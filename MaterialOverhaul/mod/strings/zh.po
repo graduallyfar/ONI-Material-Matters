@@ -109,3 +109,15 @@ msgstr "未处于最佳温区，或没有已锁定批次"
 msgctxt "STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"
 msgid "Material Overhaul: the overheat threshold is 85% of the primary construction material's melting point"
 msgstr "材料革新：过热阈值取主建造材料熔点的 85%"
+
+#. 建筑信息卡描述里追加的一句话：温度工作区间（v0.0.2）
+#. STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE
+msgctxt "STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE"
+msgid "This building only runs inside the current recipe's working temperature range: below the minimum it stops and preheats, above the maximum it stops and waits to cool down, and only the best range gives full efficiency."
+msgstr "本建筑需要在当前配方的工作温区内运行：低于最低可工作温度时停产预热，高于最高可工作温度时停产等待降温，最佳温区内才是满效率。"
+
+#. 配方名后面追加的工作温区文本（{0} 配方名、{1} 最低可工作温度、{2} 最高可工作温度）
+#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE"
+msgid "{0} (working temperature {1} ~ {2})"
+msgstr "{0}（工作温区 {1} ~ {2}）"

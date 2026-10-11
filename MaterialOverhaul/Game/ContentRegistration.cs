@@ -24,6 +24,28 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
+        /// 该建筑是否已经有确认的配方温区数值。信息卡提示与配方温度文本只对它生效，
+        /// 没有数值的建筑不显示温度相关信息（避免暗示一个还不存在的约束）。
+        /// </summary>
+        public static bool HasConfirmedZone(string prefabId)
+        {
+            if (string.IsNullOrEmpty(prefabId))
+            {
+                return false;
+            }
+
+            foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
+            {
+                if (spec.FabricatorId == prefabId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 纳入温区数值的建筑同时启用「过热阈值 = 主建造材料熔点 × 85%」的规则。
         /// 没有确认温区数值的建筑暂不启用，避免在没有温度需求的前提下改动原版过热阈值。
         /// </summary>

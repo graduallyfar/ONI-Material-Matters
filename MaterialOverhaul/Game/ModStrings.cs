@@ -41,9 +41,23 @@ namespace MaterialOverhaul.Game
                     }
                 }
             }
+
+            // STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.*
+            public static class UISIDESCREENS
+            {
+                public static class MATERIALOVERHAUL
+                {
+                    /// <summary>
+                    /// 配方名后面追加的工作温区文本。{0} 配方名、{1} 最低可工作温度、{2} 最高可工作温度。
+                    /// 由 <c>ComplexRecipe.GetUIName</c> 的后置补丁追加，只对有温区数值的配方生效。
+                    /// </summary>
+                    public static LocString RECIPE_TEMP_RANGE = "{0}（工作温区 {1} ~ {2}）";
+                }
+            }
         }
 
         // STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR
+        // STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.*
         public static class BUILDINGS
         {
             public static class DAMAGESOURCES
@@ -51,6 +65,18 @@ namespace MaterialOverhaul.Game
                 public static class MATERIALOVERHAUL
                 {
                     public static LocString MECHANICAL_WEAR = "机械磨损";
+                }
+            }
+
+            public static class PREFABS
+            {
+                public static class MATERIALOVERHAUL
+                {
+                    /// <summary>
+                    /// 建筑信息卡描述里追加的一句话：告诉玩家本建筑需要处在配方的工作温区内。
+                    /// 由 <c>BuildingDef.Desc</c> 的后置补丁追加到原版描述之后，只对已有温区数值的建筑生效。
+                    /// </summary>
+                    public static LocString TEMPZONE_NOTE = "本建筑需要在当前配方的工作温区内运行：低于最低可工作温度时停产预热，高于最高可工作温度时停产等待降温，最佳温区内才是满效率。";
                 }
             }
         }
