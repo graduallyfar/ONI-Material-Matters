@@ -1,0 +1,54 @@
+# ============================================================
+# ONI Material Overhaul —— Git 忽略规则
+# 只忽略“机器生成 / 个人本地状态 / 构建产物”，不忽略任何设计文档与源码。
+# ============================================================
+
+# ---- 操作系统与编辑器临时文件 ----
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+
+# ---- Obsidian：个人界面状态（每台机器不同，不属于项目内容）----
+# 注意：其余 .obsidian 配置（app.json / core-plugins.json 等）仍然纳入版本管理。
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/workspaces.json
+.obsidian/cache
+
+# ---- C# / .NET 构建产物 ----
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+
+# ---- IDE / 编辑器本地配置 ----
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.DotSettings.user
+
+# ---- Unity 工程（缺氧 Mod 常附带 Unity 资源工程）----
+[Ll]ibrary/
+[Tt]emp/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+*.unitypackage
+
+# ---- 本地构建输出与临时目录 ----
+_build/
+_dist/
+local.props
+*.tmp
+
+# ---- 绝对不要提交：游戏原版程序集与反编译代码 ----
+# （按项目约定，游戏程序集只从本地安装位置引用，不作为源码分发）
+Assembly-CSharp.dll
+Assembly-CSharp-firstpass.dll
+PLib.dll
+*.decompiled.cs
