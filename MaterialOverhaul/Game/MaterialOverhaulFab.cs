@@ -29,6 +29,19 @@ namespace MaterialOverhaul.Game
         /// </summary>
         private const float WearPerSecondPlaceholder = 1f;
 
+        /// <summary>原版重新构建建筑用户菜单的事件（GameHashes.RefreshUserMenu = 493375141）。</summary>
+        private const int RefreshUserMenuHash = 493375141;
+
+        private const string KeyPrefix = "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.";
+        private const string KeyModeToDefault = KeyPrefix + "RUNMODE.TO_DEFAULT";
+        private const string KeyModeToControl = KeyPrefix + "RUNMODE.TO_CONTROL";
+        private const string KeyModeTooltipDefault = KeyPrefix + "RUNMODE.TOOLTIP_DEFAULT";
+        private const string KeyModeTooltipControl = KeyPrefix + "RUNMODE.TOOLTIP_CONTROL";
+        private const string KeyForcedEnable = KeyPrefix + "FORCEDRUN.ENABLE";
+        private const string KeyForcedDisable = KeyPrefix + "FORCEDRUN.DISABLE";
+        private const string KeyForcedTooltipEnable = KeyPrefix + "FORCEDRUN.TOOLTIP_ENABLE";
+        private const string KeyForcedTooltipDisable = KeyPrefix + "FORCEDRUN.TOOLTIP_DISABLE";
+
         private ComplexFabricator fabricator;
         private PrimaryElement primaryElement;
 
@@ -131,6 +144,15 @@ namespace MaterialOverhaul.Game
 
             wear.Restore(wearAccumulated);
             RestoreOrders();
+
+            // 面板开关随用户菜单刷新重建；对象清理时必须退订（AGENTS 实现约定）。
+            Subscribe(RefreshUserMenuHash, OnRefreshUserMenu);
+        }
+
+        protected override void OnCleanUp()
+        {
+            Unsubscribe(RefreshUserMenuHash, OnRefreshUserMenu);
+            base.OnCleanUp();
         }
 
         /// <summary>建筑本体温度。不使用周围气体温度代替（§3.1）。</summary>
@@ -227,6 +249,88 @@ namespace MaterialOverhaul.Game
 
             ProductionDecision gate = EvaluateFor(working);
             LogStateIfChanged(working, gate);
+        }
+
+        // ---- 建筑面板开关：模式与强制运行（建筑细节文档 §2.1、§2.1.4）----
+
+        /// <summary>
+        /// 往建筑面板加两个独立按钮：模式切换与强制运行开关。
+        /// 两者都会立即重新判断生产许可与加热状态，但**保留当前批次**（不清进度、不丢原料）。
+        /// </summary>
+        private void OnRefreshUserMenu(object data)
+        {
+            if (fabricator == null || global::Game.Instance == null)
+            {
+                return;
+            }
+
+            // 按钮文本与提示描述的是「按下去会进入的状态」，所以取目标模式的那一条。
+            string modeText = controlMode
+                ? LocalizedOr(KeyModeToDefault, "Switch to Default Mode")
+                : LocalizedOr(KeyModeToControl, "Switch to Control Mode");
+            string modeTooltip = controlMode
+                ? LocalizedOr(KeyModeTooltipDefault, "Default mode: production is allowed across the whole working temperature range.")
+                : LocalizedOr(KeyModeTooltipControl, "Control mode: production only inside the best temperature range, with top-up heating while producing.");
+
+            global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+                iconName: "action_control",
+                text: modeText,
+                on_click: ToggleControlMode,
+                tooltipText: modeTooltip));
+
+            string forcedText = forcedRun
+                ? LocalizedOr(KeyForcedDisable, "Disable Forced Run")
+                : LocalizedOr(KeyForcedEnable, "Enable Forced Run");
+            string forcedTooltip = forcedRun
+                ? LocalizedOr(KeyForcedTooltipDisable, "Forced run is on. Turning it off re-evaluates production permission under the selected mode.")
+                : LocalizedOr(KeyForcedTooltipEnable, "Forced run: keep producing outside the working temperature range and keep heating.");
+
+            global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+                iconName: "action_power",
+                text: forcedText,
+                on_click: ToggleForcedRun,
+                tooltipText: forcedTooltip));
+        }
+
+        private void ToggleControlMode()
+        {
+            SetControlMode(!controlMode);
+            OnPolicyChanged();
+        }
+
+        private void ToggleForcedRun()
+        {
+            SetForcedRun(!forcedRun);
+            OnPolicyChanged();
+        }
+
+        /// <summary>切换开关后重新判断许可与加热状态；不清除批次、不动进度与磨损。</summary>
+        private void OnPolicyChanged()
+        {
+            topUpActive = false;
+
+            if (fabricator != null)
+            {
+                // 让原版在下一轮刷新队列时重新校验当前订单。
+                fabricator.SetQueueDirty();
+            }
+
+            RefreshStatus();
+
+            if (global::Game.Instance != null)
+            {
+                global::Game.Instance.userMenu.Refresh(gameObject);
+            }
+        }
+
+        /// <summary>
+        /// 取本地化文本；键缺失时回退到内置英文，避免界面出现空白或原始键名。
+        /// 键本身是主路径（AGENTS 实现约定：新增界面文本使用本地化键）。
+        /// </summary>
+        private static string LocalizedOr(string key, string fallback)
+        {
+            string value = Strings.Get(key);
+            return string.IsNullOrEmpty(value) ? fallback : value;
         }
 
         // ---- 预热与补热（判断在 HeatingPlanner，这里只负责取状态与注入热量）----

@@ -53,6 +53,14 @@ foreach ($meta in @('mod.yaml', 'mod_info.yaml')) {
     Copy-Item -LiteralPath (Join-Path (Join-Path $projectRoot 'mod') $meta) -Destination $target -Force
 }
 
+# 本地化：mod 的 translations\<lang>.json 由游戏按当前语言加载
+$translations = Join-Path (Join-Path $projectRoot 'mod') 'translations'
+if (Test-Path -LiteralPath $translations) {
+    $destTranslations = Join-Path $target 'translations'
+    New-Item -ItemType Directory -Path $destTranslations -Force | Out-Null
+    Copy-Item -Path (Join-Path $translations '*') -Destination $destTranslations -Recurse -Force
+}
+
 $leaked = Get-ChildItem -LiteralPath $target -Filter 'Assembly-CSharp*.dll' -ErrorAction SilentlyContinue
 if ($leaked) { throw "部署目录出现原版程序集，已中止：$($leaked.FullName -join ', ')" }
 
