@@ -26,6 +26,8 @@ namespace MaterialOverhaul
                 throw;
             }
 
+            Core.DebugValues.Initialize(path);
+
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count

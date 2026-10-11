@@ -17,10 +17,11 @@ namespace MaterialOverhaul.Patches
             try
             {
                 DamageStatusItems.Register();
+                DebugValueApplier.Apply();
             }
             catch (Exception e)
             {
-                ModLog.Error("注册损坏原因状态项失败：" + e);
+                ModLog.Error("Db 初始化后置处理失败：" + e);
             }
         }
     }

@@ -23,11 +23,8 @@ namespace MaterialOverhaul.Game
     [SerializationConfig(MemberSerialization.OptIn)]
     public class MaterialOverhaulFab : KMonoBehaviour
     {
-        /// <summary>
-        /// 磨损速率**占位值**。磨损到生命值伤害的转换系数属待定项（§6.4、§10 第 10 项），
-        /// 本版只累计自有字段、不扣血，因此该占位值不影响玩法平衡，数值阶段确定后替换。
-        /// </summary>
-        private const float WearPerSecondPlaceholder = 1f;
+        // 磨损速率取自 Core.DebugValues：默认是占位值，不产生玩法影响；
+        // 放入调试标记文件后改用样例值，便于在游戏里观察磨损与损坏原因。
 
         /// <summary>原版重新构建建筑用户菜单的事件（GameHashes.RefreshUserMenu = 493375141）。</summary>
         private const int RefreshUserMenuHash = 493375141;
@@ -224,7 +221,7 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            wear.AccumulateProduction(seconds, WearPerSecondPlaceholder);
+            wear.AccumulateProduction(seconds, DebugValues.WearPerSecond);
             wearAccumulated = wear.Wear;
         }
 
