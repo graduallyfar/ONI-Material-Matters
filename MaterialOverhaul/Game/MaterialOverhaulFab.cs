@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KSerialization;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Hardness;
+using MaterialOverhaul.Heating;
 using MaterialOverhaul.Orders;
 using MaterialOverhaul.Zones;
 
@@ -40,6 +41,17 @@ namespace MaterialOverhaul.Game
 
         private TempState lastLoggedState = TempState.Disabled;
         private bool hasLoggedState;
+
+        // 加热运行时状态：不持久化，读档后按实际温度与供电重新判断（§8.3）。
+        private bool preheated;
+        private bool topUpActive;
+        private HandleVector<int>.Handle structureHandle;
+        private bool structureHandleResolved;
+
+        // 组件引用缓存，避免每次模拟更新重复 GetComponent。
+        private EnergyConsumer energyConsumer;
+        private BuildingEnabledButton enabledButton;
+        private BuildingHP buildingHP;
 
         /// <summary>本建筑的 prefab id，作为侧表索引。</summary>
         public string PrefabId { get; private set; }
@@ -107,6 +119,9 @@ namespace MaterialOverhaul.Game
             base.OnSpawn();
             fabricator = GetComponent<ComplexFabricator>();
             primaryElement = GetComponent<PrimaryElement>();
+            energyConsumer = GetComponent<EnergyConsumer>();
+            enabledButton = GetComponent<BuildingEnabledButton>();
+            buildingHP = GetComponent<BuildingHP>();
 
             KPrefabID prefabIdComponent = GetComponent<KPrefabID>();
             PrefabId = prefabIdComponent != null ? prefabIdComponent.PrefabTag.ToString() : gameObject.name;
@@ -213,6 +228,93 @@ namespace MaterialOverhaul.Game
             ProductionDecision gate = EvaluateFor(working);
             LogStateIfChanged(working, gate);
         }
+
+        // ---- 预热与补热（判断在 HeatingPlanner，这里只负责取状态与注入热量）----
+
+        /// <summary>
+        /// 由模拟更新驱动（补丁挂在 ComplexFabricator.Sim200ms 上）。
+        ///
+        /// 自动化红信号**不参与**这里的判断：它只停止生产，不阻止预热与补热
+        /// （建筑细节文档 §2.2.1、AGENTS 已确认约束），所以这里查的是供电、手动禁用与损坏，
+        /// 而不是 Operational.IsOperational（后者会把自动化信号一并算进来）。
+        /// </summary>
+        public void TickHeating(float dt)
+        {
+            if (dt <= 0f || primaryElement == null)
+            {
+                return;
+            }
+
+            TempZone zone = CurrentZone;
+            if (zone.IsDisabled)
+            {
+                preheated = false;
+                topUpActive = false;
+                return;
+            }
+
+            float temperature = BodyTemperature;
+            TempState state = TempZoneEvaluator.Evaluate(temperature, zone);
+
+            // 「已开工」状态：跌破最低可工作温度就复位，重新预热；
+            // 达到启动阈值即视为已开工。不持久化，读档后按实际温度重建。
+            if (state == TempState.BelowWorkMin)
+            {
+                preheated = false;
+            }
+            else if (temperature >= HeatingPlanner.PreheatTarget(zone, Policy))
+            {
+                preheated = true;
+            }
+
+            HeatingContext context = default(HeatingContext);
+            context.HasLockedBatch = CurrentWorkingRecipe != null;
+            context.BatchMaterialsReady = context.HasLockedBatch; // 已投料同样视为本批次材料齐全
+            context.Powered = energyConsumer == null || energyConsumer.IsPowered;
+            context.ManuallyDisabled = enabledButton != null && !enabledButton.IsEnabled;
+            context.BrokenDown = buildingHP != null && buildingHP.IsBroken;
+
+            if (!HeatingConditions.CanHeat(context))
+            {
+                topUpActive = false;
+                return;
+            }
+
+            bool allowsProduction = TempZoneEvaluator.Decide(temperature, zone, Policy).AllowsProduction;
+            bool productionRunning = preheated && allowsProduction;
+
+            HeatingIntent intent = HeatingPlanner.Decide(temperature, zone, Policy, productionRunning, topUpActive);
+            topUpActive = intent == HeatingIntent.TopUp;
+
+            InjectHeat(intent, dt);
+        }
+
+        /// <summary>
+        /// 注入热量。功率未配置（默认 0）时不注入，也不会申请 handle。
+        /// 走原版结构温度接口：传入的是 kJ，温升由 SIM 按建造材料热容与换热计算，不是固定温升。
+        /// </summary>
+        private void InjectHeat(HeatingIntent intent, float dt)
+        {
+            float kilowatts = HeatingPower.KilowattsFor(intent);
+            if (kilowatts == 0f)
+            {
+                return;
+            }
+
+            if (!structureHandleResolved)
+            {
+                structureHandle = GameComps.StructureTemperatures.GetHandle(gameObject);
+                structureHandleResolved = true;
+            }
+
+            GameComps.StructureTemperatures.ProduceEnergy(structureHandle, kilowatts * dt, HeatSourceDescription, dt);
+        }
+
+        /// <summary>
+        /// 热量来源说明，原版会用它显示运行能量来源。
+        /// 数值阶段接入实际加热后，应换成本地化键（AGENTS 实现约定：新增界面文本使用本地化键）。
+        /// </summary>
+        private const string HeatSourceDescription = "MaterialOverhaul.Heating";
 
         private void LogStateIfChanged(ComplexRecipe recipe, ProductionDecision gate)
         {

@@ -170,7 +170,7 @@ namespace MaterialOverhaul.Patches
     [HarmonyPatch(typeof(ComplexFabricator), "Sim200ms")]
     internal static class Patch_ComplexFabricator_Sim200ms
     {
-        private static void Postfix(ComplexFabricator __instance)
+        private static void Postfix(ComplexFabricator __instance, float dt)
         {
             try
             {
@@ -178,6 +178,7 @@ namespace MaterialOverhaul.Patches
                 if (fab != null)
                 {
                     fab.RefreshStatus();
+                    fab.TickHeating(dt);
                 }
             }
             catch (Exception e)

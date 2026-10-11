@@ -12,6 +12,7 @@ namespace MaterialOverhaul.Tests
         {
             StartThresholds();
             HeatingGate();
+            HeatingPowerMapping();
             Wear();
         }
 
@@ -55,6 +56,28 @@ namespace MaterialOverhaul.Tests
             HeatingContext notReady = ok;
             notReady.BatchMaterialsReady = false;
             TestRunner.Check(!HeatingConditions.CanHeat(notReady), "材料未齐备不加热");
+        }
+
+        private static void HeatingPowerMapping()
+        {
+            TestRunner.Section("加热功率占位（数值阶段填写）");
+            TestRunner.Check(!HeatingPower.IsConfigured, "默认未配置任何功率");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "未配置时预热功率为 0");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "未配置时补热功率为 0");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "未配置时持续加热功率为 0");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.None), Tol, "None 意图不注热");
+
+            HeatingPower.PreheatKilowatts = 12f;
+            HeatingPower.TopUpKilowatts = 3f;
+            TestRunner.Check(HeatingPower.IsConfigured, "配置后标记为已配置");
+            TestRunner.CheckClose(12f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热取预热功率");
+            TestRunner.CheckClose(3f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热取补热功率");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "未配置的项仍为 0");
+
+            // 复位，避免影响其他用例。
+            HeatingPower.PreheatKilowatts = 0f;
+            HeatingPower.TopUpKilowatts = 0f;
+            TestRunner.Check(!HeatingPower.IsConfigured, "复位后回到未配置");
         }
 
         private static void Wear()
