@@ -13,6 +13,7 @@ namespace MaterialOverhaul.Tests
             Run("Orders", OrderTests.Run);
             Run("强制运行与加热意图", RunPolicyAndHeatingTests.Run);
             Run("Heating / Hardness", HeatingAndWearTests.Run);
+            Run("损坏原因与维修", DamageCauseTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");
