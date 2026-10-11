@@ -22,6 +22,7 @@
 | [建筑分类与温区适用范围](<Mod玩法设计和修改/3. 建筑分类与温区适用范围.md>) | 建筑分类名单与原版过热现状复核 |
 | [V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) | 工程骨架、温区／预热／硬度判断层、接入方式的实现记录 |
 | [V0.0.2 开发计划](<开发计划/V0.0.2开发计划.md>) | 订单流程、金属精炼器温区与过热阈值的实现记录与待定项 |
+| [V0.0.3 开发计划](<开发计划/V0.0.3开发计划.md>) | 待开发：金属精炼器炼铝完整流程、暂定数值、deepseek harness 实施任务与验收清单 |
 | `E:\ONI-Ref\Assembly-CSharp\Assembly-CSharp.decompiled.cs` | 本地游戏反编译代码，用于核实原版行为和寻找接入位置 |
 | `E:\ONI-Ref\PLib\PLib.decompiled.cs` | PLib参考实现；存在参考文件不代表项目已引入该依赖 |
 
@@ -60,7 +61,7 @@
 
 首次建立工程时，先定位用户实际安装的游戏程序集和目标版本，确认支持的运行时、框架、Harmony及可选PLib版本。不要因为机器安装了某个 .NET SDK，就直接选用相同版本作为游戏 Mod 目标框架。
 
-构建命令、依赖路径和输出目录已写入[V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) §2.2：`dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release` 构建、`dotnet run --project tests\MaterialOverhaul.Tests\...` 跑判断层测试、`MaterialOverhaul\tools\deploy.ps1` 部署到本地 mod 目录。工程建立与构建验证已完成；**游戏内验证尚未进行**，不把构建成功当作功能正确。各版本的实现记录与待定项见 [V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>)、[V0.0.2 开发计划](<开发计划/V0.0.2开发计划.md>)。
+构建命令、依赖路径和输出目录已写入[V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) §2.2：`dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release` 构建、`dotnet run --project tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj -c Release` 跑判断层测试、`MaterialOverhaul\tools\deploy.ps1` 部署到本地 mod 目录。工程建立与构建验证已完成；**v0.0.2 有一次局部游戏运行记录，后续修正尚待重启验证**，不把构建成功当作功能正确。v0.0.3 目前只有开发文档，代码任务交给 deepseek harness；用户授权对未定数值先给暂定值，集中见 [V0.0.3 开发计划](<开发计划/V0.0.3开发计划.md>) §2，不把暂定值写成最终平衡规则。
 
 ## 6. 实现约定
 
