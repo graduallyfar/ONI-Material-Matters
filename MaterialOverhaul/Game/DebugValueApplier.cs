@@ -22,6 +22,14 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
+            // 与真实温区同一个时机问题：Db.Initialize 时配方表还是空的，这里不标记完成，
+            // 等 ComplexRecipeManager.PostProcess 之后再补一次（见 Patches/DbPatches.cs）。
+            ComplexRecipeManager manager = ComplexRecipeManager.Get();
+            if (manager == null || manager.recipes == null || manager.recipes.Count == 0)
+            {
+                return;
+            }
+
             applied = true;
 
             int recipeCount = RegisterSampleZones();

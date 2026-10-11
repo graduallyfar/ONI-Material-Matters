@@ -218,6 +218,15 @@ namespace MaterialOverhaul.Game
 
             cachedRecipeId = recipeId;
             cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
+
+            if (!cachedZoneConfigured && !ContentRegistration.ZonesResolved)
+            {
+                // 兜底：配方温区还没在「配方表可用」的时机登记过（加载顺序变化或钩子未命中）时，
+                // 第一次有建筑要用配方时再补一次，避免整套温区静默失效。
+                ContentRegistration.Apply();
+                cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
+            }
+
             if (!cachedZoneConfigured)
             {
                 cachedZone = TempZone.Disabled;

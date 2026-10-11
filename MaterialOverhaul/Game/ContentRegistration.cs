@@ -16,6 +16,21 @@ namespace MaterialOverhaul.Game
     /// </summary>
     public static class ContentRegistration
     {
+        private static bool zonesResolved;
+
+        /// <summary>
+        /// 配方温区是否已经在「配方表可用」的前提下登记过。
+        ///
+        /// **已核实的加载顺序（游戏内日志确认）**：`Db.Initialize` 早于建筑预制件创建，
+        /// 那时 `ComplexRecipeManager.recipes` 还是空的（配方先进 `preProcessRecipes`，
+        /// 直到 `Assets.CreatePrefabs` 末尾的 `ComplexRecipeManager.PostProcess()` 才转入 `recipes`）。
+        /// 因此 Db 钩子里登记配方温区一定会落空，必须等 PostProcess 之后再登记。
+        /// </summary>
+        public static bool ZonesResolved
+        {
+            get { return zonesResolved; }
+        }
+
         /// <summary>登记过热规则与配方温区。可重复调用：已登记的条目不重复写入。</summary>
         public static void Apply()
         {
@@ -78,11 +93,16 @@ namespace MaterialOverhaul.Game
         public static void RegisterRecipeZones()
         {
             ComplexRecipeManager manager = ComplexRecipeManager.Get();
-            if (manager == null || manager.recipes == null)
+            if (manager == null || manager.recipes == null || manager.recipes.Count == 0)
             {
-                ModLog.Warn("配方管理器不可用，配方温区数值本次未登记。");
+                // 配方表还没建好：不标记完成，等 ComplexRecipeManager.PostProcess 之后重试
+                // （MaterialOverhaulFab 在第一次要用配方时还有一次兜底重试）。
+                ModLog.WarnOnce("zone|recipes-empty",
+                    "配方温区：登记时原版配方表还是空的（Db.Initialize 早于配方注册），将在配方注册完成后重试。");
                 return;
             }
+
+            zonesResolved = true;
 
             int registered = 0;
             foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)

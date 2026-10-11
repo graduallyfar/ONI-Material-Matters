@@ -121,3 +121,9 @@ msgstr "本建筑需要在当前配方的工作温区内运行：低于最低可
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE"
 msgid "{0} (working temperature {1} ~ {2})"
 msgstr "{0}（工作温区 {1} ~ {2}）"
+
+#. 配方详情「效果」里的温度行（{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限）
+#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL"
+msgid "Working temperature: {0} ~ {1} (best range {2} ~ {3})"
+msgstr "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"

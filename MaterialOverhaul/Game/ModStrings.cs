@@ -52,6 +52,12 @@ namespace MaterialOverhaul.Game
                     /// 由 <c>ComplexRecipe.GetUIName</c> 的后置补丁追加，只对有温区数值的配方生效。
                     /// </summary>
                     public static LocString RECIPE_TEMP_RANGE = "{0}（工作温区 {1} ~ {2}）";
+
+                    /// <summary>
+                    /// 配方详情「效果」里的温度行。{0} 最低可工作温度、{1} 最高可工作温度、
+                    /// {2} 最佳温区下限、{3} 最佳温区上限。
+                    /// </summary>
+                    public static LocString RECIPE_TEMP_RANGE_DETAIL = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
                 }
             }
         }

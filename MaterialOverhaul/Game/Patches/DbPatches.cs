@@ -30,6 +30,33 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
+    /// 在 <c>ComplexRecipeManager.PostProcess</c> 之后登记配方温区。
+    ///
+    /// **这是必须的时机修正（游戏内日志已确认）**：`Db.Initialize` 跑在建筑预制件与配方注册之前，
+    /// 那时 `ComplexRecipeManager.recipes` 是空的，温区登记会全部落空（表现为「配方温区条目 0」、
+    /// 建筑在常温下照样生产）。原版在 `Assets.CreatePrefabs` 末尾调用 `PostProcess()` 把
+    /// `preProcessRecipes` 转入 `recipes`，因此在这里补一次登记。
+    /// </summary>
+    [HarmonyPatch(typeof(ComplexRecipeManager), "PostProcess")]
+    internal static class Patch_ComplexRecipeManager_PostProcess
+    {
+        private static void Postfix()
+        {
+            try
+            {
+                ContentRegistration.Apply();
+
+                // 调试样例温区同样要在配方表可用之后写入（未被真实数值覆盖的配方才会用到它）。
+                DebugValueApplier.Apply();
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("配方注册后登记内容失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
     /// 给白名单建筑补一个自动化输出端口：原版这些配方建筑没有任何逻辑端口（开发计划 §3.9），
     /// 而设计要求温区信号。
     ///
