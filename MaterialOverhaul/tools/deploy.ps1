@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     构建 MaterialOverhaul 并部署到本机缺氧的本地 Mod 目录。
 

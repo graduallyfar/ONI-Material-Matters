@@ -22,7 +22,7 @@
 | `E:\ONI-Ref\Assembly-CSharp\Assembly-CSharp.decompiled.cs` | 本地游戏反编译代码，用于核实原版行为和寻找接入位置 |
 | `E:\ONI-Ref\PLib\PLib.decompiled.cs` | PLib参考实现；存在参考文件不代表项目已引入该依赖 |
 
-编写本文件时，项目处于设计阶段，尚无 Mod 源码工程、解决方案或构建脚本。开始编码前重新检查实际目录，不把这个阶段描述当作永久事实。
+工程已建立：`MaterialOverhaul\`（netstandard2.1 类库，引用本机游戏程序集与游戏自带 0Harmony，两者都不进产物）、`tests\MaterialOverhaul.Tests\`（判断层源码级测试）、`MaterialOverhaul\tools\deploy.ps1`（部署到本地 mod 目录）。构建入口、依赖路径与部署目录见 [V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) §2.2；目标框架由游戏程序集核实，**不依据本机已安装的 .NET SDK 推断**。
 
 版本控制已建立：本目录已是 Git 仓库（分支 `main`，初始提交 `21efa29`），根目录 `.gitignore` 忽略构建产物与 Obsidian 个人界面状态，仓库局部设置 `core.autocrlf=false` 以免改写现有文件换行符；尚未配置远程仓库，推送或发布需用户明确授权。
 
@@ -57,7 +57,7 @@
 
 首次建立工程时，先定位用户实际安装的游戏程序集和目标版本，确认支持的运行时、框架、Harmony及可选PLib版本。不要因为机器安装了某个 .NET SDK，就直接选用相同版本作为游戏 Mod 目标框架。
 
-构建命令、依赖路径和输出目录在工程建立并验证后写入开发说明。当前没有固定构建入口，不编造“运行某命令即可构建”的结论。
+构建命令、依赖路径和输出目录已写入[V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) §2.2：`dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release` 构建、`dotnet run --project tests\MaterialOverhaul.Tests\...` 跑判断层测试、`MaterialOverhaul\tools\deploy.ps1` 部署到本地 mod 目录。工程建立与构建验证已完成；**游戏内验证尚未进行**，不把构建成功当作功能正确。
 
 ## 6. 实现约定
 
