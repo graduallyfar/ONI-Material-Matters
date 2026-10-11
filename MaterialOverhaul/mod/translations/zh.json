@@ -24,6 +24,33 @@
           "MECHANICAL_WEAR": "机械磨损"
         }
       }
+    },
+    "BUILDING": {
+      "STATUSITEMS": {
+        "MATERIALOVERHAUL": {
+          "MECHANICAL": {
+            "NAME": "机械损坏",
+            "TOOLTIP": "主建造材料硬度不足，按实际生产时间累计磨损导致损坏。维修采用普通方式，不重置温度。"
+          },
+          "OVERHEAT": {
+            "NAME": "过热损坏",
+            "TOOLTIP": "建筑本体温度超过过热阈值导致损坏。维修按原版过热方式处理并重置温度。"
+          },
+          "BOTH": {
+            "NAME": "机械损坏＋过热损坏",
+            "TOOLTIP": "同时存在机械磨损与过热损坏。维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。"
+          }
+        }
+      },
+      "LOGICPORTS": {
+        "MATERIALOVERHAUL": {
+          "TEMPERATURE_ZONE": {
+            "DESCRIPTION": "温区信号",
+            "ACTIVE": "已锁定批次处于最佳温区",
+            "INACTIVE": "未处于最佳温区或没有已锁定批次"
+          }
+        }
+      }
     }
   }
 }

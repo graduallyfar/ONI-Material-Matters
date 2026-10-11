@@ -24,6 +24,33 @@
           "MECHANICAL_WEAR": "Mechanical Wear"
         }
       }
+    },
+    "BUILDING": {
+      "STATUSITEMS": {
+        "MATERIALOVERHAUL": {
+          "MECHANICAL": {
+            "NAME": "Mechanical Damage",
+            "TOOLTIP": "The primary construction material is too soft; wear accumulated with actual production time caused this damage. Repaired normally, temperature is not reset."
+          },
+          "OVERHEAT": {
+            "NAME": "Overheat Damage",
+            "TOOLTIP": "The building body exceeded its overheat threshold. Repaired as an overheat repair, which resets temperature."
+          },
+          "BOTH": {
+            "NAME": "Mechanical + Overheat Damage",
+            "TOOLTIP": "Both mechanical wear and overheat damage are present. Repair is handled as an overheat repair and resets temperature; this does not add an extra mechanical damage tick."
+          }
+        }
+      },
+      "LOGICPORTS": {
+        "MATERIALOVERHAUL": {
+          "TEMPERATURE_ZONE": {
+            "DESCRIPTION": "Temperature Zone Signal",
+            "ACTIVE": "Locked batch is inside the best temperature range",
+            "INACTIVE": "Outside the best temperature range, or no locked batch"
+          }
+        }
+      }
     }
   }
 }

@@ -71,12 +71,14 @@ namespace MaterialOverhaul.Game
         private BuildingEnabledButton enabledButton;
         private BuildingHP buildingHP;
         private Overheatable overheatable;
+        private LogicPorts logicPorts;
 
         // 损坏状态：只维护当前尚未修复的原因，不做历史统计。
         private bool overheated;
         private bool mechanicalDamaged;
         private DamageCause lastLoggedDamageCause = DamageCause.None;
         private bool hasLoggedDamageCause;
+        private int lastZoneSignal = -1;
 
         /// <summary>本建筑的 prefab id，作为侧表索引。</summary>
         public string PrefabId { get; private set; }
@@ -148,6 +150,7 @@ namespace MaterialOverhaul.Game
             enabledButton = GetComponent<BuildingEnabledButton>();
             buildingHP = GetComponent<BuildingHP>();
             overheatable = GetComponent<Overheatable>();
+            logicPorts = GetComponent<LogicPorts>();
 
             KPrefabID prefabIdComponent = GetComponent<KPrefabID>();
             PrefabId = prefabIdComponent != null ? prefabIdComponent.PrefabTag.ToString() : gameObject.name;
@@ -257,11 +260,24 @@ namespace MaterialOverhaul.Game
                 CurrentState = TempState.Disabled;
                 CurrentEfficiency = 1f;
                 hasLoggedState = false;
+                UpdateTemperatureZoneSignal();
                 return;
             }
 
             ProductionDecision gate = EvaluateFor(working);
             LogStateIfChanged(working, gate);
+            UpdateTemperatureZoneSignal();
+        }
+
+        /// <summary>
+        /// 温区输出信号：有已锁定配方且处于最佳温区为 1，其余为 0。
+        /// 没有配方时输出不活动的红信号，不设置第三种空信号；绿色只代表温度条件满足，不代表正在生产。
+        /// </summary>
+        private void UpdateTemperatureZoneSignal()
+        {
+            bool hasLockedBatch = CurrentWorkingRecipe != null;
+            bool inBestZone = CurrentState == TempState.Normal;
+            TemperatureZoneSignal.Send(logicPorts, ref lastZoneSignal, hasLockedBatch, inBestZone);
         }
 
         // ---- 建筑面板开关：模式与强制运行（建筑细节文档 §2.1、§2.1.4）----
@@ -440,7 +456,46 @@ namespace MaterialOverhaul.Game
 
             hasLoggedDamageCause = true;
             lastLoggedDamageCause = cause;
-            LogDamageCause(cause);
+            OnDamageCauseChanged(cause);
+        }
+
+        /// <summary>
+        /// 损坏原因变化时更新状态项。原版只保存一份 damageSourceInfo，
+        /// 所以这里由本 Mod 按当前原因显示，双重原因显示合并状态项。
+        /// </summary>
+        private void OnDamageCauseChanged(DamageCause cause)
+        {
+            UpdateDamageStatusItem(cause);
+
+            if (cause == DamageCause.None)
+            {
+                return;
+            }
+
+            ModLog.Info(PrefabId + " 损坏原因：" + cause
+                + "；过热维修 " + DamageCauseEvaluator.UsesOverheatRepair(cause)
+                + "，重置温度 " + DamageCauseEvaluator.ResetsTemperatureOnRepair(cause)
+                + "，显示两种原因 " + DamageCauseEvaluator.ShowsBothCauses(cause) + "。");
+        }
+
+        private void UpdateDamageStatusItem(DamageCause cause)
+        {
+            KSelectable selectable = GetComponent<KSelectable>();
+            if (selectable == null || DamageStatusItems.Mechanical == null)
+            {
+                // 状态项尚未登记（Db 未初始化）时跳过，不影响其他逻辑。
+                return;
+            }
+
+            selectable.RemoveStatusItem(DamageStatusItems.Mechanical);
+            selectable.RemoveStatusItem(DamageStatusItems.Overheat);
+            selectable.RemoveStatusItem(DamageStatusItems.Both);
+
+            StatusItem item = DamageStatusItems.For(cause);
+            if (item != null)
+            {
+                selectable.SetStatusItem(Db.Get().StatusItemCategories.Main, item, null);
+            }
         }
 
         /// <summary>
@@ -508,19 +563,6 @@ namespace MaterialOverhaul.Game
             {
                 mechanicalDamaged = true;
             }
-        }
-
-        private void LogDamageCause(DamageCause cause)
-        {
-            if (cause == DamageCause.None)
-            {
-                return;
-            }
-
-            ModLog.Info(PrefabId + " 损坏原因：" + cause
-                + "；过热维修 " + DamageCauseEvaluator.UsesOverheatRepair(cause)
-                + "，重置温度 " + DamageCauseEvaluator.ResetsTemperatureOnRepair(cause)
-                + "，显示两种原因 " + DamageCauseEvaluator.ShowsBothCauses(cause) + "。");
         }
 
         /// <summary>
