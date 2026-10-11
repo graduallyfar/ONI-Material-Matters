@@ -238,6 +238,15 @@ namespace MaterialOverhaul.Game
 
         // ---- 订单顺序（本版最小部分：有序列表、轮换指针、锁定批次，§7.3）----
 
+        /// <summary>
+        /// 本 Mod 顺序表中下一个候选配方的标识；没有订单时返回 null。
+        /// 接入层用它把玩家添加顺序映射到原版配方列表，接管“下一个执行哪个订单”。
+        /// </summary>
+        public string PeekNextOrderRecipeId()
+        {
+            return orders.PeekNextRecipeId();
+        }
+
         /// <summary>记录一笔新添加的订单。同一配方重复添加视为新订单，不合并。</summary>
         public void NoteRecipeQueued(string recipeId)
         {

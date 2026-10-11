@@ -223,6 +223,25 @@ namespace MaterialOverhaul.Orders
             return cursor;
         }
 
+        /// <summary>
+        /// 本 Mod 顺序表中当前的候选订单标识（从轮换位置开始）。
+        ///
+        /// 接入层用它把「玩家添加顺序」映射到原版的配方列表：原版
+        /// <c>ComplexFabricator.AdvanceNextOrder</c> 是唯一推进点，把指针预置到本候选的前一位，
+        /// 原版的扫描循环就会从玩家顺序的候选开始，其余可用性判断仍由原版完成。
+        /// 没有订单时返回 null，调用方保持原版行为。
+        /// </summary>
+        public string PeekNextRecipeId()
+        {
+            if (orders.Count == 0)
+            {
+                return null;
+            }
+
+            int index = cursor < 0 || cursor >= orders.Count ? 0 : cursor;
+            return orders[index].RecipeId;
+        }
+
         /// <summary>存档恢复：重建顺序与指针位置（§8.3，读档不得重排订单）。</summary>
         public void Restore(IEnumerable<OrderEntry> entries, int restoredCursor)
         {

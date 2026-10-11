@@ -14,6 +14,8 @@ namespace MaterialOverhaul.Patches
     ///   ComplexFabricator.Sim200ms                  public，无子类覆写        180837
     ///   ComplexFabricator.IncrementRecipeQueueCount public                   181402
     ///   ComplexFabricator.SetRecipeQueueCount       public                   181391
+    ///   ComplexFabricator.AdvanceNextOrder          private，唯一推进点       180989
+    ///   ComplexFabricator.CompleteWorkingOrder      public virtual           180935
     ///   ComplexFabricatorWorkable.OnWorkTick        protected override       126157
     ///   Workable.GetEfficiencyMultiplier            public virtual           157412
     ///
@@ -232,6 +234,110 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("订单顺序记录补丁异常：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 接管“下一个执行哪个订单”：把原版指针预置到本 Mod 顺序表的候选之前，
+    /// 让原版 <c>AdvanceNextOrder</c> 的扫描循环从玩家添加顺序的候选开始。
+    ///
+    /// 这样只改变**顺序**：有剩余队列、是否有料、缺料向后跳过，仍全部由原版判断
+    /// （`GetRemainingQueueCount` 与 `HasIngredients`），不重复实现也不会越权放行。
+    /// 温度不足不参与选择——温度只决定已锁定批次是加热还是生产（建筑细节文档 §2.3.3）。
+    /// </summary>
+    [HarmonyPatch(typeof(ComplexFabricator), "AdvanceNextOrder")]
+    internal static class Patch_ComplexFabricator_AdvanceNextOrder
+    {
+        private static readonly AccessTools.FieldRef<ComplexFabricator, int> NextOrderIdxRef =
+            AccessTools.FieldRefAccess<ComplexFabricator, int>("nextOrderIdx");
+
+        private static void Prefix(ComplexFabricator __instance)
+        {
+            try
+            {
+                MaterialOverhaulFab fab = PatchHelpers.FabOf(__instance);
+                if (fab == null)
+                {
+                    return;
+                }
+
+                string candidate = fab.PeekNextOrderRecipeId();
+                if (string.IsNullOrEmpty(candidate))
+                {
+                    return;
+                }
+
+                ComplexRecipe[] recipes = __instance.GetRecipes();
+                if (recipes == null || recipes.Length == 0)
+                {
+                    return;
+                }
+
+                int index = -1;
+                for (int i = 0; i < recipes.Length; i++)
+                {
+                    if (recipes[i].id == candidate)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index < 0)
+                {
+                    // 候选不在该建筑的配方列表里（配方被移除或 DLC 未启用）时保持原版行为。
+                    return;
+                }
+
+                // 原版循环第一步就是 nextOrderIdx = (nextOrderIdx + 1) % Length，因此预置到候选的前一位。
+                NextOrderIdxRef(__instance) = (index - 1 + recipes.Length) % recipes.Length;
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("订单轮换补丁异常：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 批次完成后同步本 Mod 顺序表：原版把队列计数扣到 0 即该订单已耗尽，从顺序表移除。
+    /// 无限订单（计数 -1）不在顺序表中被移除，符合“无限订单持续保留”。
+    ///
+    /// 原版 <c>CompleteWorkingOrder</c> 内部走的是私有的 <c>DecrementRecipeQueueCountInternal</c>，
+    /// 不经过 <c>SetRecipeQueueCount</c>，所以这里必须单独同步。
+    /// </summary>
+    [HarmonyPatch(typeof(ComplexFabricator), "CompleteWorkingOrder")]
+    internal static class Patch_ComplexFabricator_CompleteWorkingOrder
+    {
+        private static void Prefix(ComplexFabricator __instance, out ComplexRecipe __state)
+        {
+            __state = __instance.CurrentWorkingOrder;
+        }
+
+        private static void Postfix(ComplexFabricator __instance, ComplexRecipe __state)
+        {
+            try
+            {
+                if (__state == null)
+                {
+                    return;
+                }
+
+                MaterialOverhaulFab fab = PatchHelpers.FabOf(__instance);
+                if (fab == null)
+                {
+                    return;
+                }
+
+                if (__instance.GetRecipeQueueCount(__state) <= 0)
+                {
+                    fab.NoteRecipeCleared(__state.id);
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("批次完成同步补丁异常：" + e);
             }
         }
     }

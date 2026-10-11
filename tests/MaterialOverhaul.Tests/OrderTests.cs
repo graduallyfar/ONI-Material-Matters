@@ -17,6 +17,25 @@ namespace MaterialOverhaul.Tests
             YieldKeepsRoundProgress();
             RemoveFixesCursorAndLock();
             RestoreKeepsOrder();
+            PeekNextCandidate();
+        }
+
+        private static void PeekNextCandidate()
+        {
+            TestRunner.Section("候选取值（接入层映射用）");
+            OrderQueue queue = Build("copper", "iron", "gold");
+            TestRunner.CheckEqual("copper", queue.PeekNextRecipeId(), "初始候选为第一项");
+
+            HashSet<string> ready = Ready("gold");
+            queue.SelectNext(o => ready.Contains(o.RecipeId));
+            TestRunner.CheckEqual("gold", queue.PeekNextRecipeId(), "缺料跳过后候选为选中的订单");
+
+            OrderQueue empty = new OrderQueue();
+            TestRunner.Check(empty.PeekNextRecipeId() == null, "空队列没有候选");
+
+            OrderQueue restored = new OrderQueue();
+            restored.Restore(new List<OrderEntry> { OrderEntry.Limited("a", 1), OrderEntry.Limited("b", 1) }, 1);
+            TestRunner.CheckEqual("b", restored.PeekNextRecipeId(), "读档后候选按恢复的轮换位置");
         }
 
         private static OrderQueue Build(params string[] recipeIds)
