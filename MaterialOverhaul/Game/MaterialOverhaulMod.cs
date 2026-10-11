@@ -28,10 +28,57 @@ namespace MaterialOverhaul
 
             Core.DebugValues.Initialize(path);
 
+            // 注册本 Mod 的本地化键树。原版 OverloadStrings 只能覆盖已存在的 LocString 字段、
+            // 无法新增键，所以必须在这里显式建键，否则界面会显示 MISSING.STRINGS.*。
+            RegisterStrings();
+            LoadModStrings();
+
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count
                 + "，要求硬度条目 " + HardnessRequirementTable.Count + "。");
+        }
+
+        /// <summary>
+        /// 把 <see cref="Game.ModStrings"/> 的各分支注册成键。
+        /// 键名 = "STRINGS." + 嵌套类名 + "." + 字段名，所以这里按三个顶层分支分别注册，
+        /// 避免把 ModStrings 自身的类名也拼进键里。
+        /// </summary>
+        private static void RegisterStrings()
+        {
+            LocString.CreateLocStringKeys(typeof(Game.ModStrings.UI), "STRINGS.");
+            LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDINGS), "STRINGS.");
+            LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDING), "STRINGS.");
+        }
+
+        /// <summary>
+        /// 注册之后再读 mod 的 strings/*.po 做覆盖。
+        ///
+        /// 顺序很关键：原版自己的 `Mod.LoadStrings` 发生在本 Mod 的 OnLoad **之前**，
+        /// 那时键还没建，它覆盖不到任何自定义键；只有这里手动加载才真正生效。
+        /// 当前 .po 的内容与字段默认值一致，保留它主要是给后续加其它语言留入口。
+        /// </summary>
+        private void LoadModStrings()
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(path ?? string.Empty, "strings");
+                if (string.IsNullOrEmpty(path) || !System.IO.Directory.Exists(dir))
+                {
+                    return;
+                }
+
+                foreach (string file in System.IO.Directory.GetFiles(dir, "*.po"))
+                {
+                    Localization.OverloadStrings(Localization.LoadStringsFile(file, isTemplate: false));
+                    ModLog.Info("已加载本地化文件 " + System.IO.Path.GetFileName(file));
+                }
+            }
+            catch (Exception e)
+            {
+                // 本地化失败不影响功能：字段默认值本身就可显示。
+                ModLog.Warn("加载本地化文件失败（界面将使用内置默认文本）：" + e.Message);
+            }
         }
     }
 }
