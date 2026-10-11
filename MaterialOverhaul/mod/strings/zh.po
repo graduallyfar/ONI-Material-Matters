@@ -1,0 +1,105 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: MaterialOverhaul\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not Included\n"
+
+#. 建筑面板：运行模式切换
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_DEFAULT
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_DEFAULT"
+msgid "Switch to Default Mode"
+msgstr "切换为默认模式"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_CONTROL
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_CONTROL"
+msgid "Switch to Control Mode"
+msgstr "切换为控制模式"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_DEFAULT
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_DEFAULT"
+msgid "Default mode: production is allowed across the whole working temperature range; temperature only changes efficiency."
+msgstr "默认模式：在整个可工作温区内都能生产，温度只影响效率。"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_CONTROL
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_CONTROL"
+msgid "Control mode: production only inside the best temperature range, and top-up heating runs while producing below the top-up line."
+msgstr "控制模式：只在最佳温区内生产；生产时温度低于补热线会自动补热。"
+
+#. 建筑面板：强制运行开关
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.ENABLE
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.ENABLE"
+msgid "Enable Forced Run"
+msgstr "开启强制运行"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.DISABLE
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.DISABLE"
+msgid "Disable Forced Run"
+msgstr "关闭强制运行"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE"
+msgid "Forced run: keep producing outside the working temperature range and keep heating. Materials, power, automation permission and building health still apply."
+msgstr "强制运行：不因温区越界停止生产，并持续加热。原料、供电、自动化生产许可与建筑完好仍然必须满足。"
+
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE"
+msgid "Forced run is on. Turning it off re-evaluates production permission under the selected mode and keeps the current batch."
+msgstr "强制运行已开启。关闭后按当前模式的温区限制重新判断生产许可，并保留当前批次。"
+
+#. 机械磨损的伤害来源
+#. STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR
+msgctxt "STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR"
+msgid "Mechanical Wear"
+msgstr "机械磨损"
+
+#. 损坏原因状态项：只有机械损坏
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.MECHANICAL.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.MECHANICAL.NAME"
+msgid "Mechanical Damage"
+msgstr "机械损坏"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.MECHANICAL.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.MECHANICAL.TOOLTIP"
+msgid "The primary construction material is too soft; wear accumulated with actual production time caused this damage. Repaired normally, temperature is not reset."
+msgstr "主建造材料硬度不足，按实际生产时间累计磨损导致损坏。维修采用普通方式，不重置温度。"
+
+#. 损坏原因状态项：只有过热损坏
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.NAME"
+msgid "Overheat Damage"
+msgstr "过热损坏"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.TOOLTIP"
+msgid "The building body exceeded its overheat threshold. Repaired as an overheat repair, which resets temperature."
+msgstr "建筑本体温度超过过热阈值导致损坏。维修按原版过热方式处理并重置温度。"
+
+#. 损坏原因状态项：机械与过热同时存在
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.NAME"
+msgid "Mechanical + Overheat Damage"
+msgstr "机械损坏＋过热损坏"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.TOOLTIP"
+msgid "Both mechanical wear and overheat damage are present. Repair is handled as an overheat repair and resets temperature; this does not add an extra mechanical damage tick."
+msgstr "同时存在机械磨损与过热损坏。维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。"
+
+#. 逻辑端口：温区输出信号
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION"
+msgid "Temperature Zone Signal"
+msgstr "温区信号"
+
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"
+msgid "Locked batch is inside the best temperature range"
+msgstr "已锁定批次处于最佳温区"
+
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
+msgid "Outside the best temperature range, or no locked batch"
+msgstr "未处于最佳温区，或没有已锁定批次"

@@ -53,12 +53,23 @@ foreach ($meta in @('mod.yaml', 'mod_info.yaml')) {
     Copy-Item -LiteralPath (Join-Path (Join-Path $projectRoot 'mod') $meta) -Destination $target -Force
 }
 
-# 本地化：mod 的 translations\<lang>.json 由游戏按当前语言加载
-$translations = Join-Path (Join-Path $projectRoot 'mod') 'translations'
-if (Test-Path -LiteralPath $translations) {
-    $destTranslations = Join-Path $target 'translations'
-    New-Item -ItemType Directory -Path $destTranslations -Force | Out-Null
-    Copy-Item -Path (Join-Path $translations '*') -Destination $destTranslations -Recurse -Force
+# 本地化：原版只扫描 mod 目录下的 strings\*.po（Mod.LoadStrings 只接受 .po 扩展名），
+# 其它目录名（例如 translations）与 .json/.hjson 都不会被读取，会导致界面显示 MISSING.STRINGS.*。
+$strings = Join-Path (Join-Path $projectRoot 'mod') 'strings'
+if (Test-Path -LiteralPath $strings) {
+    $destStrings = Join-Path $target 'strings'
+    New-Item -ItemType Directory -Path $destStrings -Force | Out-Null
+    Copy-Item -Path (Join-Path $strings '*') -Destination $destStrings -Recurse -Force
+}
+
+# 清理历史遗留、不被原版识别的 translations 目录（路径先解析核对再删）
+$stale = Join-Path $target 'translations'
+if (Test-Path -LiteralPath $stale) {
+    $resolvedStale = (Resolve-Path -LiteralPath $stale).Path
+    if ($resolvedStale -eq $stale) {
+        Remove-Item -LiteralPath $resolvedStale -Recurse -Force
+        Write-Host "已清理不被识别的 translations 目录"
+    }
 }
 
 $leaked = Get-ChildItem -LiteralPath $target -Filter 'Assembly-CSharp*.dll' -ErrorAction SilentlyContinue
