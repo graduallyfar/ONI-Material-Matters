@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 本地游戏路径：GameDir 定义在 local.props（不提交），见 local.props.example -->
+  <Import Project="local.props" Condition="Exists('local.props')" />
+
+  <PropertyGroup>
+    <!-- 目标框架由游戏程序集核实：OxygenNotIncluded_Data\Managed\netstandard.dll 为 2.1.0.0 -->
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>MaterialOverhaul</AssemblyName>
+    <RootNamespace>MaterialOverhaul</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <DebugType>portable</DebugType>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <!-- 构建产物统一放到工作区 _build，不进入工程目录 -->
+    <OutputPath>..\_build\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- Unity/游戏程序集与 netstandard 引用程序集之间存在版本告警，属预期 -->
+    <NoWarn>$(NoWarn);CS1701;CS1702;CS0436</NoWarn>
+    <!-- 游戏程序集与 netstandard2.1 引用程序集之间的版本冲突提示，属预期，降级为消息 -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ManagedDir Condition="'$(GameDir)' != ''">$(GameDir)\OxygenNotIncluded_Data\Managed</ManagedDir>
+  </PropertyGroup>
+
+  <Target Name="CheckGameDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(GameDir)' == ''"
+           Text="未配置游戏路径。请复制 local.props.example 为 local.props，并把 GameDir 设为缺氧安装根目录。" />
+    <Error Condition="!Exists('$(ManagedDir)\Assembly-CSharp.dll')"
+           Text="在 '$(ManagedDir)' 找不到 Assembly-CSharp.dll。请检查 local.props 中的 GameDir 是否指向游戏安装根目录。" />
+  </Target>
+
+  <ItemGroup>
+    <!-- 游戏原版程序集：只引用，不复制进产物 -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(ManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Harmony 由游戏自带（0Harmony 2.4.2.0），不打包 -->
+    <Reference Include="0Harmony">
+      <HintPath>$(ManagedDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

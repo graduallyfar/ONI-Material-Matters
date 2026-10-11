@@ -1,0 +1,9 @@
+<Project>
+  <!--
+    复制本文件为 local.props，把 GameDir 改成自己的缺氧游戏安装根目录。
+    local.props 已被 .gitignore 忽略，不会提交。
+  -->
+  <PropertyGroup>
+    <GameDir>X:\SteamLibrary\steamapps\common\OxygenNotIncluded</GameDir>
+  </PropertyGroup>
+</Project>
