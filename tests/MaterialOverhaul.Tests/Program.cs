@@ -11,6 +11,7 @@ namespace MaterialOverhaul.Tests
 
             Run("Zones", ZoneTests.Run);
             Run("Orders", OrderTests.Run);
+            Run("强制运行与加热意图", RunPolicyAndHeatingTests.Run);
             Run("Heating / Hardness", HeatingAndWearTests.Run);
 
             Console.WriteLine();

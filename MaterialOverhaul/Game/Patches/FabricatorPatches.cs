@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Game;
+using MaterialOverhaul.Zones;
 using UnityEngine;
 
 namespace MaterialOverhaul.Patches
@@ -85,7 +86,7 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                ProductionGate gate = fab.EvaluateFor(recipe);
+                ProductionDecision gate = fab.EvaluateFor(recipe);
                 if (!gate.AllowsProduction)
                 {
                     __result = 0f;
@@ -128,7 +129,7 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                ProductionGate gate = fab.EvaluateFor(recipe);
+                ProductionDecision gate = fab.EvaluateFor(recipe);
                 __result *= gate.AllowsProduction ? gate.Efficiency : 0f;
             }
             catch (Exception e)

@@ -7,23 +7,6 @@ using MaterialOverhaul.Zones;
 
 namespace MaterialOverhaul.Game
 {
-    /// <summary>当前配方的生产许可与温度效率评估结果。</summary>
-    public struct ProductionGate
-    {
-        /// <summary>是否允许推进生产。低于最低可工作温度或高于最高可工作温度时为 false。</summary>
-        public bool AllowsProduction;
-
-        /// <summary>温度效率 η_T。未配置温区时恒为 1。</summary>
-        public float Efficiency;
-
-        public TempState State;
-
-        public TempZone Zone;
-
-        /// <summary>该配方是否在温区侧表中匹配到条目；false 表示已退化为原版行为。</summary>
-        public bool ZoneConfigured;
-    }
-
     /// <summary>
     /// 建筑级组件：温区判断、加热判断与硬度磨损累计的游戏侧载体
     /// （V0.0.1 开发计划 §3.5：判断机制属于建筑级组件，所有启用建筑共用同一份实现）。
@@ -69,6 +52,35 @@ namespace MaterialOverhaul.Game
         [Serialize] private int orderCursor;
         [Serialize] private float wearAccumulated;
         [Serialize] private string lockedRecipeId = string.Empty;
+        [Serialize] private bool controlMode;
+        [Serialize] private bool forcedRun;
+
+        /// <summary>
+        /// 运行模式与强制运行开关。V0.0.1 未接入建筑面板开关，默认模式且不强制；
+        /// 面板控件与自动化接入属后续版本，字段已随存档持久化（§8.1）。
+        /// </summary>
+        public RunPolicy Policy
+        {
+            get { return new RunPolicy { ControlMode = controlMode, Forced = forcedRun }; }
+        }
+
+        /// <summary>当前配方的目标温区；无配方或未匹配时为 Disabled。</summary>
+        public TempZone CurrentZone
+        {
+            get { return cachedZone; }
+        }
+
+        /// <summary>切换默认／控制模式。面板控件属后续版本，本版只保留语义入口。</summary>
+        public void SetControlMode(bool control)
+        {
+            controlMode = control;
+        }
+
+        /// <summary>切换强制运行开关。本版未接入面板与自动化，只保留语义入口。</summary>
+        public void SetForcedRun(bool forced)
+        {
+            forcedRun = forced;
+        }
 
         public OrderQueue Orders
         {
@@ -114,46 +126,38 @@ namespace MaterialOverhaul.Game
 
         /// <summary>
         /// 评估该配方的生产许可与温度效率。配方标识变化时才重新查侧表，避免每次调用查表与刷日志。
+        /// 模式与强制运行只影响生产许可，不改变效率曲线（判断层 <see cref="TempZoneEvaluator.Decide"/>）。
         /// </summary>
-        public ProductionGate EvaluateFor(ComplexRecipe recipe)
+        public ProductionDecision EvaluateFor(ComplexRecipe recipe)
         {
             if (recipe == null)
             {
-                ProductionGate passthrough = default(ProductionGate);
-                passthrough.AllowsProduction = true;
-                passthrough.Efficiency = 1f;
-                passthrough.State = TempState.Disabled;
-                passthrough.Zone = TempZone.Disabled;
-                passthrough.ZoneConfigured = false;
-                return passthrough;
+                return ProductionDecision.Passthrough;
             }
 
-            if (recipe.id != cachedRecipeId)
+            UpdateCachedZone(recipe.id);
+
+            ProductionDecision decision = TempZoneEvaluator.Decide(BodyTemperature, cachedZone, Policy);
+            CurrentState = decision.State;
+            CurrentEfficiency = decision.Efficiency;
+            return decision;
+        }
+
+        private void UpdateCachedZone(string recipeId)
+        {
+            if (recipeId == cachedRecipeId)
             {
-                cachedRecipeId = recipe.id;
-                cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
-                if (!cachedZoneConfigured)
-                {
-                    cachedZone = TempZone.Disabled;
-                    ModLog.WarnOnce("zone|missing|" + cachedRecipeId,
-                        "配方温区：未匹配到配方 '" + cachedRecipeId + "'（建筑 " + PrefabId + "），该配方退化为原版行为。");
-                }
+                return;
             }
 
-            float temperature = BodyTemperature;
-            TempState state = TempZoneEvaluator.Evaluate(temperature, cachedZone);
-            float efficiency = TempZoneEvaluator.Efficiency(state, temperature, cachedZone);
-
-            CurrentState = state;
-            CurrentEfficiency = efficiency;
-
-            ProductionGate gate = default(ProductionGate);
-            gate.AllowsProduction = state.AllowsProduction();
-            gate.Efficiency = efficiency;
-            gate.State = state;
-            gate.Zone = cachedZone;
-            gate.ZoneConfigured = cachedZoneConfigured;
-            return gate;
+            cachedRecipeId = recipeId;
+            cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
+            if (!cachedZoneConfigured)
+            {
+                cachedZone = TempZone.Disabled;
+                ModLog.WarnOnce("zone|missing|" + cachedRecipeId,
+                    "配方温区：未匹配到配方 '" + cachedRecipeId + "'（建筑 " + PrefabId + "），该配方退化为原版行为。");
+            }
         }
 
         /// <summary>
@@ -206,11 +210,11 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            ProductionGate gate = EvaluateFor(working);
+            ProductionDecision gate = EvaluateFor(working);
             LogStateIfChanged(working, gate);
         }
 
-        private void LogStateIfChanged(ComplexRecipe recipe, ProductionGate gate)
+        private void LogStateIfChanged(ComplexRecipe recipe, ProductionDecision gate)
         {
             if (hasLoggedState && gate.State == lastLoggedState)
             {

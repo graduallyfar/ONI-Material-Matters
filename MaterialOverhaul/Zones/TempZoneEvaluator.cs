@@ -87,6 +87,32 @@ namespace MaterialOverhaul.Zones
             }
         }
 
+        /// <summary>
+        /// 结合运行模式与强制运行开关给出完整结论。
+        ///
+        /// 模式只改变「是否允许生产」，不改变效率曲线：
+        ///   默认模式 —— 整个可工作温区内允许生产；
+        ///   控制模式 —— 只在最佳温区内允许生产；
+        ///   强制运行 —— 无论是否越界都允许生产，效率仍按五态取值，越界保持对应侧边界效率。
+        /// </summary>
+        public static ProductionDecision Decide(float bodyTemp, TempZone zone, RunPolicy policy)
+        {
+            if (zone.IsDisabled)
+            {
+                return ProductionDecision.Passthrough;
+            }
+
+            TempState state = Evaluate(bodyTemp, zone);
+
+            ProductionDecision decision = default(ProductionDecision);
+            decision.State = state;
+            decision.Efficiency = Efficiency(state, bodyTemp, zone);
+            decision.ZoneConfigured = true;
+            decision.AllowsProduction = policy.Forced
+                || (policy.ControlMode ? state == TempState.Normal : state.AllowsProduction());
+            return decision;
+        }
+
         /// <summary>效率直接取值的便捷重载。</summary>
         public static float Efficiency(float bodyTemp, TempZone zone)
         {
