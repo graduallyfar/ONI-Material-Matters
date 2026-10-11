@@ -17,6 +17,13 @@
           }
         }
       }
+    },
+    "BUILDINGS": {
+      "DAMAGESOURCES": {
+        "MATERIALOVERHAUL": {
+          "MECHANICAL_WEAR": "机械磨损"
+        }
+      }
     }
   }
 }

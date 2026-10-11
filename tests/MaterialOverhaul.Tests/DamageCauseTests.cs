@@ -8,6 +8,24 @@ namespace MaterialOverhaul.Tests
         {
             CauseSelection();
             RepairRules();
+            Conversion();
+        }
+
+        private static void Conversion()
+        {
+            TestRunner.Section("磨损到伤害的转换（系数占位）");
+            TestRunner.Check(!DamageConversion.IsConfigured, "默认未配置转换系数");
+            TestRunner.CheckEqual(0, DamageConversion.DamageFor(10), "未配置时不产生伤害");
+            TestRunner.CheckEqual(0, DamageConversion.DamageFor(0), "零磨损不产生伤害");
+            TestRunner.CheckEqual(0, DamageConversion.DamageFor(-3), "负磨损不产生伤害");
+
+            DamageConversion.DamagePerWearUnit = 0.5f;
+            TestRunner.Check(DamageConversion.IsConfigured, "配置后标记为已配置");
+            TestRunner.CheckEqual(5, DamageConversion.DamageFor(10), "按系数折算并向下取整");
+            TestRunner.CheckEqual(0, DamageConversion.DamageFor(1), "不足 1 点伤害时返回 0");
+
+            DamageConversion.DamagePerWearUnit = 0f;
+            TestRunner.Check(!DamageConversion.IsConfigured, "复位后回到未配置");
         }
 
         private static void CauseSelection()

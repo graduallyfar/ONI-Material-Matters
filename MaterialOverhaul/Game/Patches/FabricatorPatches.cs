@@ -179,6 +179,7 @@ namespace MaterialOverhaul.Patches
                 {
                     fab.RefreshStatus();
                     fab.TickHeating(dt);
+                    fab.TickDamage();
                 }
             }
             catch (Exception e)

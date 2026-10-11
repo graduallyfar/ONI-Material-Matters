@@ -42,6 +42,11 @@ namespace MaterialOverhaul.Game
         private const string KeyForcedTooltipEnable = KeyPrefix + "FORCEDRUN.TOOLTIP_ENABLE";
         private const string KeyForcedTooltipDisable = KeyPrefix + "FORCEDRUN.TOOLTIP_DISABLE";
 
+        /// <summary>原版建筑受伤事件（GameHashes.DoBuildingDamage = -794517298）。</summary>
+        private const int DoBuildingDamageHash = -794517298;
+
+        private const string KeyDamageSourceMechanical = "STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR";
+
         private ComplexFabricator fabricator;
         private PrimaryElement primaryElement;
 
@@ -65,6 +70,13 @@ namespace MaterialOverhaul.Game
         private EnergyConsumer energyConsumer;
         private BuildingEnabledButton enabledButton;
         private BuildingHP buildingHP;
+        private Overheatable overheatable;
+
+        // 损坏状态：只维护当前尚未修复的原因，不做历史统计。
+        private bool overheated;
+        private bool mechanicalDamaged;
+        private DamageCause lastLoggedDamageCause = DamageCause.None;
+        private bool hasLoggedDamageCause;
 
         /// <summary>本建筑的 prefab id，作为侧表索引。</summary>
         public string PrefabId { get; private set; }
@@ -135,6 +147,7 @@ namespace MaterialOverhaul.Game
             energyConsumer = GetComponent<EnergyConsumer>();
             enabledButton = GetComponent<BuildingEnabledButton>();
             buildingHP = GetComponent<BuildingHP>();
+            overheatable = GetComponent<Overheatable>();
 
             KPrefabID prefabIdComponent = GetComponent<KPrefabID>();
             PrefabId = prefabIdComponent != null ? prefabIdComponent.PrefabTag.ToString() : gameObject.name;
@@ -391,6 +404,115 @@ namespace MaterialOverhaul.Game
             topUpActive = intent == HeatingIntent.TopUp;
 
             InjectHeat(intent, dt);
+        }
+
+        // ---- 机械磨损与损坏原因（判断在 DamageConversion / DamageCauseEvaluator）----
+
+        /// <summary>当前损坏原因（机械／过热／双重），供显示与维修方式选择使用。</summary>
+        public DamageCause CurrentDamageCause
+        {
+            get { return DamageCauseEvaluator.Evaluate(mechanicalDamaged, overheated, Policy.Forced); }
+        }
+
+        /// <summary>本次维修是否应重置温度：含过热时为真，只有机械损坏时为假。</summary>
+        public bool RepairResetsTemperature
+        {
+            get { return DamageCauseEvaluator.ResetsTemperatureOnRepair(CurrentDamageCause); }
+        }
+
+        /// <summary>
+        /// 由模拟更新驱动：检测过热、把累计磨损折算成伤害、维护当前损坏原因。
+        ///
+        /// 过热检测**独立于生命值**：建筑损坏停机后仍要继续检测，才能把环境升温造成的过热
+        /// 追加进原因（原版过热组件在建筑损坏后进入免伤状态，只依赖扣血事件无法更新原因）。
+        /// </summary>
+        public void TickDamage()
+        {
+            UpdateOverheatState();
+            ClearDamageWhenFullyRepaired();
+            ApplyMechanicalWear();
+
+            DamageCause cause = CurrentDamageCause;
+            if (hasLoggedDamageCause && cause == lastLoggedDamageCause)
+            {
+                return;
+            }
+
+            hasLoggedDamageCause = true;
+            lastLoggedDamageCause = cause;
+            LogDamageCause(cause);
+        }
+
+        private void UpdateOverheatState()
+        {
+            if (overheatable == null || primaryElement == null)
+            {
+                overheated = false;
+                return;
+            }
+
+            overheated = primaryElement.Temperature > overheatable.OverheatTemperature;
+        }
+
+        private void ClearDamageWhenFullyRepaired()
+        {
+            // 完全修复后结束本次损坏状态；过热状态仍由实际温度决定。
+            if (buildingHP != null && !buildingHP.NeedsRepairs)
+            {
+                mechanicalDamaged = false;
+            }
+        }
+
+        private void ApplyMechanicalWear()
+        {
+            if (buildingHP == null || primaryElement == null)
+            {
+                return;
+            }
+
+            // 生命值已耗尽就不再继续扣减（损坏停机后仍检测过热，但不重复扣血）。
+            if (buildingHP.IsBroken)
+            {
+                return;
+            }
+
+            int wholeWear = (int)wear.Wear;
+            if (wholeWear <= 0)
+            {
+                return;
+            }
+
+            int damage = DamageConversion.DamageFor(wholeWear);
+            if (damage <= 0)
+            {
+                // 转换系数尚未配置：保留累计磨损，不扣血也不丢弃。
+                return;
+            }
+
+            wear.TakeWholeWear();
+
+            BuildingHP.DamageSourceInfo info = default(BuildingHP.DamageSourceInfo);
+            info.damage = damage;
+            info.source = LocalizedOr(KeyDamageSourceMechanical, "Mechanical Wear");
+            BoxingTrigger(DoBuildingDamageHash, info);
+
+            if (buildingHP.IsBroken)
+            {
+                mechanicalDamaged = true;
+            }
+        }
+
+        private void LogDamageCause(DamageCause cause)
+        {
+            if (cause == DamageCause.None)
+            {
+                return;
+            }
+
+            ModLog.Info(PrefabId + " 损坏原因：" + cause
+                + "；过热维修 " + DamageCauseEvaluator.UsesOverheatRepair(cause)
+                + "，重置温度 " + DamageCauseEvaluator.ResetsTemperatureOnRepair(cause)
+                + "，显示两种原因 " + DamageCauseEvaluator.ShowsBothCauses(cause) + "。");
         }
 
         /// <summary>
