@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using KSerialization;
 using Klei.AI;
@@ -11,23 +12,24 @@ using UnityEngine;
 namespace MaterialOverhaul.Game
 {
     /// <summary>
-    /// 建筑级组件：温区判断、加热判断与硬度磨损累计的游戏侧载体
-    /// （V0.0.1 开发计划 §3.5：判断机制属于建筑级组件，所有启用建筑共用同一份实现）。
+    /// 建筑级组件：温区运行状态、加热与电网需求、订单身份、硬度磨损与损坏原因的游戏侧载体。
     ///
     /// 组件只挂在白名单建筑上（见 <see cref="BuildingWhitelist"/>），其余建筑行为等同原版。
-    /// 判断函数本体在 Zones/Heating/Hardness 的判断层里，本类只负责：
-    ///   - 读取建筑本体温度与主建造材料硬度；
+    /// 判断本体在 Zones／Heating／Hardness／Orders 的判断层里，本类只负责：
+    ///   - 读取建筑本体温度、主建造材料硬度与运行条件；
     ///   - 按原版配方标识查侧表；
-    ///   - 保存本 Mod 自有数据（§8.1）。
+    ///   - 把判断结果接到原版流程（效率、操作任务、功率、损坏）上；
+    ///   - 保存本 Mod 自有数据（V0.0.3 开发计划 §5.3）。
     ///
-    /// 本版不接管原版产热、过热损伤、批次结算、取料与运行状态判断（§1.3 原则 1）。
+    /// 按职责拆成四个 partial 文件，避免单个建筑组件过大：
+    ///   - 本文件：生命周期、状态、序列化与对外只读视图；
+    ///   - <c>MaterialOverhaulFab.Orders.cs</c>：订单身份、批次锁定与逐笔编辑；
+    ///   - <c>MaterialOverhaulFab.Heating.cs</c>：运行状态机、加热注热与电网需求；
+    ///   - <c>MaterialOverhaulFab.Damage.cs</c>：磨损计时、损坏原因与维修。
     /// </summary>
     [SerializationConfig(MemberSerialization.OptIn)]
-    public class MaterialOverhaulFab : KMonoBehaviour
+    public partial class MaterialOverhaulFab : KMonoBehaviour, IGameObjectEffectDescriptor
     {
-        // 磨损速率取自 Core.DebugValues：默认是占位值，不产生玩法影响；
-        // 放入调试标记文件后改用样例值，便于在游戏里观察磨损与损坏原因。
-
         /// <summary>原版重新构建建筑用户菜单的事件（GameHashes.RefreshUserMenu = 493375141）。</summary>
         private const int RefreshUserMenuHash = 493375141;
 
@@ -46,8 +48,23 @@ namespace MaterialOverhaul.Game
 
         private const string KeyDamageSourceMechanical = "STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR";
 
+        /* ---- 原版组件引用（不序列化）---- */
+
         private ComplexFabricator fabricator;
         private PrimaryElement primaryElement;
+        private EnergyConsumer energyConsumer;
+        private BuildingEnabledButton enabledButton;
+        private BuildingHP buildingHP;
+        private Overheatable overheatable;
+        private LogicPorts logicPorts;
+        private Operational operational;
+        private KSelectable selectable;
+        private Building building;
+        private ComplexFabricatorWorkable workable;
+        private HandleVector<int>.Handle structureHandle;
+        private bool structureHandleResolved;
+
+        /* ---- 判断层状态（部分序列化）---- */
 
         private readonly OrderQueue orders = new OrderQueue();
         private readonly WearAccumulator wear = new WearAccumulator();
@@ -56,33 +73,64 @@ namespace MaterialOverhaul.Game
         private TempZone cachedZone = TempZone.Disabled;
         private bool cachedZoneConfigured;
 
-        private TempState lastLoggedState = TempState.Disabled;
-        private bool hasLoggedState;
+        private RunState runState = RunState.Fresh;
+        private RunDecision runDecision = RunDecision.Passthrough;
+        private PowerDemand powerDemand;
+        private DamageCauseState damageState = DamageCauseState.Fresh;
 
-        // 加热运行时状态：不持久化，读档后按实际温度与供电重新判断（§8.3）。
-        private bool preheated;
-        private bool topUpActive;
-        private HandleVector<int>.Handle structureHandle;
-        private bool structureHandleResolved;
+        private bool productionPausedByTemperature;
+        private bool mechanicalDamageMark;
+        private float currentRequestedWatts;
+        private float currentUsedWatts;
+        private float workEfficiencyMultiplier = 1f;
 
-        // 组件引用缓存，避免每次模拟更新重复 GetComponent。
-        private EnergyConsumer energyConsumer;
-        private BuildingEnabledButton enabledButton;
-        private BuildingHP buildingHP;
-        private Overheatable overheatable;
-        private LogicPorts logicPorts;
+        private float coolingSampleTemperature;
+        private float coolingSampleTimer;
+        private bool cooling;
+        private bool coolingSampleValid;
 
-        // 过热阈值（v0.0.2）：按主建造材料熔点改写，运行时不持久化，读档由 OnSpawn 重新计算。
         private bool overheatApplied;
         private float overheatTemperature;
         private AttributeModifier overheatModifier;
 
-        // 损坏状态：只维护当前尚未修复的原因，不做历史统计。
-        private bool overheated;
-        private bool mechanicalDamaged;
+        private int lastZoneSignal = -1;
+        private TempState lastLoggedState = TempState.Disabled;
+        private bool hasLoggedState;
         private DamageCause lastLoggedDamageCause = DamageCause.None;
         private bool hasLoggedDamageCause;
-        private int lastZoneSignal = -1;
+
+        /* ---- 本 Mod 自有数据，随存档落盘（§5.3）。字段在每次变化时同步，无需保存钩子。 ---- */
+
+        [Serialize] private int[] orderIds = new int[0];
+        [Serialize] private string[] orderRecipeIds = new string[0];
+        [Serialize] private bool[] orderInfinite = new bool[0];
+        [Serialize] private int[] orderRemaining = new int[0];
+        [Serialize] private int[] orderQuotas = new int[0];
+        [Serialize] private int[] orderRoundDone = new int[0];
+        [Serialize] private int orderCursor;
+        [Serialize] private int lockedOrderId;
+        [Serialize] private string lockedRecipeId = string.Empty;
+
+        [Serialize] private float wearDamageBalance;
+
+        /// <summary>
+        /// v0.0.2 的磨损字段（单位是磨损单位数）。保留只为迁移：读档时若新字段为空而它非零，
+        /// 按本版转换系数换算一次并记录迁移日志，之后不再写入。
+        /// </summary>
+        [Serialize] private float wearAccumulated;
+
+        [Serialize] private bool runStarted;
+        [Serialize] private bool runHighTempWaiting;
+        [Serialize] private bool runTopUpActive;
+
+        [Serialize] private bool causeMechanical;
+        [Serialize] private bool causeOverheat;
+        [Serialize] private bool causeForcedOverheat;
+        [Serialize] private bool causeLegacyUnknown;
+        [Serialize] private bool causeMigrationChecked;
+
+        [Serialize] private bool controlMode;
+        [Serialize] private bool forcedRun;
 
         /// <summary>本建筑的 prefab id，作为侧表索引。</summary>
         public string PrefabId { get; private set; }
@@ -93,21 +141,7 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public bool Spawned { get; private set; }
 
-        // ---- 本 Mod 自有数据，随存档落盘（§8.1）。字段在每次变化时同步，无需保存钩子。----
-        [Serialize] private string[] orderRecipeIds = new string[0];
-        [Serialize] private int[] orderRemaining = new int[0];
-        [Serialize] private int[] orderQuotas = new int[0];
-        [Serialize] private int[] orderRoundDone = new int[0];
-        [Serialize] private int orderCursor;
-        [Serialize] private float wearAccumulated;
-        [Serialize] private string lockedRecipeId = string.Empty;
-        [Serialize] private bool controlMode;
-        [Serialize] private bool forcedRun;
-
-        /// <summary>
-        /// 运行模式与强制运行开关。V0.0.1 未接入建筑面板开关，默认模式且不强制；
-        /// 面板控件与自动化接入属后续版本，字段已随存档持久化（§8.1）。
-        /// </summary>
+        /// <summary>运行模式与强制运行开关。</summary>
         public RunPolicy Policy
         {
             get { return new RunPolicy { ControlMode = controlMode, Forced = forcedRun }; }
@@ -119,36 +153,106 @@ namespace MaterialOverhaul.Game
             get { return cachedZone; }
         }
 
-        /// <summary>切换默认／控制模式。面板控件属后续版本，本版只保留语义入口。</summary>
-        public void SetControlMode(bool control)
+        /// <summary>当前配方的温区是否已配置（未配置即按原版行为运行）。</summary>
+        public bool ZoneConfigured
         {
-            controlMode = control;
+            get { return cachedZoneConfigured; }
         }
 
-        /// <summary>切换强制运行开关。本版未接入面板与自动化，只保留语义入口。</summary>
-        public void SetForcedRun(bool forced)
+        /// <summary>温区五态（用于显示）。</summary>
+        public TempState CurrentState { get; private set; }
+
+        /// <summary>温度效率 η_T。</summary>
+        public float CurrentEfficiency { get; private set; }
+
+        /// <summary>本步的运行判断结论。</summary>
+        public RunDecision CurrentDecision
         {
-            forcedRun = forced;
+            get { return runDecision; }
         }
 
+        /// <summary>本步的电力需求与实际消费。</summary>
+        public PowerDemand CurrentPower
+        {
+            get { return powerDemand; }
+        }
+
+        /// <summary>本步向电网请求的总功率（W）。未获供电时仍然存在。</summary>
+        public float CurrentRequestedWatts
+        {
+            get { return currentRequestedWatts; }
+        }
+
+        /// <summary>本步实际消费的总功率（W）。</summary>
+        public float CurrentUsedWatts
+        {
+            get { return currentUsedWatts; }
+        }
+
+        /// <summary>本步实际注入的加热意图。</summary>
+        public HeatingIntent AppliedHeating
+        {
+            get { return powerDemand.AppliedHeating; }
+        }
+
+        /// <summary>本步是否真的在推进生产（界面、磨损与生产热共享这个事实）。</summary>
+        public bool ProductionRunning
+        {
+            get { return powerDemand.ProductionRunning; }
+        }
+
+        /// <summary>本体温度是否处于下降趋势（相隔 1 s 降低超过阈值）。只影响显示文字。</summary>
+        public bool IsCooling
+        {
+            get { return cooling; }
+        }
+
+        /// <summary>当前是否因温度条件被暂停（操作任务已撤销、复制人已释放）。</summary>
+        public bool ProductionPausedByTemperature
+        {
+            get { return productionPausedByTemperature; }
+        }
+
+        /// <summary>当前是否供电。</summary>
+        public bool IsPowered
+        {
+            get { return energyConsumer == null || energyConsumer.IsPowered; }
+        }
+
+        /// <summary>是否被玩家手动禁用。</summary>
+        public bool IsManuallyDisabled
+        {
+            get { return enabledButton != null && !enabledButton.IsEnabled; }
+        }
+
+        /// <summary>是否因损坏停机。</summary>
+        public bool IsBrokenDown
+        {
+            get { return buildingHP != null && buildingHP.IsBroken; }
+        }
+
+        /// <summary>当前配方的目标温区（用于界面显示与自动化输出）。</summary>
         public OrderQueue Orders
         {
             get { return orders; }
         }
 
-        public float Wear
+        /// <summary>累计磨损（磨损单位，含未成形的部分）；用于显示。</summary>
+        public float WearUnits
         {
-            get { return wear.Wear; }
+            get { return wear.WearUnits(Balance.DamagePerWearUnit); }
         }
-
-        public TempState CurrentState { get; private set; }
-
-        public float CurrentEfficiency { get; private set; }
 
         /// <summary>当前正在生产的配方；没有生产中的批次时为 null。</summary>
         public ComplexRecipe CurrentWorkingRecipe
         {
             get { return fabricator != null ? fabricator.CurrentWorkingOrder : null; }
+        }
+
+        /// <summary>当前批次关联的订单；没有或已丢失时为 null。</summary>
+        public OrderEntry CurrentOrder
+        {
+            get { return orders.LockedBatch; }
         }
 
         protected override void OnSpawn()
@@ -162,6 +266,10 @@ namespace MaterialOverhaul.Game
             buildingHP = GetComponent<BuildingHP>();
             overheatable = GetComponent<Overheatable>();
             logicPorts = GetComponent<LogicPorts>();
+            operational = GetComponent<Operational>();
+            selectable = GetComponent<KSelectable>();
+            building = GetComponent<Building>();
+            workable = GetComponent<ComplexFabricatorWorkable>();
 
             KPrefabID prefabIdComponent = GetComponent<KPrefabID>();
             PrefabId = prefabIdComponent != null ? prefabIdComponent.PrefabTag.ToString() : gameObject.name;
@@ -169,8 +277,7 @@ namespace MaterialOverhaul.Game
             CurrentEfficiency = 1f;
             CurrentState = TempState.Disabled;
 
-            wear.Restore(wearAccumulated);
-            RestoreOrders();
+            RestoreState();
 
             // 旧存档或其它码路可能已经有原版队列数量：先纳入订单表，再按订单表重新决定下一笔。
             EnsureOrdersImported();
@@ -181,7 +288,9 @@ namespace MaterialOverhaul.Game
             // 面板开关随用户菜单刷新重建；对象清理时必须退订（AGENTS 实现约定）。
             Subscribe(RefreshUserMenuHash, OnRefreshUserMenu);
 
-            // 接入证据：确认组件确实挂到了这栋建筑上。每栋实例 spawn 时打一条，便于在日志里核对。
+            // 电网补丁按消费者反查组件；不注册就不能改写功率读数。
+            PowerRegistry.Register(energyConsumer, this);
+
             ModLog.Info("已接入建筑 " + PrefabId + "（格子 " + Grid.PosToCell(this) + "）。");
         }
 
@@ -189,6 +298,7 @@ namespace MaterialOverhaul.Game
         {
             Spawned = false;
             Unsubscribe(RefreshUserMenuHash, OnRefreshUserMenu);
+            PowerRegistry.Unregister(energyConsumer);
             base.OnCleanUp();
         }
 
@@ -198,124 +308,158 @@ namespace MaterialOverhaul.Game
             get { return primaryElement != null ? primaryElement.Temperature : 0f; }
         }
 
-        /// <summary>
-        /// 评估该配方的生产许可与温度效率。配方标识变化时才重新查侧表，避免每次调用查表与刷日志。
-        /// 模式与强制运行只影响生产许可，不改变效率曲线（判断层 <see cref="TempZoneEvaluator.Decide"/>）。
-        /// </summary>
-        public ProductionDecision EvaluateFor(ComplexRecipe recipe)
+        /// <summary>该建筑是否启用本 Mod 的内置加热与加热用电。</summary>
+        public bool SupportsBuiltInHeating
         {
-            if (recipe == null)
-            {
-                return ProductionDecision.Passthrough;
-            }
-
-            UpdateCachedZone(recipe.id);
-
-            ProductionDecision decision = TempZoneEvaluator.Decide(BodyTemperature, cachedZone, Policy);
-            CurrentState = decision.State;
-            CurrentEfficiency = decision.Efficiency;
-            return decision;
+            get { return HeatingScope.IsEnabled(PrefabId); }
         }
 
-        private void UpdateCachedZone(string recipeId)
+        /* ---- 序列化 ---- */
+
+        private void RestoreState()
         {
-            if (recipeId == cachedRecipeId)
+            wear.Restore(wearDamageBalance);
+            MigrateLegacyWear();
+
+            runState = new RunState
+            {
+                Started = runStarted,
+                HighTempWaiting = runHighTempWaiting,
+                TopUpActive = runTopUpActive
+            };
+
+            damageState = new DamageCauseState
+            {
+                MechanicalLatched = causeMechanical,
+                OverheatLatched = causeOverheat,
+                ForcedOverheatLatched = causeForcedOverheat,
+                LegacyUnknown = causeLegacyUnknown
+            };
+
+            MigrateLegacyDamageCause();
+            RestoreOrders();
+        }
+
+        /// <summary>
+        /// 迁移 v0.0.2 的磨损字段：旧存档记的是磨损单位数，本版按伤害余额记。
+        /// 只在旧值非零、新值为零且尚未迁移过时换算一次，并把旧字段清零避免重复换算。
+        /// </summary>
+        private void MigrateLegacyWear()
+        {
+            if (wearDamageBalance > 0f || wearAccumulated <= 0f)
             {
                 return;
             }
 
-            cachedRecipeId = recipeId;
-            cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
-
-            if (!cachedZoneConfigured && !ContentRegistration.ZonesResolved)
-            {
-                // 兜底：配方温区还没在「配方表可用」的时机登记过（加载顺序变化或钩子未命中）时，
-                // 第一次有建筑要用配方时再补一次，避免整套温区静默失效。
-                ContentRegistration.Apply();
-                cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
-            }
-
-            if (!cachedZoneConfigured)
-            {
-                cachedZone = TempZone.Disabled;
-                ModLog.WarnOnce("zone|missing|" + cachedRecipeId,
-                    "配方温区：未匹配到配方 '" + cachedRecipeId + "'（建筑 " + PrefabId + "），该配方退化为原版行为。");
-            }
+            wear.RestoreWearUnits(wearAccumulated, DamageConversion.DamagePerWearUnit);
+            ModLog.Info(PrefabId + "：迁移旧存档磨损 " + wearAccumulated.ToString("F3")
+                + " 磨损单位 → " + wear.DamageBalance.ToString("F3") + " HP 伤害余额。");
+            wearAccumulated = 0f;
+            wearDamageBalance = wear.DamageBalance;
         }
 
         /// <summary>
-        /// 按实际生产时间累计机械磨损。只有实际生产推进时调用
-        /// （预热、待机、暂停、维修、损坏停机都不调用，§6.3）。
+        /// 迁移旧存档的损坏原因：v0.0.2 的布尔原因只在「已损坏停机」时才置位，无法区分来源时
+        /// 明确标为迁移未知，保留原版维修温度行为，不猜成纯机械（§5.3）。
         /// </summary>
-        public void AccumulateProduction(float seconds)
+        private void MigrateLegacyDamageCause()
         {
-            if (seconds <= 0f || !HasHardnessDeficit())
+            if (causeMigrationChecked)
             {
                 return;
             }
 
-            wear.AccumulateProduction(seconds, DebugValues.WearPerSecond);
-            wearAccumulated = wear.Wear;
+            causeMigrationChecked = true;
+
+            if (!damageState.IsClean)
+            {
+                return;
+            }
+
+            if (buildingHP != null && buildingHP.NeedsRepairs)
+            {
+                damageState.LegacyUnknown = true;
+                ModLog.Info(PrefabId + "：旧存档存在未修复损伤但缺少来源记录，按「来源未知」处理，保留原版维修温度行为。");
+            }
         }
 
-        /// <summary>
-        /// 主建造材料硬度是否低于要求硬度。
-        /// 实际硬度取主建造材料（原版索引 0 的材料写入 PrimaryElement.ElementID），辅料不参与（§6.1）。
-        /// 未列入要求硬度表的建筑不产生机械磨损（§6.2）。
-        /// </summary>
-        public bool HasHardnessDeficit()
+        private void SyncWearField()
         {
-            if (primaryElement == null || primaryElement.Element == null)
-            {
-                return false;
-            }
-
-            if (!HardnessRequirementTable.TryGet(PrefabId, out byte required))
-            {
-                return false;
-            }
-
-            return primaryElement.Element.hardness < required;
+            wearDamageBalance = wear.DamageBalance;
         }
 
-        /// <summary>由模拟更新驱动刷新（补丁挂在 ComplexFabricator.Sim200ms 上，不自行注册调度）。</summary>
-        public void RefreshStatus()
+        private void SyncRunStateFields()
+        {
+            runStarted = runState.Started;
+            runHighTempWaiting = runState.HighTempWaiting;
+            runTopUpActive = runState.TopUpActive;
+        }
+
+        private void SyncDamageFields()
+        {
+            causeMechanical = damageState.MechanicalLatched;
+            causeOverheat = damageState.OverheatLatched;
+            causeForcedOverheat = damageState.ForcedOverheatLatched;
+            causeLegacyUnknown = damageState.LegacyUnknown;
+            causeMigrationChecked = true;
+        }
+
+        /* ---- 运行模式与强制运行（建筑细节文档 §2.1、§2.1.4）---- */
+
+        /// <summary>切换默认／控制模式。保留批次与进度，只重建启动条件与加热意图。</summary>
+        public void SetControlMode(bool control)
+        {
+            if (controlMode == control)
+            {
+                return;
+            }
+
+            controlMode = control;
+            OnPolicyOrModeChanged();
+        }
+
+        /// <summary>切换强制运行开关。保留批次、磨损与损坏原因。</summary>
+        public void SetForcedRun(bool forced)
+        {
+            if (forcedRun == forced)
+            {
+                return;
+            }
+
+            forcedRun = forced;
+            OnPolicyOrModeChanged();
+        }
+
+        /// <summary>模式／强制切换后重建运行状态，并立刻重新判断（不清批次、不清进度与原因）。</summary>
+        private void OnPolicyOrModeChanged()
         {
             ComplexRecipe working = CurrentWorkingRecipe;
-            if (working == null)
+            if (working != null)
             {
-                cachedRecipeId = null;
-                cachedZone = TempZone.Disabled;
-                cachedZoneConfigured = false;
-                CurrentState = TempState.Disabled;
-                CurrentEfficiency = 1f;
-                hasLoggedState = false;
-                UpdateTemperatureZoneSignal();
-                return;
+                UpdateCachedZone(working.id);
+                if (cachedZoneConfigured)
+                {
+                    runState = RunController.OnPolicyChanged(BodyTemperature, cachedZone, Policy, runState);
+                    SyncRunStateFields();
+                }
             }
 
-            ProductionDecision gate = EvaluateFor(working);
-            LogStateIfChanged(working, gate);
-            UpdateTemperatureZoneSignal();
+            productionPausedByTemperature = false;
+
+            if (fabricator != null)
+            {
+                // 让原版在下一轮刷新队列时重新校验当前订单。
+                fabricator.SetQueueDirty();
+            }
+
+            if (global::Game.Instance != null)
+            {
+                global::Game.Instance.userMenu.Refresh(gameObject);
+            }
         }
 
-        /// <summary>
-        /// 温区输出信号：有已锁定配方且处于最佳温区为 1，其余为 0。
-        /// 没有配方时输出不活动的红信号，不设置第三种空信号；绿色只代表温度条件满足，不代表正在生产。
-        /// </summary>
-        private void UpdateTemperatureZoneSignal()
-        {
-            bool hasLockedBatch = CurrentWorkingRecipe != null;
-            bool inBestZone = CurrentState == TempState.Normal;
-            TemperatureZoneSignal.Send(logicPorts, ref lastZoneSignal, hasLockedBatch, inBestZone);
-        }
+        /* ---- 界面入口 ---- */
 
-        // ---- 建筑面板开关：模式与强制运行（建筑细节文档 §2.1、§2.1.4）----
-
-        /// <summary>
-        /// 往建筑面板加两个独立按钮：模式切换与强制运行开关。
-        /// 两者都会立即重新判断生产许可与加热状态，但**保留当前批次**（不清进度、不丢原料）。
-        /// </summary>
         private void OnRefreshUserMenu(object data)
         {
             if (fabricator == null || global::Game.Instance == null)
@@ -323,7 +467,6 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            // 按钮文本与提示描述的是「按下去会进入的状态」，所以取目标模式的那一条。
             string modeText = controlMode
                 ? LocalizedOr(KeyModeToDefault, "Switch to Default Mode")
                 : LocalizedOr(KeyModeToControl, "Switch to Control Mode");
@@ -334,7 +477,7 @@ namespace MaterialOverhaul.Game
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_control",
                 text: modeText,
-                on_click: ToggleControlMode,
+                on_click: () => SetControlMode(!controlMode),
                 tooltipText: modeTooltip));
 
             string forcedText = forcedRun
@@ -347,837 +490,213 @@ namespace MaterialOverhaul.Game
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_power",
                 text: forcedText,
-                on_click: ToggleForcedRun,
+                on_click: () => SetForcedRun(!forcedRun),
                 tooltipText: forcedTooltip));
-        }
-
-        private void ToggleControlMode()
-        {
-            SetControlMode(!controlMode);
-            OnPolicyChanged();
-        }
-
-        private void ToggleForcedRun()
-        {
-            SetForcedRun(!forcedRun);
-            OnPolicyChanged();
-        }
-
-        /// <summary>切换开关后重新判断许可与加热状态；不清除批次、不动进度与磨损。</summary>
-        private void OnPolicyChanged()
-        {
-            topUpActive = false;
-
-            if (fabricator != null)
-            {
-                // 让原版在下一轮刷新队列时重新校验当前订单。
-                fabricator.SetQueueDirty();
-            }
-
-            RefreshStatus();
-
-            if (global::Game.Instance != null)
-            {
-                global::Game.Instance.userMenu.Refresh(gameObject);
-            }
         }
 
         /// <summary>
         /// 取本地化文本；键缺失时回退到内置英文，避免界面出现空白或原始键名。
         /// 键本身是主路径（AGENTS 实现约定：新增界面文本使用本地化键）。
         /// </summary>
-        private static string LocalizedOr(string key, string fallback)
+        internal static string LocalizedOr(string key, string fallback)
         {
             string value = Strings.Get(key);
             return string.IsNullOrEmpty(value) ? fallback : value;
         }
 
-        // ---- 预热与补热（判断在 HeatingPlanner，这里只负责取状态与注入热量）----
+        /* ---- 信息卡 ---- */
 
         /// <summary>
-        /// 由模拟更新驱动（补丁挂在 ComplexFabricator.Sim200ms 上）。
-        ///
-        /// 自动化红信号**不参与**这里的判断：它只停止生产，不阻止预热与补热
-        /// （建筑细节文档 §2.2.1、AGENTS 已确认约束），所以这里查的是供电、手动禁用与损坏，
-        /// 而不是 Operational.IsOperational（后者会把自动化信号一并算进来）。
+        /// 建筑信息卡的效果条目（§7.1）。文本只反映本步的真实条件：
+        /// 允许生产不会被写成正在生产，只有实际注热才写预热／补热／持续加热。
         /// </summary>
-        public void TickHeating(float dt)
+        public List<Descriptor> GetDescriptors(GameObject go)
         {
-            if (dt <= 0f || primaryElement == null)
+            List<Descriptor> list = new List<Descriptor>();
+            try
             {
-                return;
+                ComplexRecipe working = CurrentWorkingRecipe;
+                OrderEntry current = CurrentOrder;
+
+                list.Add(DescriptorText(RunStatusText.Compose(this)));
+
+                if (cachedZoneConfigured)
+                {
+                    list.Add(DescriptorText(string.Format(
+                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE", "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"),
+                        GameUtil.GetFormattedTemperature(cachedZone.WorkMin),
+                        GameUtil.GetFormattedTemperature(cachedZone.WorkMax),
+                        GameUtil.GetFormattedTemperature(cachedZone.BestMin),
+                        GameUtil.GetFormattedTemperature(cachedZone.BestMax))));
+                }
+
+                if (working != null)
+                {
+                    string orderText = current != null
+                        ? OrderSummary(current)
+                        : LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER", "当前批次未关联订单记录（读档迁移）");
+                    list.Add(DescriptorText(string.Format(
+                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_BATCH", "当前生产：{0}，批次进度 {1}"),
+                        orderText,
+                        GameUtil.GetFormattedPercent(Mathf.Clamp01(OrderProgressValue()) * 100f))));
+                }
+                else
+                {
+                    list.Add(DescriptorText(NextBatchText()));
+                }
+
+                list.Add(DescriptorText(string.Format(
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.POWER_LINE", "请求功率 {0}，实际用电 {1}，实际注热 {2}"),
+                    GameUtil.GetFormattedWattage(currentRequestedWatts),
+                    GameUtil.GetFormattedWattage(currentUsedWatts),
+                    HeatingIntentText(powerDemand.AppliedHeating))));
+
+                list.Add(DescriptorText(HardnessText()));
+
+                // 过热「条件」与「已受损」分开显示：只超过阈值时说明后果，不写成已经受损。
+                if (IsAboveOverheatThreshold && !HasOverheatDamage)
+                {
+                    list.Add(DescriptorText(string.Format(
+                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_CONDITION", "本体温度已超过过热阈值 {0}，继续升温会过热受损。"),
+                        GameUtil.GetFormattedTemperature(overheatable != null ? overheatable.OverheatTemperature : 0f))));
+                }
+
+                AddOrderListDescriptors(list);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("生成建筑信息卡条目失败：" + e);
             }
 
-            TempZone zone = CurrentZone;
-            if (zone.IsDisabled)
-            {
-                preheated = false;
-                topUpActive = false;
-                return;
-            }
-
-            float temperature = BodyTemperature;
-            TempState state = TempZoneEvaluator.Evaluate(temperature, zone);
-
-            // 「已开工」状态：跌破最低可工作温度就复位，重新预热；
-            // 达到启动阈值即视为已开工。不持久化，读档后按实际温度重建。
-            if (state == TempState.BelowWorkMin)
-            {
-                preheated = false;
-            }
-            else if (temperature >= HeatingPlanner.PreheatTarget(zone, Policy))
-            {
-                preheated = true;
-            }
-
-            HeatingContext context = default(HeatingContext);
-            context.HasLockedBatch = CurrentWorkingRecipe != null;
-            context.BatchMaterialsReady = context.HasLockedBatch; // 已投料同样视为本批次材料齐全
-            context.Powered = energyConsumer == null || energyConsumer.IsPowered;
-            context.ManuallyDisabled = enabledButton != null && !enabledButton.IsEnabled;
-            context.BrokenDown = buildingHP != null && buildingHP.IsBroken;
-
-            if (!HeatingConditions.CanHeat(context))
-            {
-                topUpActive = false;
-                return;
-            }
-
-            bool allowsProduction = TempZoneEvaluator.Decide(temperature, zone, Policy).AllowsProduction;
-            bool productionRunning = preheated && allowsProduction;
-
-            HeatingIntent intent = HeatingPlanner.Decide(temperature, zone, Policy, productionRunning, topUpActive);
-            topUpActive = intent == HeatingIntent.TopUp;
-
-            InjectHeat(intent, dt);
+            return list;
         }
 
-        // ---- 机械磨损与损坏原因（判断在 DamageConversion / DamageCauseEvaluator）----
-
-        /// <summary>当前损坏原因（机械／过热／双重），供显示与维修方式选择使用。</summary>
-        public DamageCause CurrentDamageCause
-        {
-            get { return DamageCauseEvaluator.Evaluate(mechanicalDamaged, overheated, Policy.Forced); }
-        }
-
-        /// <summary>本次维修是否应重置温度：含过热时为真，只有机械损坏时为假。</summary>
-        public bool RepairResetsTemperature
-        {
-            get { return DamageCauseEvaluator.ResetsTemperatureOnRepair(CurrentDamageCause); }
-        }
-
-        /// <summary>
-        /// 由模拟更新驱动：检测过热、把累计磨损折算成伤害、维护当前损坏原因。
-        ///
-        /// 过热检测**独立于生命值**：建筑损坏停机后仍要继续检测，才能把环境升温造成的过热
-        /// 追加进原因（原版过热组件在建筑损坏后进入免伤状态，只依赖扣血事件无法更新原因）。
-        /// </summary>
-        public void TickDamage()
-        {
-            // 兜底：spawn 时主建造材料还没就绪（元素缺失等）时补一次，避免高温柔区运行却仍用原版阈值。
-            if (!overheatApplied)
-            {
-                ApplyOverheatRule();
-            }
-
-            UpdateOverheatState();
-            ClearDamageWhenFullyRepaired();
-            ApplyMechanicalWear();
-
-            DamageCause cause = CurrentDamageCause;
-            if (hasLoggedDamageCause && cause == lastLoggedDamageCause)
-            {
-                return;
-            }
-
-            hasLoggedDamageCause = true;
-            lastLoggedDamageCause = cause;
-            OnDamageCauseChanged(cause);
-        }
-
-        /// <summary>
-        /// 损坏原因变化时更新状态项。原版只保存一份 damageSourceInfo，
-        /// 所以这里由本 Mod 按当前原因显示，双重原因显示合并状态项。
-        /// </summary>
-        private void OnDamageCauseChanged(DamageCause cause)
-        {
-            UpdateDamageStatusItem(cause);
-
-            if (cause == DamageCause.None)
-            {
-                return;
-            }
-
-            ModLog.Info(PrefabId + " 损坏原因：" + cause
-                + "；过热维修 " + DamageCauseEvaluator.UsesOverheatRepair(cause)
-                + "，重置温度 " + DamageCauseEvaluator.ResetsTemperatureOnRepair(cause)
-                + "，显示两种原因 " + DamageCauseEvaluator.ShowsBothCauses(cause) + "。");
-        }
-
-        private void UpdateDamageStatusItem(DamageCause cause)
-        {
-            KSelectable selectable = GetComponent<KSelectable>();
-            if (selectable == null || DamageStatusItems.Mechanical == null)
-            {
-                // 状态项尚未登记（Db 未初始化）时跳过，不影响其他逻辑。
-                return;
-            }
-
-            selectable.RemoveStatusItem(DamageStatusItems.Mechanical);
-            selectable.RemoveStatusItem(DamageStatusItems.Overheat);
-            selectable.RemoveStatusItem(DamageStatusItems.Both);
-
-            StatusItem item = DamageStatusItems.For(cause);
-            if (item != null)
-            {
-                selectable.SetStatusItem(Db.Get().StatusItemCategories.Main, item, null);
-            }
-        }
-
-        /// <summary>
-        /// 更新过热状态。**一旦达到过热条件就计入本次损坏原因，并保持到完全修复为止**：
-        /// 建筑受损后即使温度回落，损失仍在、原因仍是过热，维修方式也要据此选择。
-        /// 没有过热组件的建筑不参与过热判定。
-        /// </summary>
-        private void UpdateOverheatState()
-        {
-            if (overheatable == null || primaryElement == null || overheated)
-            {
-                return;
-            }
-
-            if (primaryElement.Temperature > overheatable.OverheatTemperature)
-            {
-                overheated = true;
-            }
-        }
-
-        private void ClearDamageWhenFullyRepaired()
-        {
-            // 完全修复后结束本次损坏状态：机械与过热原因一并清除。
-            if (buildingHP != null && !buildingHP.NeedsRepairs)
-            {
-                mechanicalDamaged = false;
-                overheated = false;
-            }
-        }
-
-        private void ApplyMechanicalWear()
-        {
-            if (buildingHP == null || primaryElement == null)
-            {
-                return;
-            }
-
-            // 生命值已耗尽就不再继续扣减（损坏停机后仍检测过热，但不重复扣血）。
-            if (buildingHP.IsBroken)
-            {
-                return;
-            }
-
-            int wholeWear = (int)wear.Wear;
-            if (wholeWear <= 0)
-            {
-                return;
-            }
-
-            int damage = DamageConversion.DamageFor(wholeWear);
-            if (damage <= 0)
-            {
-                // 转换系数尚未配置：保留累计磨损，不扣血也不丢弃。
-                return;
-            }
-
-            wear.TakeWholeWear();
-
-            BuildingHP.DamageSourceInfo info = default(BuildingHP.DamageSourceInfo);
-            info.damage = damage;
-            info.source = LocalizedOr(KeyDamageSourceMechanical, "Mechanical Wear");
-            BoxingTrigger(DoBuildingDamageHash, info);
-
-            if (buildingHP.IsBroken)
-            {
-                mechanicalDamaged = true;
-            }
-        }
-
-        /// <summary>
-        /// 注入热量。功率未配置（默认 0）时不注入，也不会申请 handle。
-        /// 走原版结构温度接口：传入的是 kJ，温升由 SIM 按建造材料热容与换热计算，不是固定温升。
-        /// </summary>
-        private void InjectHeat(HeatingIntent intent, float dt)
-        {
-            float kilowatts = HeatingPower.KilowattsFor(intent);
-            if (kilowatts == 0f)
-            {
-                return;
-            }
-
-            if (!structureHandleResolved)
-            {
-                structureHandle = GameComps.StructureTemperatures.GetHandle(gameObject);
-                structureHandleResolved = true;
-            }
-
-            GameComps.StructureTemperatures.ProduceEnergy(structureHandle, kilowatts * dt, HeatSourceDescription, dt);
-        }
-
-        /// <summary>
-        /// 热量来源说明，原版会用它显示运行能量来源。
-        /// 数值阶段接入实际加热后，应换成本地化键（AGENTS 实现约定：新增界面文本使用本地化键）。
-        /// </summary>
-        private const string HeatSourceDescription = "MaterialOverhaul.Heating";
-
-        private void LogStateIfChanged(ComplexRecipe recipe, ProductionDecision gate)
-        {
-            if (hasLoggedState && gate.State == lastLoggedState)
-            {
-                return;
-            }
-
-            hasLoggedState = true;
-            lastLoggedState = gate.State;
-
-            if (!gate.ZoneConfigured)
-            {
-                ModLog.Info(PrefabId + "：" + recipe.id + " 未配置温区，温度 " + BodyTemperature.ToString("F1")
-                    + " K，按原版行为运行。");
-                return;
-            }
-
-            ModLog.Info(PrefabId + "：" + recipe.id + " 状态 " + gate.State
-                + "，本体温度 " + BodyTemperature.ToString("F1") + " K，效率 " + gate.Efficiency.ToString("F3")
-                + "，允许生产 " + gate.AllowsProduction + "。");
-        }
-
-        // ---- 订单流程（V0.0.2：以订单为单位接管顺序，建筑细节文档 §2.3）----
-
-        /// <summary>本 Mod 订单表里是否有数据。没有数据时轮换与原版一致。</summary>
-        public bool HasOrderData
-        {
-            get { return orders.Count > 0; }
-        }
-
-        /// <summary>
-        /// 重新决定「下一个执行哪一笔订单」，写入原版 <c>nextOrderIdx</c> 与 <c>nextOrderIsWorkable</c>。
-        ///
-        /// 顺序完全由本 Mod 订单表给出（玩家添加顺序，同配方可重复）；
-        /// 「还有没有剩余批次」与「原料是否齐备」仍用原版判断，避免复制一份原版逻辑后产生偏差。
-        /// 全部订单都不可执行时不移动轮换指针，等材料或订单变化后再检查（不空转）。
-        /// </summary>
-        public void RefreshNextOrder()
+        /// <summary>批次进度：优先用原版进度值，缺失时返回 0。</summary>
+        private float OrderProgressValue()
         {
             if (fabricator == null)
             {
-                return;
+                return 0f;
             }
 
-            EnsureOrdersImported();
+            float progress = fabricator.GetPercentComplete();
+            return float.IsNaN(progress) ? 0f : progress;
+        }
+
+        private static Descriptor DescriptorText(string text)
+        {
+            return new Descriptor(text, text, Descriptor.DescriptorType.Effect);
+        }
+
+        /// <summary>
+        /// 信息卡里的完整订单列表（按添加顺序）。逐笔编辑在订单列表侧屏里，
+        /// 这里保证即使侧屏不可用也能看到每一笔的身份与剩余数量。
+        /// </summary>
+        private void AddOrderListDescriptors(List<Descriptor> list)
+        {
             if (orders.Count == 0)
             {
                 return;
             }
 
-            ComplexRecipe[] recipes = fabricator.GetRecipes();
-            if (recipes == null || recipes.Length == 0)
-            {
-                return;
-            }
+            list.Add(DescriptorText(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_HEADER", "订单列表（按添加顺序）：")));
 
-            int index = orders.SelectNext(entry => IsOrderExecutable(entry, recipes));
-            if (index < 0)
+            int currentId = orders.LockedOrderId;
+            for (int i = 0; i < orders.Count; i++)
             {
-                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
-                return;
+                OrderEntry entry = orders.Orders[i];
+                bool isCurrent = entry.Id == currentId;
+                list.Add(DescriptorText(string.Format(
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_ROW", "{0}{1}. {2}"),
+                    isCurrent ? "▶ " : "   ",
+                    i + 1,
+                    OrderSummary(entry))));
             }
-
-            string recipeId = orders.Orders[index].RecipeId;
-            int recipeIndex = IndexOfRecipe(recipes, recipeId);
-            if (recipeIndex < 0)
-            {
-                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
-                ModLog.WarnOnce("order|recipe-unavailable|" + PrefabId + "|" + recipeId,
-                    PrefabId + "：订单表里的配方 '" + recipeId + "' 不在本建筑的配方列表中（DLC 未启用或配方被移除）。");
-                return;
-            }
-
-            FabricatorAccess.NextOrderIdx(fabricator) = recipeIndex;
-            FabricatorAccess.NextOrderIsWorkable(fabricator) = true;
         }
 
-        /// <summary>
-        /// 订单表里没有、但原版计数里还有数量的配方（旧存档、其它码路直接改原版计数）纳入订单表，
-        /// 否则这些订单会因为不在订单表里而永远轮不到。
-        /// </summary>
-        public void EnsureOrdersImported()
+        private static string HeatingIntentText(HeatingIntent intent)
         {
-            if (fabricator == null)
+            switch (intent)
             {
-                return;
-            }
+                case HeatingIntent.Preheat:
+                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT", "预热中");
 
-            ComplexRecipe[] recipes = fabricator.GetRecipes();
-            Dictionary<string, int> counts = FabricatorAccess.QueueCounts(fabricator);
-            if (recipes == null || recipes.Length == 0 || counts == null)
-            {
-                return;
-            }
+                case HeatingIntent.TopUp:
+                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_TOPUP", "补热中");
 
-            bool imported = false;
-            foreach (ComplexRecipe recipe in recipes)
-            {
-                if (recipe == null || orders.ContainsRecipe(recipe.id))
-                {
-                    continue;
-                }
+                case HeatingIntent.Sustained:
+                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SUSTAINED", "持续加热");
 
-                int count;
-                if (!counts.TryGetValue(recipe.id, out count) || count == 0)
-                {
-                    continue;
-                }
-
-                if (FabricatorAccess.IsInfinite(count))
-                {
-                    orders.Add(OrderEntry.Infinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota));
-                }
-                else
-                {
-                    orders.Add(OrderEntry.Limited(recipe.id, count));
-                }
-
-                imported = true;
-                ModLog.Info("订单迁移：" + PrefabId + " 把原版队列里的 " + recipe.id
-                    + "（数量 " + count + "）纳入本 Mod 订单表。");
-            }
-
-            if (imported)
-            {
-                SyncOrderFields();
+                default:
+                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_NONE", "无");
             }
         }
 
-        /// <summary>原版「+」之后同步订单表：新增一笔 1 批订单；计数越过上限变无限时整笔替换为无限订单。</summary>
-        public void OnVanillaIncrement(ComplexRecipe recipe, int previousCount)
-        {
-            if (fabricator == null || recipe == null)
-            {
-                return;
-            }
-
-            int count = fabricator.GetRecipeQueueCount(recipe);
-            if (FabricatorAccess.IsInfinite(count))
-            {
-                orders.ReplaceRecipeWithInfinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota);
-            }
-            else if (FabricatorAccess.IsInfinite(previousCount))
-            {
-                // 原版在无限状态下点「+」会把计数清成 0：订单表同样取消该配方。
-                orders.RemoveAllOfRecipe(recipe.id);
-            }
-            else
-            {
-                orders.AddBatchRequest(recipe.id);
-            }
-
-            AfterOrderChange(recipe.id);
-        }
-
-        /// <summary>原版「−」之后同步订单表：按订单逐笔回退。</summary>
-        public void OnVanillaDecrement(ComplexRecipe recipe, int previousCount)
-        {
-            if (fabricator == null || recipe == null)
-            {
-                return;
-            }
-
-            int count = fabricator.GetRecipeQueueCount(recipe);
-            if (count == previousCount)
-            {
-                // respectInfinite 为真且已是无限：原版不做改动，保留无限订单及其本轮进度。
-                return;
-            }
-
-            if (FabricatorAccess.IsInfinite(count))
-            {
-                // 原版会把数量 0 递减成无限。本 Mod 不凭一次递减凭空创建订单，并把计数改回 0。
-                ForceVanillaCount(recipe.id, 0);
-                ModLog.Info(PrefabId + "：" + recipe.id
-                    + " 原版数量为 0 时递减会变成无限，本 Mod 不创建订单，已把计数改回 0。");
-                return;
-            }
-
-            if (FabricatorAccess.IsInfinite(previousCount))
-            {
-                // 原版把无限降到队列上限：改记为对应批次数，之后继续逐笔回退。
-                orders.ReplaceRecipeWithBatches(recipe.id, count);
-            }
-            else if (count <= 0)
-            {
-                orders.RemoveAllOfRecipe(recipe.id);
-            }
-            else
-            {
-                orders.DecrementLastBatch(recipe.id);
-            }
-
-            AfterOrderChange(recipe.id);
-        }
-
-        /// <summary>侧屏直接设置数量：0 取消、-1 记为无限订单、正数改写为一笔对应批次的订单。</summary>
-        public void OnVanillaSetCount(ComplexRecipe recipe, int count)
-        {
-            if (fabricator == null || recipe == null)
-            {
-                return;
-            }
-
-            if (FabricatorAccess.IsInfinite(count))
-            {
-                orders.ReplaceRecipeWithInfinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota);
-            }
-            else if (count > 0)
-            {
-                orders.ReplaceRecipeWithBatches(recipe.id, count);
-            }
-            else
-            {
-                orders.RemoveAllOfRecipe(recipe.id);
-            }
-
-            AfterOrderChange(recipe.id);
-        }
-
-        /// <summary>原版开始生产时锁定对应的那一笔订单（重复配方靠轮换位置区分）。</summary>
-        public void LockOrderForStart(string recipeId)
-        {
-            if (!orders.LockForStart(recipeId))
-            {
-                ModLog.WarnOnce("order|lock-missing|" + PrefabId + "|" + recipeId,
-                    PrefabId + "：原版开始的批次 '" + recipeId + "' 在订单表里找不到对应订单，批次仍按原版结算。");
-                return;
-            }
-
-            SyncOrderFields();
-        }
-
-        /// <summary>批次完成前的订单记账。必须在原版正文之前完成，无限订单的本轮额度才会即时生效。</summary>
-        public void OnBatchCompleting(string recipeId)
-        {
-            OrderEntry completed = orders.CompleteBatch(recipeId);
-            if (completed == null)
-            {
-                ModLog.WarnOnce("order|complete-unmanaged|" + PrefabId + "|" + recipeId,
-                    PrefabId + "：完成了一个不在订单表里的批次 '" + recipeId + "'。");
-                return;
-            }
-
-            SyncOrderFields();
-        }
-
-        /// <summary>
-        /// 批次完成后的计数对齐：原版正文内部已经自己扣过一次计数（走私有的
-        /// <c>DecrementRecipeQueueCountInternal</c>），这里以订单表为准写回并让队列重新计算。
-        /// </summary>
-        public void OnBatchCompleted(string recipeId)
-        {
-            SyncVanillaCount(recipeId);
-            if (fabricator != null)
-            {
-                fabricator.SetQueueDirty();
-            }
-        }
-
-        /// <summary>订单表变化后统一处理：写回原版计数、持久化、让队列重新计算。</summary>
-        private void AfterOrderChange(string recipeId)
-        {
-            SyncVanillaCount(recipeId);
-            SyncOrderFields();
-            if (fabricator != null)
-            {
-                fabricator.SetQueueDirty();
-            }
-        }
-
-        /// <summary>把订单表里该配方的总需求写回原版计数字典（无限订单写原版的无限哨兵值）。</summary>
-        private void SyncVanillaCount(string recipeId)
-        {
-            RecipeTotal total = orders.TotalFor(recipeId);
-            ForceVanillaCount(recipeId, total.Infinite ? ComplexFabricator.QUEUE_INFINITE : total.Batches);
-        }
-
-        private void ForceVanillaCount(string recipeId, int batches)
-        {
-            if (fabricator == null || string.IsNullOrEmpty(recipeId))
-            {
-                return;
-            }
-
-            Dictionary<string, int> counts = FabricatorAccess.QueueCounts(fabricator);
-            if (counts != null)
-            {
-                counts[recipeId] = batches;
-            }
-        }
-
-        /// <summary>
-        /// 该订单当前是否可执行：配方存在、还有剩余批次、原料齐备。
-        ///
-        /// 剩余批次与原版一致：无限订单恒有剩余，正在生产的那一批已从计数里扣掉。
-        /// 原料沿用原版判断（金属精炼器的冷却液要求也在其中）；「已投料视为本批次材料齐全」
-        /// 由原版锁定批次加计数扣减体现，因此这里不再把加工存储重复计入，避免同一批原料算两次。
-        /// </summary>
-        private bool IsOrderExecutable(OrderEntry entry, ComplexRecipe[] recipes)
+        private string OrderSummary(OrderEntry entry)
         {
             if (entry == null)
             {
-                return false;
+                return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER", "无订单记录");
             }
 
-            int index = IndexOfRecipe(recipes, entry.RecipeId);
-            if (index < 0)
-            {
-                return false;
-            }
-
-            ComplexRecipe recipe = recipes[index];
-            if (FabricatorAccess.GetRemainingQueueCount(fabricator, recipe) <= 0)
-            {
-                return false;
-            }
-
-            return FabricatorAccess.HasIngredients(fabricator, recipe, fabricator.inStorage);
+            string name = RecipeDisplayName(entry.RecipeId);
+            return entry.IsInfinite
+                ? string.Format(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_INFINITE", "{0}（无限，本轮 {1}/{2}）"),
+                    name, entry.BatchesDoneThisRound, entry.BatchQuota)
+                : string.Format(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIMITED", "{0}（剩余 {1} 批）"),
+                    name, entry.Remaining);
         }
 
-        private static int IndexOfRecipe(ComplexRecipe[] recipes, string recipeId)
+        private string NextBatchText()
         {
-            if (recipes == null || string.IsNullOrEmpty(recipeId))
+            if (orders.Count == 0)
             {
-                return -1;
+                return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NO_TASK", "无生产任务");
             }
 
-            for (int i = 0; i < recipes.Length; i++)
+            OrderEntry next = NextPreviewOrder();
+            if (next == null)
             {
-                if (recipes[i] != null && recipes[i].id == recipeId)
-                {
-                    return i;
-                }
+                return string.Format(
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.WAITING_MATERIALS", "等待材料（待检查订单 {0} 笔）"),
+                    orders.Count);
             }
 
-            return -1;
+            return string.Format(
+                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NEXT_BATCH", "下一生产：{0}"),
+                OrderSummary(next));
         }
 
-        // ---- 过热阈值（V0.0.2：主建造材料熔点 × 85%，建筑细节文档 §2.1.5）----
-
-        /// <summary>
-        /// 取本实例按规则算出的过热阈值与显示来源：主建造材料名、材料熔点。
-        ///
-        /// 未登记过热规则的建筑、没有本体元素、或熔点不可用时返回 false，
-        /// 调用方保持原版显示（信息卡里的过热温度行就不会被改写）。
-        /// </summary>
-        public bool TryGetOverheatRuleValue(out float overheatKelvin, out string materialName, out float meltingPointKelvin)
+        private string HardnessText()
         {
-            overheatKelvin = 0f;
-            materialName = null;
-            meltingPointKelvin = 0f;
+            byte required;
+            bool hasRequirement = HardnessRequirementTable.TryGet(PrefabId, out required);
+            string material = primaryElement != null && primaryElement.Element != null ? primaryElement.Element.name : "-";
+            int hp = buildingHP != null ? Mathf.RoundToInt(buildingHP.HitPoints) : 0;
 
-            if (primaryElement == null)
+            if (!hasRequirement)
             {
-                return false;
+                return string.Format(
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE", "主建造材料 {0}，生命值 {1}；该建筑未登记要求硬度，不产生机械磨损。"),
+                    material, hp);
             }
 
-            Element element = primaryElement.Element;
-            if (element == null)
+            string actual = primaryElement != null && primaryElement.Element != null
+                ? primaryElement.Element.hardness.ToString()
+                : "-";
+
+            if (!HasHardnessDeficit())
             {
-                return false;
+                return string.Format(
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_OK", "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度合格，机械磨损为零。"),
+                    material, actual, required, hp);
             }
 
-            float fraction;
-            if (!OverheatRuleTable.TryGet(PrefabId, out fraction))
-            {
-                return false;
-            }
-
-            if (!OverheatRule.TryCompute(element.highTemp, fraction, out overheatKelvin))
-            {
-                return false;
-            }
-
-            materialName = element.name;
-            meltingPointKelvin = element.highTemp;
-            return true;
-        }
-
-        /// <summary>
-        /// 按「主建造材料熔点 × 规则比例」改写本建筑的过热阈值。
-        ///
-        /// 阈值由**建造材料**而不是配方决定：同一栋建筑换成熔点更高的材料就能在更高温度下工作，
-        /// 这是材料选择的一部分代价。做法是保留原版 <c>Overheatable</c> 的行为，
-        /// 只把属性总值补偿到规则值，并让结构温度重新注册，使 SIM 使用新阈值
-        /// （原版 <c>UpdateSimState</c> 每次脏标记都会重新读取该属性）。
-        ///
-        /// 幂等：值没变时不做任何事；两处调用（组件 OnSpawn 与 Overheatable.OnSpawn）谁先谁后都成立。
-        /// </summary>
-        public void ApplyOverheatRule()
-        {
-            if (overheatable == null || primaryElement == null)
-            {
-                return;
-            }
-
-            Element element = primaryElement.Element;
-            if (element == null)
-            {
-                return;
-            }
-
-            float value;
-            string materialName;
-            float meltingPoint;
-            if (!TryGetOverheatRuleValue(out value, out materialName, out meltingPoint))
-            {
-                float fraction;
-                if (OverheatRuleTable.TryGet(PrefabId, out fraction))
-                {
-                    ModLog.WarnOnce("overheat|bad-melting|" + PrefabId,
-                        PrefabId + "：主建造材料 " + element.name + " 的熔点 " + element.highTemp
-                        + " K 不可用，过热阈值保持原版设定。");
-                }
-
-                return;
-            }
-            if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f)
-            {
-                return;
-            }
-
-            overheatApplied = true;
-            overheatTemperature = value;
-
-            // 先写基础值，再读一次属性：这会触发原版 InitializeModifiers，
-            // 之后补偿差额不会因为修饰项在别处建立而重复叠加。
-            overheatable.baseOverheatTemp = value;
-            float current = overheatable.OverheatTemperature;
-
-            AttributeInstance instance = overheatable.GetAttributes().Get(Db.Get().BuildingAttributes.OverheatTemperature);
-            if (instance == null)
-            {
-                ModLog.WarnOnce("overheat|no-attribute|" + PrefabId,
-                    PrefabId + "：找不到过热温度属性，无法把阈值设为规则值（当前 " + current.ToString("F1") + " K）。");
-                return;
-            }
-
-            if (overheatModifier == null)
-            {
-                overheatModifier = new AttributeModifier(
-                    Db.Get().BuildingAttributes.OverheatTemperature.Id,
-                    0f,
-                    Strings.Get("STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"));
-                instance.Add(overheatModifier);
-            }
-
-            // 把原版基础值与建造材料自带的过热修正一起补偿掉，使属性总值恰好等于规则值。
-            // 这里用「总值 − 本 Mod 修正项」得到固定部分，重复调用时结果稳定（不会叠加）。
-            float fixedPart = instance.GetTotalValue() - overheatModifier.Value;
-            overheatModifier.SetValue(value - fixedPart);
-
-            MarkStructureTemperatureDirty();
-
-            float appliedFraction;
-            if (!OverheatRuleTable.TryGet(PrefabId, out appliedFraction))
-            {
-                appliedFraction = OverheatRule.MeltingPointFraction;
-            }
-
-            ModLog.Info(PrefabId + "：主建造材料 " + materialName + " 熔点 " + meltingPoint.ToString("F1")
-                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + appliedFraction.ToString("F2") + "）。");
-        }
-
-        /// <summary>
-        /// 让原版把新的过热阈值推给 SIM：<c>Disable</c> + <c>Enable</c> 会把结构温度标脏，
-        /// 原版 <c>UpdateSimState</c> 随后重新读取 <c>Overheatable.OverheatTemperature</c>。
-        /// 原版 <c>Overheatable.OnSpawn</c> 用的就是这个办法。
-        /// </summary>
-        private void MarkStructureTemperatureDirty()
-        {
-            if (!structureHandleResolved)
-            {
-                structureHandle = GameComps.StructureTemperatures.GetHandle(gameObject);
-                structureHandleResolved = true;
-            }
-
-            if (!structureHandle.IsValid() || !GameComps.StructureTemperatures.IsEnabled(structureHandle))
-            {
-                // 结构温度还没注册：原版注册时会读取当前属性值，因此不需要在这里处理。
-                return;
-            }
-
-            GameComps.StructureTemperatures.Disable(structureHandle);
-            GameComps.StructureTemperatures.Enable(structureHandle);
-        }
-
-        private void SyncOrderFields()
-        {
-            int count = orders.Count;
-            orderRecipeIds = new string[count];
-            orderRemaining = new int[count];
-            orderQuotas = new int[count];
-            orderRoundDone = new int[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                OrderEntry entry = orders.Orders[i];
-                orderRecipeIds[i] = entry.RecipeId;
-                orderRemaining[i] = entry.Remaining;
-                orderQuotas[i] = entry.IsInfinite ? entry.BatchQuota : 0;
-                orderRoundDone[i] = entry.BatchesDoneThisRound;
-            }
-
-            orderCursor = orders.Cursor;
-            OrderEntry locked = orders.LockedBatch;
-            lockedRecipeId = locked != null ? locked.RecipeId : string.Empty;
-        }
-
-        private void RestoreOrders()
-        {
-            List<OrderEntry> entries = new List<OrderEntry>();
-            int count = orderRecipeIds != null ? orderRecipeIds.Length : 0;
-
-            for (int i = 0; i < count; i++)
-            {
-                string recipeId = orderRecipeIds[i];
-                if (string.IsNullOrEmpty(recipeId))
-                {
-                    continue;
-                }
-
-                int quota = ArrayValue(orderQuotas, i, 0);
-                OrderEntry entry = quota > 0
-                    ? OrderEntry.Infinite(recipeId, quota)
-                    : OrderEntry.Limited(recipeId, ArrayValue(orderRemaining, i, 1));
-                entry.BatchesDoneThisRound = ArrayValue(orderRoundDone, i, 0);
-                entries.Add(entry);
-            }
-
-            orders.Restore(entries, orderCursor);
-
-            if (entries.Count > 0)
-            {
-                // 读档只恢复顺序与轮换位置；锁定批次需要按实际温度与供电重新校验（§8.3）。
-                ModLog.Info("读档恢复订单：" + PrefabId + " 共 " + entries.Count + " 项，轮换位置 " + orders.Cursor + "。");
-            }
-
-            lockedRecipeId = string.Empty;
-        }
-
-        private static int ArrayValue(int[] array, int index, int fallback)
-        {
-            if (array == null || index < 0 || index >= array.Length)
-            {
-                return fallback;
-            }
-
-            return array[index];
+            return string.Format(
+                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度不足，按实际生产时间磨损（{4} 磨损单位/生产秒，{5} HP/磨损单位）。"),
+                material, actual, required, hp,
+                DamageConversion.WearPerProductionSecond.ToString("F2"),
+                DamageConversion.DamagePerWearUnit.ToString("F3"));
         }
     }
 }

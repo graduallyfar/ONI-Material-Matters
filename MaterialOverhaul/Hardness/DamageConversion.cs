@@ -1,23 +1,78 @@
+using MaterialOverhaul.Core;
+
 namespace MaterialOverhaul.Hardness
 {
     /// <summary>
-    /// 磨损到生命值伤害的转换。
+    /// 磨损与伤害的转换配置。数值集中定义在 <see cref="Balance"/>，本类只负责把它们交给
+    /// <see cref="WearAccumulator"/>，让「磨损速率」与「伤害转换」只有一处来源。
     ///
-    /// **转换系数属于待定项**（开发计划 §6.4、§10 第 10 项），默认 0：
-    /// 磨损照常累计，但暂不折算成伤害——既不扣血，也不丢弃已累计的磨损值。
-    /// 填入数值后机制立即生效，不需要改动调用方。
+    /// 本版取值（V0.0.3 开发计划 §2.1，均为**暂定值**）：
+    ///   - 磨损速率 1 磨损单位／实际生产秒；硬度差只决定有无磨损，不增加差值倍率；
+    ///   - 伤害转换 0.05 HP／磨损单位，即实际生产 20 s 扣 1 HP，全部小数余额保留。
+    ///
+    /// 字段保留可写，供测试与调试覆盖；游戏内默认值一律来自 <see cref="Balance"/>。
     /// </summary>
     public static class DamageConversion
     {
-        /// <summary>每个磨损单位折算的生命值伤害点数。数值阶段填写前为 0。</summary>
-        public static float DamagePerWearUnit;
+        /// <summary>每个磨损单位折算的生命值伤害点数。</summary>
+        public static float DamagePerWearUnit = Balance.DamagePerWearUnit;
 
+        /// <summary>硬度不足时的磨损速率（磨损单位／实际生产秒）。</summary>
+        public static float WearPerProductionSecond = Balance.WearPerProductionSecond;
+
+        /// <summary>转换系数是否已配置；未配置时不累计磨损。</summary>
         public static bool IsConfigured
         {
-            get { return DamagePerWearUnit > 0f; }
+            get { return DamagePerWearUnit > 0f && WearPerProductionSecond > 0f; }
         }
 
-        /// <summary>把整数磨损单位折算成伤害点数（向下取整）。未配置时返回 0。</summary>
+        /// <summary>按实际生产秒数累计磨损与伤害余额。</summary>
+        public static void AccumulateProduction(WearAccumulator accumulator, float productionSeconds)
+        {
+            if (accumulator == null || !IsConfigured)
+            {
+                return;
+            }
+
+            accumulator.AccumulateProduction(productionSeconds, WearPerProductionSecond, DamagePerWearUnit);
+        }
+
+        /// <summary>把伤害余额换算回磨损单位数（显示用）。</summary>
+        public static float WearUnitsOf(float damageBalance)
+        {
+            return DamagePerWearUnit <= 0f ? 0f : damageBalance / DamagePerWearUnit;
+        }
+
+        /// <summary>
+        /// 把「已乘过操作效率的 dt」还原成**真实生产秒数**。
+        ///
+        /// 原版在调用 <c>OnWorkTick</c> 之前已经把效率乘进 dt（见
+        /// <c>WorkChore.StatesInstance.Update</c>：<c>dt2 = dt × GetEfficiencyMultiplier(worker)</c>），
+        /// 因此效率 0.3 时回调收到的 0.2 s 其实对应约 0.667 s 的真实时间。
+        /// 磨损按真实时间计（§6.1）：效率越低，完成同一批用的实际时间越长，磨损越多。
+        ///
+        /// 单步结果做上限保护，避免「极速工人」等调试选项把整批时间算成一次磨损。
+        /// </summary>
+        public static float RealProductionSeconds(float scaledDt, float efficiencyMultiplier, float maxSecondsPerTick)
+        {
+            if (scaledDt <= 0f || efficiencyMultiplier <= 0.000001f)
+            {
+                return 0f;
+            }
+
+            float seconds = scaledDt / efficiencyMultiplier;
+            if (float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds < 0f)
+            {
+                return 0f;
+            }
+
+            return seconds > maxSecondsPerTick ? maxSecondsPerTick : seconds;
+        }
+
+        /// <summary>
+        /// 把整数磨损单位折算成伤害点数。**仅供按磨损单位建模的外部调用使用**；
+        /// 建筑侧的实数计时走 <see cref="AccumulateProduction"/>，以伤害余额累计、不在这里取整。
+        /// </summary>
         public static int DamageFor(int wearUnits)
         {
             if (wearUnits <= 0 || DamagePerWearUnit <= 0f)

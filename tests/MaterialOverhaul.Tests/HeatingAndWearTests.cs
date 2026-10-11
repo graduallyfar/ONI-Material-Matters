@@ -81,31 +81,32 @@ namespace MaterialOverhaul.Tests
 
         private static void Wear()
         {
-            TestRunner.Section("磨损累计");
+            TestRunner.Section("磨损与伤害余额（v0.0.3：0.05 HP／磨损单位）");
             WearAccumulator wear = new WearAccumulator();
-            TestRunner.CheckClose(0f, wear.Wear, Tol, "初始为零");
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "初始为零");
 
             // 只有实际生产推进才调用；预热、待机、暂停、维修都不调用。
-            wear.AccumulateProduction(0f, 0.5f);
-            TestRunner.CheckClose(0f, wear.Wear, Tol, "零生产时间不累计");
-            wear.AccumulateProduction(10f, 0f);
-            TestRunner.CheckClose(0f, wear.Wear, Tol, "零速率不累计");
-            wear.AccumulateProduction(-1f, 1f);
-            TestRunner.CheckClose(0f, wear.Wear, Tol, "负时间不累计");
+            DamageConversion.AccumulateProduction(wear, 0f);
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "零生产时间不累计");
+            DamageConversion.AccumulateProduction(wear, -1f);
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "负时间不累计");
 
-            wear.AccumulateProduction(1f, 1.5f);
-            TestRunner.CheckClose(1.5f, wear.Wear, Tol, "按生产时间累计");
-            TestRunner.CheckEqual(1, wear.TakeWholeWear(), "取走已成形部分");
-            TestRunner.CheckClose(0.5f, wear.Wear, Tol, "保留尚未成形的累计部分");
+            // 20 s 实际生产 = 1 HP。
+            DamageConversion.AccumulateProduction(wear, 19f);
+            TestRunner.CheckEqual(0, wear.TakeWholeDamage(), "19 s 不扣整点生命");
+            TestRunner.CheckClose(0.95f, wear.DamageBalance, Tol, "余额为 0.95 HP");
+            DamageConversion.AccumulateProduction(wear, 1f);
+            TestRunner.CheckEqual(1, wear.TakeWholeDamage(), "再 1 s 扣 1 HP");
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "扣血后余额归零");
 
-            wear.AccumulateProduction(0.25f, 1f);
-            TestRunner.CheckClose(0.75f, wear.Wear, Tol, "小数部分继续累加");
-            TestRunner.CheckEqual(0, wear.TakeWholeWear(), "不足 1 时不产生伤害单位");
-
+            wear.Restore(0f);
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "读档恢复前先归零");
             wear.Restore(2.5f);
-            TestRunner.CheckClose(2.5f, wear.Wear, Tol, "读档恢复累计值");
+            TestRunner.CheckClose(2.5f, wear.DamageBalance, Tol, "读档恢复伤害余额");
+            TestRunner.CheckEqual(2, wear.TakeWholeDamage(), "恢复后取走整点");
+            TestRunner.CheckClose(0.5f, wear.DamageBalance, Tol, "小数余额保留");
             wear.Restore(-5f);
-            TestRunner.CheckClose(0f, wear.Wear, Tol, "负值恢复被钳制为 0");
+            TestRunner.CheckClose(0f, wear.DamageBalance, Tol, "负值恢复被钳制为 0");
         }
     }
 }

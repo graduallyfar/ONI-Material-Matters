@@ -36,7 +36,36 @@ namespace MaterialOverhaul
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count
-                + "，要求硬度条目 " + HardnessRequirementTable.Count + "。");
+                + "，要求硬度条目 " + HardnessRequirementTable.Count
+                + "，内置加热范围 " + JoinScope() + "。");
+            LogBalanceSummary();
+        }
+
+        /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
+        private static void LogBalanceSummary()
+        {
+            ModLog.Info("本版数值：铝配方四边界 300/450/650/800 ℃，过热阈值 = 主建造材料熔点 × "
+                + Heating.OverheatRule.MeltingPointFraction.ToString("F2")
+                + "；加热电功率 预热 " + Heating.HeatingPower.PreheatWatts.ToString("F0")
+                + " W／补热 " + Heating.HeatingPower.TopUpWatts.ToString("F0")
+                + " W／强制 " + Heating.HeatingPower.SustainedWatts.ToString("F0")
+                + " W，注热倍率 " + Heating.HeatingPower.TestHeatMultiplier.ToString("F0")
+                + "；要求硬度 " + Core.Balance.MetalRefineryRequiredHardness
+                + "，磨损 " + Hardness.DamageConversion.WearPerProductionSecond.ToString("F2")
+                + " 单位/生产秒，伤害 " + Hardness.DamageConversion.DamagePerWearUnit.ToString("F3")
+                + " HP/磨损单位；无限订单默认额度 " + Core.Balance.DefaultInfiniteBatchQuota
+                + "（上限 " + Core.Balance.MaxInfiniteBatchQuota + "）。");
+        }
+
+        private static string JoinScope()
+        {
+            System.Collections.Generic.List<string> ids = new System.Collections.Generic.List<string>();
+            foreach (string id in Zones.HeatingScope.All)
+            {
+                ids.Add(id);
+            }
+
+            return ids.Count == 0 ? "（空）" : string.Join("、", ids.ToArray());
         }
 
         /// <summary>

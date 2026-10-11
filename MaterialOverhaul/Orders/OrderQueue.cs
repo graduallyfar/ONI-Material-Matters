@@ -41,6 +41,16 @@ namespace MaterialOverhaul.Orders
             get { return cursor; }
         }
 
+        /// <summary>已锁定批次的订单身份；0 表示当前没有锁定批次。</summary>
+        public int LockedOrderId
+        {
+            get
+            {
+                OrderEntry locked = LockedBatch;
+                return locked != null ? locked.Id : 0;
+            }
+        }
+
         /// <summary>已锁定批次的订单下标；-1 表示当前没有锁定批次。</summary>
         public int LockedIndex
         {
@@ -189,11 +199,158 @@ namespace MaterialOverhaul.Orders
             return true;
         }
 
-        // ---- 查询 ----
+        /// <summary>按订单身份取消那一笔（取消精确对应订单，即使队列里还有相同配方）。</summary>
+        public bool RemoveById(int id)
+        {
+            return RemoveAt(IndexOfId(id));
+        }
+
+        // ---- 按订单身份的编辑（§5.1：不再按 recipe id 合并全部同配方订单）----
+
+        /// <summary>
+        /// 编辑有限订单的剩余批次数（口径包含尚未完成的那一批）。
+        /// 调到 0 或以下按取消处理：移除该笔，并清除它的批次锁定（原料退回由调用方负责）。
+        /// 返回 false 表示找不到该订单。
+        /// </summary>
+        public bool SetRemaining(int id, int remaining)
+        {
+            int index = IndexOfId(id);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            if (remaining <= 0)
+            {
+                RemoveAt(index);
+                return true;
+            }
+
+            orders[index].Remaining = remaining;
+            return true;
+        }
+
+        /// <summary>
+        /// 切换某一笔订单的有限／无限口径。切到无限时用量默认额度，切回有限时按给定批次。
+        /// 已完成的本轮进度不因口径切换而凭空生成。
+        /// </summary>
+        public bool SetInfinite(int id, bool infinite, int batchesOrQuota)
+        {
+            int index = IndexOfId(id);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            OrderEntry entry = orders[index];
+            if (infinite)
+            {
+                entry.IsInfinite = true;
+                entry.Remaining = 0;
+                entry.BatchQuota = Clamp(batchesOrQuota, 1, Core.Balance.MaxInfiniteBatchQuota);
+                if (entry.BatchesDoneThisRound < 0)
+                {
+                    entry.BatchesDoneThisRound = 0;
+                }
+
+                return true;
+            }
+
+            if (batchesOrQuota <= 0)
+            {
+                RemoveAt(index);
+                return true;
+            }
+
+            entry.IsInfinite = false;
+            entry.Remaining = batchesOrQuota;
+            entry.BatchQuota = 0;
+            entry.BatchesDoneThisRound = 0;
+            return true;
+        }
+
+        /// <summary>
+        /// 修改无限订单每轮额度（1–99）。**保留已完成数**：
+        /// 新额度已经用完时，若该笔正是当前批次则等它结束后自然让出（不抢先取消），
+        /// 否则直接把指针推到它后面。
+        /// </summary>
+        public bool SetInfiniteQuota(int id, int quota)
+        {
+            int index = IndexOfId(id);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            OrderEntry entry = orders[index];
+            if (!entry.IsInfinite)
+            {
+                return false;
+            }
+
+            entry.BatchQuota = Clamp(quota, 1, Core.Balance.MaxInfiniteBatchQuota);
+
+            if (entry.BatchesDoneThisRound >= entry.BatchQuota && !IsLockedOrder(id) && orders.Count > 0)
+            {
+                cursor = (index + 1) % orders.Count;
+            }
+
+            return true;
+        }
+
+        /// <summary>按订单身份取下标；找不到返回 -1。</summary>
+        public int IndexOfId(int id)
+        {
+            if (id <= 0)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < orders.Count; i++)
+            {
+                if (orders[i].Id == id)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>按订单身份取订单；找不到返回 null。</summary>
+        public OrderEntry FindById(int id)
+        {
+            int index = IndexOfId(id);
+            return index < 0 ? null : orders[index];
+        }
+
+        /// <summary>是否为当前已锁定的那一笔订单。</summary>
+        public bool IsLockedOrder(int id)
+        {
+            OrderEntry locked = LockedBatch;
+            return locked != null && locked.Id == id;
+        }
 
         public bool ContainsRecipe(string recipeId)
         {
             return LastIndexOfRecipe(recipeId) >= 0;
+        }
+
+        /// <summary>
+        /// 旧存档订单补齐身份编号。返回补发条数；调用方应在之后持久化一次。
+        /// </summary>
+        public int EnsureIds()
+        {
+            int assigned = 0;
+            foreach (OrderEntry entry in orders)
+            {
+                if (entry != null && entry.EnsureId())
+                {
+                    assigned++;
+                }
+            }
+
+            return assigned;
         }
 
         /// <summary>该配方是否存在无限订单（用于原版「−」时不丢掉无限订单的本轮进度）。</summary>
@@ -289,6 +446,47 @@ namespace MaterialOverhaul.Orders
             return orders[index].RecipeId;
         }
 
+        /// <summary>
+        /// **无副作用**的下一生产预告查询（§5.2 第 3 条）：与 <see cref="SelectNext"/> 同样从轮换位置
+        /// 向后检查第一个可执行订单，但**不移动指针**，因此不会提前改变有限订单连续执行的归属。
+        /// </summary>
+        public int PreviewNext(Func<OrderEntry, bool> isAvailable)
+        {
+            if (isAvailable == null)
+            {
+                throw new ArgumentNullException(nameof(isAvailable));
+            }
+
+            if (orders.Count == 0)
+            {
+                return -1;
+            }
+
+            int start = cursor;
+            if (start < 0 || start >= orders.Count)
+            {
+                start = 0;
+            }
+
+            for (int step = 0; step < orders.Count; step++)
+            {
+                int index = (start + step) % orders.Count;
+                if (isAvailable(orders[index]))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>无副作用的下一批订单；没有可执行订单时返回 null。</summary>
+        public OrderEntry PreviewNextOrder(Func<OrderEntry, bool> isAvailable)
+        {
+            int index = PreviewNext(isAvailable);
+            return index < 0 ? null : orders[index];
+        }
+
         // ---- 批次锁定与完成（§2.3.3）----
 
         /// <summary>材料齐备后按顺序表下标锁定本批次。锁定发生在调温之前，不是正式生产时才开始。</summary>
@@ -302,6 +500,12 @@ namespace MaterialOverhaul.Orders
             ResetRoundIfComplete(orders[index]);
             lockedIndex = index;
             return true;
+        }
+
+        /// <summary>按订单身份锁定本批次（存档恢复时重建同一笔）。</summary>
+        public bool LockById(int orderId)
+        {
+            return Lock(IndexOfId(orderId));
         }
 
         /// <summary>
@@ -329,7 +533,29 @@ namespace MaterialOverhaul.Orders
         public OrderEntry CompleteBatch(string recipeId)
         {
             int index = IndexOfInProgressOrder(recipeId);
-            if (index < 0)
+            return CompleteAt(index);
+        }
+
+        /// <summary>
+        /// 按订单身份完成一个批次。身份来自本 Mod 在 <c>StartWorkingOrder</c> 时锁定的那一笔，
+        /// 因此队列里存在相同配方时也不会误扣到别的订单上。
+        /// </summary>
+        public OrderEntry CompleteBatchById(int orderId)
+        {
+            int index = IndexOfId(orderId);
+            if (index >= 0)
+            {
+                return CompleteAt(index);
+            }
+
+            // 身份丢失（旧存档迁移）时退回按「已锁定 / 轮换位置」的配方口径。
+            OrderEntry locked = LockedBatch;
+            return locked != null ? CompleteBatch(locked.RecipeId) : null;
+        }
+
+        private OrderEntry CompleteAt(int index)
+        {
+            if (index < 0 || index >= orders.Count)
             {
                 return null;
             }
@@ -389,6 +615,17 @@ namespace MaterialOverhaul.Orders
         /// <summary>存档恢复：重建顺序与指针位置（§8.3，读档不得重排订单）。</summary>
         public void Restore(IEnumerable<OrderEntry> entries, int restoredCursor)
         {
+            Restore(entries, restoredCursor, 0);
+        }
+
+        /// <summary>
+        /// 存档恢复：重建顺序、指针位置与**当前批次关联的订单身份**。
+        ///
+        /// 同一配方的两笔订单只能靠身份区分，因此这里必须恢复身份而不是「任意一笔同配方订单」。
+        /// 身份在队列里找不到时只恢复顺序与指针，锁定批次留待按实际条件重新校验。
+        /// </summary>
+        public void Restore(IEnumerable<OrderEntry> entries, int restoredCursor, int restoredLockedId)
+        {
             orders.Clear();
             if (entries != null)
             {
@@ -396,6 +633,7 @@ namespace MaterialOverhaul.Orders
                 {
                     if (entry != null)
                     {
+                        entry.EnsureId();
                         orders.Add(entry);
                     }
                 }
@@ -403,6 +641,17 @@ namespace MaterialOverhaul.Orders
 
             cursor = orders.Count == 0 ? 0 : Clamp(restoredCursor, 0, orders.Count - 1);
             lockedIndex = -1;
+
+            if (restoredLockedId > 0)
+            {
+                int index = IndexOfId(restoredLockedId);
+                if (index >= 0)
+                {
+                    lockedIndex = index;
+                    // 让轮换位置停在这一笔，原版重新开始时才会取到同一笔订单。
+                    cursor = index;
+                }
+            }
         }
 
         // ---- 内部 ----

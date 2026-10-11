@@ -1,36 +1,42 @@
+using MaterialOverhaul.Core;
+
 namespace MaterialOverhaul.Heating
 {
     /// <summary>
-    /// 加热功率配置。数值集中在这里，判断层与接入层只读这里的结果。
+    /// 加热的电力与注热功率视图。数值集中定义在 <see cref="Balance"/>，这里只做
+    /// 「加热意图 → 电功率（W）／注热功率（kW）」的映射，避免同一数值散落在判断、注热与界面里。
     ///
-    /// 单位是 kW：注入热量 = kW × dt（秒）= kJ，与原版 SteamTurbine2 的写法一致
-    /// （`ProduceEnergy(handle, 8f * dt, ...)`）。
+    /// 单位口径（V0.0.3 开发计划 §2.1、§4.2）：
+    ///   - 注入热量 Q(kJ) = kW × dt(s)，与原版 <c>SteamTurbine2</c> 的
+    ///     <c>ProduceEnergy(handle, 8f * dt, ...)</c> 写法一致；
+    ///   - 注入的是**热量**而不是固定温升：实际温升由 SIM 按建筑有效热容与换热计算；
+    ///   - 倍率 1000 是本版暂定的「用电 → 注热」测试口径，已知会放大温度跨步与能源收益，
+    ///     **不是平衡完成值**，也不是正式换算关系。
     ///
-    /// **注入的是热量而不是固定温升**：实际温升由 SIM 按建筑热容与换热计算
-    /// （原版建筑有效热容 = `Def.MassForTemperatureModification × Element.specificHeatCapacity`）。
-    ///
-    /// **当前是「用电 → 注热 1:1000」的测试口径（用户指定，只为快速验证机制）**：
-    ///   - 预热：1200 W 用电 → 1.2 kW × 1000 = **1200 kW** 注热；
-    ///   - 补热：设计确认的 200 W 额外用电 → 0.2 kW × 1000 = **200 kW**；
-    ///   - 强制运行持续加热：沿用预热值 1200 kW。
-    ///
-    /// 1200 kW 会让金属精炼器在不到一个周期内就达到 300 ℃ 级温区，**不是平衡数值**；
-    /// 1:1000 也不是已确认的正式换算关系（正式关系仍是待定项）。
-    /// 要回到正式评估，把 <see cref="TestHeatMultiplier"/> 改回 1（即 1:1）或直接改三档功率。
+    /// 三个字段保留可写，供测试与调试覆盖默认值；游戏内默认值一律来自 <see cref="Balance"/>。
     /// </summary>
     public static class HeatingPower
     {
-        /// <summary>测试用「用电 → 注热」倍率。1 = 1:1（此前的口径），1000 = 用户指定的测试口径。</summary>
-        public const float TestHeatMultiplier = 1000f;
+        /// <summary>测试用「用电 → 注热」倍率，见 <see cref="Balance.HeatMultiplier"/>。</summary>
+        public const float TestHeatMultiplier = Balance.HeatMultiplier;
 
-        /// <summary>预热注热功率（kW）：1200 W 用电 × 测试倍率。</summary>
-        public static float PreheatKilowatts = 1.2f * TestHeatMultiplier;
+        /// <summary>预热电功率（W）。</summary>
+        public static float PreheatWatts = Balance.PreheatWatts;
 
-        /// <summary>补热注热功率（kW）：设计的 200 W 额外用电 × 测试倍率。</summary>
-        public static float TopUpKilowatts = 0.2f * TestHeatMultiplier;
+        /// <summary>补热的额外电功率（W）；生产时的生产用电另计。</summary>
+        public static float TopUpWatts = Balance.TopUpWatts;
 
-        /// <summary>强制运行的持续加热功率（kW），暂沿用预热值。</summary>
-        public static float SustainedKilowatts = 1.2f * TestHeatMultiplier;
+        /// <summary>强制运行持续加热的电功率（W）。</summary>
+        public static float SustainedWatts = Balance.SustainedWatts;
+
+        /// <summary>预热注热功率（kW）。</summary>
+        public static float PreheatKilowatts = Balance.PreheatKilowatts;
+
+        /// <summary>补热注热功率（kW）。</summary>
+        public static float TopUpKilowatts = Balance.TopUpKilowatts;
+
+        /// <summary>强制运行持续加热注热功率（kW）。</summary>
+        public static float SustainedKilowatts = Balance.SustainedKilowatts;
 
         /// <summary>是否已经配置过任意一项功率。</summary>
         public static bool IsConfigured
@@ -38,7 +44,7 @@ namespace MaterialOverhaul.Heating
             get { return PreheatKilowatts != 0f || TopUpKilowatts != 0f || SustainedKilowatts != 0f; }
         }
 
-        /// <summary>取某个意图对应的注热功率。未知意图与 None 都返回 0。</summary>
+        /// <summary>取某个意图对应的注热功率（kW）。未知意图与 None 都返回 0。</summary>
         public static float KilowattsFor(HeatingIntent intent)
         {
             switch (intent)
@@ -55,6 +61,42 @@ namespace MaterialOverhaul.Heating
                 default:
                     return 0f;
             }
+        }
+
+        /// <summary>取某个意图对应的**加热**电功率（W）。None 为 0。</summary>
+        public static float HeatingWattsFor(HeatingIntent intent)
+        {
+            switch (intent)
+            {
+                case HeatingIntent.Preheat:
+                    return PreheatWatts;
+
+                case HeatingIntent.TopUp:
+                    return TopUpWatts;
+
+                case HeatingIntent.Sustained:
+                    return SustainedWatts;
+
+                default:
+                    return 0f;
+            }
+        }
+
+        /// <summary>实际有电、正在注热时的电功率（W）；断电时为 0。</summary>
+        public static float AppliedHeatingWatts(HeatingIntent intent, bool powered)
+        {
+            return powered ? HeatingWattsFor(intent) : 0f;
+        }
+
+        /// <summary>恢复本版默认值（测试与调试覆盖后复位用）。</summary>
+        public static void ResetToDefaults()
+        {
+            PreheatWatts = Balance.PreheatWatts;
+            TopUpWatts = Balance.TopUpWatts;
+            SustainedWatts = Balance.SustainedWatts;
+            PreheatKilowatts = Balance.PreheatKilowatts;
+            TopUpKilowatts = Balance.TopUpKilowatts;
+            SustainedKilowatts = Balance.SustainedKilowatts;
         }
     }
 }

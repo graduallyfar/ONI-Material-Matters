@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MaterialOverhaul.Core;
+using MaterialOverhaul.Hardness;
 using MaterialOverhaul.Heating;
 using MaterialOverhaul.Zones;
 
@@ -31,11 +32,34 @@ namespace MaterialOverhaul.Game
             get { return zonesResolved; }
         }
 
-        /// <summary>登记过热规则与配方温区。可重复调用：已登记的条目不重复写入。</summary>
+        /// <summary>登记过热规则、配方温区与要求硬度。可重复调用：已登记的条目不重复写入。</summary>
         public static void Apply()
         {
             RegisterOverheatRules();
+            RegisterHardnessRequirements();
             RegisterRecipeZones();
+        }
+
+        /// <summary>
+        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：本版只登记金属精炼器 25（FIRM）。
+        ///
+        /// **不走调试路径**：调试样例值只在常规配置之上填补清单里未登记的建筑，
+        /// 不能把样例值扩散给全部白名单，也不能覆盖这里的数值。
+        /// </summary>
+        public static void RegisterHardnessRequirements()
+        {
+            foreach (string prefabId in HeatingScope.All)
+            {
+                byte existing;
+                if (HardnessRequirementTable.TryGet(prefabId, out existing))
+                {
+                    continue;
+                }
+
+                HardnessRequirementTable.Register(prefabId, Balance.MetalRefineryRequiredHardness);
+                ModLog.Info("要求硬度：" + prefabId + " 要求硬度 "
+                    + Balance.MetalRefineryRequiredHardness + "（本版暂定，使用原版 Element.hardness 分级）。");
+            }
         }
 
         /// <summary>
@@ -102,14 +126,14 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            zonesResolved = true;
-
             int registered = 0;
+            int unresolved = 0;
             foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
             {
                 ComplexRecipe recipe = FindRecipe(manager, spec);
                 if (recipe == null)
                 {
+                    unresolved++;
                     ModLog.WarnOnce("zone|unresolved|" + spec.FabricatorId + "|" + Join(spec.Inputs),
                         "配方温区：未能在原版配方表里找到 " + Describe(spec)
                         + "（可能是 DLC 未启用或配方标识变化），该条目本次未生效。");
@@ -127,6 +151,9 @@ namespace MaterialOverhaul.Game
                 ModLog.Info("配方温区：" + recipe.id + " 登记为 " + spec.Zone
                     + "（" + spec.Source + "）。");
             }
+
+            // 只有整份目录都解析出来才算「登记完成」；否则保留一次兜底重试的机会。
+            zonesResolved = unresolved == 0;
 
             if (registered > 0)
             {

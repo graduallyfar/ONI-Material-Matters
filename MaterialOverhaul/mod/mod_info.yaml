@@ -1,4 +1,4 @@
-supportedContent: ALL
+﻿supportedContent: ALL
 minimumSupportedBuild: 744825
 APIVersion: 2
-version: "0.0.2"
+version: "0.0.3"

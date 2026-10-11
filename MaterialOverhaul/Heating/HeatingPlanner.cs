@@ -1,3 +1,4 @@
+using MaterialOverhaul.Core;
 using MaterialOverhaul.Zones;
 
 namespace MaterialOverhaul.Heating
@@ -6,23 +7,20 @@ namespace MaterialOverhaul.Heating
     /// 预热与补热的意图判定。纯逻辑，不依赖游戏对象。
     ///
     /// 已确认规则（建筑细节文档 §2.1.1、§2.1.2、§2.1.4、§2.2.1）：
-    ///   - 默认模式只在「未开工且低于启动阈值」时预热；开工后在整个可工作温区内生产，不再补热。
-    ///   - 控制模式预热到最佳温区启动阈值；已在生产且低于补热启动线时边生产边补热。
-    ///   - **补热停止线高于补热启动线**，两者都在最佳温区内部，避免在同一温度点反复启停。
+    ///   - 默认模式只在「尚未开工且低于启动线」时预热；开工后在整个可工作温区内生产，不再补热。
+    ///   - 控制模式预热到最佳温区启动线；已在生产且低于补热启动线时边生产边补热。
+    ///   - **补热停止线高于补热启动线**，两者都在最佳温区内部，避免在同一温度点反复启停；
     ///     补热一旦开始就要加热到停止线才关闭，因此判定需要传入当前补热状态。
-    ///   - 超过最高可工作温度时停止内置加热，等待降温；不提供耐热保护。
-    ///   - 强制运行开启后持续加热，不因达到最佳温区或越过最高可工作温度而停止。
+    ///   - 超过高温暂停线时停止内置加热，等待降温；不提供耐热保护。
+    ///   - 强制运行开启后持续加热，不因达到最佳温区或越界而停止。
+    ///
+    /// 完整的运行状态机（启动资格、高温等待、回差）在 <see cref="RunController"/>；
+    /// 本类只回答「该注入哪一档热量」，供状态机与显示共用。
     /// </summary>
     public static class HeatingPlanner
     {
-        /// <summary>
-        /// 补热回差**占位值**：占最佳温区宽度的比例。
-        ///
-        /// 已确认的只是结构（停止线高于启动线、两者都在最佳温区内部），
-        /// 回差具体数值属数值阶段（开发计划 §10 第 7 项）。当前占位值用于让回差机制可运行、可测试，
-        /// **不是最终数值**，定案后只替换本常量。
-        /// </summary>
-        public const float HysteresisFractionPlaceholder = 0.05f;
+        /// <summary>补热回差（K）。本版暂定值，见 <see cref="Balance.TopUpHysteresisKelvin"/>。</summary>
+        public const float HysteresisKelvin = Balance.TopUpHysteresisKelvin;
 
         /// <summary>补热启动线：低于此线开始补热。位于最佳温区内部、低于停止线。</summary>
         public static float TopUpLine(TempZone zone, RunPolicy policy)
@@ -39,14 +37,25 @@ namespace MaterialOverhaul.Heating
         /// <summary>预热目标线：默认模式取最低工作启动阈值，控制模式取最佳工作启动阈值。</summary>
         public static float PreheatTarget(TempZone zone, RunPolicy policy)
         {
-            return policy.ControlMode ? StartThreshold.Control(zone) : StartThreshold.Default(zone);
+            return StartThreshold.LowStart(zone, policy);
         }
 
-        /// <summary>当前温区下的补热回差。</summary>
+        /// <summary>
+        /// 当前温区下的补热回差。
+        ///
+        /// 已确认的只是结构（停止线高于启动线、两者都在最佳温区内部）；回差数值属本版暂定。
+        /// 这里用固定开尔文数而不是比例，是为了让「460 开始 / 470 停止」在配置里直接可读；
+        /// 同时不允许回差大到把启动线推到最佳温区之外。
+        /// </summary>
         public static float Hysteresis(TempZone zone)
         {
             float width = zone.BestMax - zone.BestMin;
-            return width <= 0f ? 0f : HysteresisFractionPlaceholder * width;
+            if (width <= 0f)
+            {
+                return 0f;
+            }
+
+            return HysteresisKelvin > width ? width : HysteresisKelvin;
         }
 
         /// <summary>未跟踪补热状态时的简化入口：按「尚未补热」判断，只会启动补热、不会维持。</summary>
@@ -73,7 +82,7 @@ namespace MaterialOverhaul.Heating
                 return HeatingIntent.Sustained;
             }
 
-            if (TempZoneEvaluator.Evaluate(bodyTemp, zone) == TempState.AboveWorkMax)
+            if (bodyTemp > StartThreshold.HighPauseLine(zone, policy))
             {
                 // 高温保护：停止生产和内置加热，等待降温。
                 return HeatingIntent.None;

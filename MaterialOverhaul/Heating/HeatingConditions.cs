@@ -27,13 +27,24 @@ namespace MaterialOverhaul.Heating
     /// </summary>
     public static class HeatingConditions
     {
-        public static bool CanHeat(HeatingContext context)
+        /// <summary>
+        /// 是否可以**提出**加热需求（不含供电）。
+        ///
+        /// 电网需求必须能在未获供电时存在：否则断电时需求归零，来电后建筑不会被重新请求功率，
+        /// 表现为「免费注热」或「来电不启动」（V0.0.3 开发计划 §4.2）。
+        /// </summary>
+        public static bool CanRequestHeat(HeatingContext context)
         {
             return context.HasLockedBatch
                 && context.BatchMaterialsReady
-                && context.Powered
                 && !context.ManuallyDisabled
                 && !context.BrokenDown;
+        }
+
+        /// <summary>是否可以**实际**加热：在需求条件之上再要求已确认供电。</summary>
+        public static bool CanHeat(HeatingContext context)
+        {
+            return CanRequestHeat(context) && context.Powered;
         }
     }
 }

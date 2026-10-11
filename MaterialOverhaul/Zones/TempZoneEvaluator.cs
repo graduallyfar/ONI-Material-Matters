@@ -1,3 +1,4 @@
+using System;
 using MaterialOverhaul.Core;
 
 namespace MaterialOverhaul.Zones
@@ -11,11 +12,11 @@ namespace MaterialOverhaul.Zones
     /// </summary>
     public static class TempZoneEvaluator
     {
-        /// <summary>最低可工作温度处的效率。暂定值，数值阶段可能调整。</summary>
-        public const float LowBoundaryEfficiency = 0.3f;
+        /// <summary>最低可工作温度处的效率。本版暂定值（见 <see cref="Balance.LowBoundaryEfficiency"/>）。</summary>
+        public const float LowBoundaryEfficiency = Balance.LowBoundaryEfficiency;
 
-        /// <summary>最高可工作温度处的效率。暂定值，数值阶段可能调整。</summary>
-        public const float HighBoundaryEfficiency = 0.8f;
+        /// <summary>最高可工作温度处的效率。本版暂定值（见 <see cref="Balance.HighBoundaryEfficiency"/>）。</summary>
+        public const float HighBoundaryEfficiency = Balance.HighBoundaryEfficiency;
 
         /// <summary>
         /// 按建筑本体温度判断五态。区间开闭严格按 §3.1 五态表，不使用周围气体温度。
@@ -51,15 +52,20 @@ namespace MaterialOverhaul.Zones
         }
 
         /// <summary>
-        /// 温度效率 η_T。
+        /// 温度效率 η_T：已确认的指数分段（V0.0.3 开发计划 §2.2）。
         ///
-        /// 分段结构已确认：低温段随温度上升递增、最佳段恒为 1、高温段随温度上升递减；
-        /// 边界条件为暂定值：最低可工作温度处 LowBoundaryEfficiency(0.3)、
-        /// 最高可工作温度处 HighBoundaryEfficiency(0.8)。
+        /// <code>
+        /// η_T(T) = 0.3 ^ ((BestMin − T) / (BestMin − WorkMin))    WorkMin ≤ T &lt; BestMin
+        ///        = 1                                              BestMin ≤ T ≤ BestMax
+        ///        = 0.8 ^ ((T − BestMax) / (WorkMax − BestMax))    BestMax &lt; T ≤ WorkMax
+        /// </code>
         ///
-        /// **占位说明：** 总体设计给出的是指数形式，各段系数与转换关系尚未定案。
-        /// 这里先用线性插值把分段结构固定下来，属于**占位实现**，不是最终曲线，
-        /// 数值阶段确定后只改本函数，不影响判断层与调用方。
+        /// 写成归一化温差而不是绝对温度，是为了避免绝对开尔文参与大指数。
+        /// 验算点：375 ℃≈0.547723、725 ℃≈0.894427；300／450／650／800 ℃分别为 0.3／1／1／0.8。
+        ///
+        /// 越界取值：低于最低可工作温度保持低温侧边界效率、高于最高可工作温度保持高温侧边界效率，
+        /// 两者都**不归零**——普通运行靠生产许可停机，强制运行沿用边界效率继续生产。
+        /// 温度效率只乘到进度速度上，不改变投入与产出，也不改变产物质量。
         /// </summary>
         public static float Efficiency(TempState state, float bodyTemp, TempZone zone)
         {
@@ -70,21 +76,39 @@ namespace MaterialOverhaul.Zones
                     return 1f;
 
                 case TempState.BelowWorkMin:
-                    // 强制运行越界时保持低温侧边界效率，不归零、不取两侧最低值。
                     return LowBoundaryEfficiency;
 
                 case TempState.AboveWorkMax:
                     return HighBoundaryEfficiency;
 
                 case TempState.LowEfficiency:
-                    return Lerp(LowBoundaryEfficiency, 1f, Ratio(bodyTemp, zone.WorkMin, zone.BestMin));
+                    // 0.3 ^ ratio，ratio 从 1（在 WorkMin）降到 0（在 BestMin）。
+                    return Power(LowBoundaryEfficiency, 1f - Ratio(bodyTemp, zone.WorkMin, zone.BestMin), LowBoundaryEfficiency);
 
                 case TempState.HighEfficiency:
-                    return Lerp(HighBoundaryEfficiency, 1f, 1f - Ratio(bodyTemp, zone.BestMax, zone.WorkMax));
+                    // 0.8 ^ ratio，ratio 从 0（在 BestMax）升到 1（在 WorkMax）。
+                    return Power(HighBoundaryEfficiency, Ratio(bodyTemp, zone.BestMax, zone.WorkMax), HighBoundaryEfficiency);
 
                 default:
                     return 1f;
             }
+        }
+
+        /// <summary>指数效率：base 的 exponent 次方。段宽退化（exponent 不可用）时返回 fallback。</summary>
+        private static float Power(float baseValue, float exponent, float fallback)
+        {
+            if (float.IsNaN(exponent) || float.IsInfinity(exponent))
+            {
+                return fallback;
+            }
+
+            double value = Math.Pow(baseValue, exponent);
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return fallback;
+            }
+
+            return (float)value;
         }
 
         /// <summary>
@@ -159,11 +183,6 @@ namespace MaterialOverhaul.Zones
             }
 
             return t > 1f ? 1f : t;
-        }
-
-        private static float Lerp(float from, float to, float t)
-        {
-            return from + (to - from) * t;
         }
     }
 }
