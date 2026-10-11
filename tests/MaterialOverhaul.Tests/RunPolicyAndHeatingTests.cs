@@ -87,9 +87,13 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckEqual(HeatingIntent.Preheat,
                 HeatingPlanner.Decide(309f, Zone, RunPolicy.ControlModePolicy, false), "控制模式预热到最佳启动阈值");
             TestRunner.CheckEqual(HeatingIntent.TopUp,
-                HeatingPlanner.Decide(309f, Zone, RunPolicy.ControlModePolicy, true), "控制模式生产中低于补热线 → 补热");
+                HeatingPlanner.Decide(309f, Zone, RunPolicy.ControlModePolicy, true), "控制模式生产中低于补热启动线 → 补热");
             TestRunner.CheckEqual(HeatingIntent.None,
-                HeatingPlanner.Decide(311f, Zone, RunPolicy.ControlModePolicy, true), "达到补热停止线 → 停止补热");
+                HeatingPlanner.Decide(309.5f, Zone, RunPolicy.ControlModePolicy, true), "回差区间内且未在补热 → 不启动补热");
+            TestRunner.CheckEqual(HeatingIntent.TopUp,
+                HeatingPlanner.Decide(309.5f, Zone, RunPolicy.ControlModePolicy, true, true), "回差区间内且正在补热 → 继续补热");
+            TestRunner.CheckEqual(HeatingIntent.None,
+                HeatingPlanner.Decide(310.5f, Zone, RunPolicy.ControlModePolicy, true, true), "达到补热停止线 → 停止补热");
 
             TestRunner.CheckEqual(HeatingIntent.None,
                 HeatingPlanner.Decide(350f, Zone, RunPolicy.DefaultMode, false), "超过最高可工作温度 → 停止内置加热");
@@ -101,9 +105,9 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckEqual(HeatingIntent.None,
                 HeatingPlanner.Decide(318f, TempZone.Disabled, RunPolicy.DefaultMode, false), "未配置温区不加热");
 
-            TestRunner.CheckClose(StartThreshold.Control(Zone), HeatingPlanner.TopUpLine(Zone, RunPolicy.ControlModePolicy), Tol, "补热线当前取预热停止线");
-            TestRunner.CheckClose(HeatingPlanner.TopUpLine(Zone, RunPolicy.ControlModePolicy),
-                HeatingPlanner.TopUpStopLine(Zone, RunPolicy.ControlModePolicy), Tol, "补热启停线当前同点（待确认的文档冲突）");
+            TestRunner.CheckClose(StartThreshold.Control(Zone), HeatingPlanner.TopUpStopLine(Zone, RunPolicy.ControlModePolicy), Tol, "补热停止线取预热停止线");
+            TestRunner.Check(HeatingPlanner.TopUpLine(Zone, RunPolicy.ControlModePolicy) < HeatingPlanner.TopUpStopLine(Zone, RunPolicy.ControlModePolicy), "补热停止线高于启动线（回差）");
+            TestRunner.Check(HeatingPlanner.TopUpLine(Zone, RunPolicy.ControlModePolicy) > Zone.BestMin, "补热启动线仍位于最佳温区内部");
         }
     }
 }
