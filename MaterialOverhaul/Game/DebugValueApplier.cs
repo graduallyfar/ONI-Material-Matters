@@ -39,14 +39,24 @@ namespace MaterialOverhaul.Game
                 HardnessRequirementTable.Register(prefabId, DebugValues.SampleRequiredHardness);
             }
 
-            HeatingPower.PreheatKilowatts = DebugValues.HeatingKilowatts;
-            HeatingPower.TopUpKilowatts = DebugValues.HeatingKilowatts;
-            HeatingPower.SustainedKilowatts = DebugValues.HeatingKilowatts;
+            // 加热功率：调试开关只填补「还没配置」的情况。v0.0.2 已经有用户指定的测试口径
+            // （用电 → 注热 1:1000，预热 1200 kW），不能被调试样例值 5 kW 覆盖。
+            bool heatingOverridden = !HeatingPower.IsConfigured;
+            if (heatingOverridden)
+            {
+                HeatingPower.PreheatKilowatts = DebugValues.HeatingKilowatts;
+                HeatingPower.TopUpKilowatts = DebugValues.HeatingKilowatts;
+                HeatingPower.SustainedKilowatts = DebugValues.HeatingKilowatts;
+            }
+
             DamageConversion.DamagePerWearUnit = DebugValues.DamagePerWearUnit;
 
             ModLog.Warn("调试数值已写入：配方温区 " + recipeCount + " 条，要求硬度 "
-                + HardnessRequirementTable.Count + " 条，加热功率 " + DebugValues.HeatingKilowatts
-                + " kW，磨损转换系数 " + DebugValues.DamagePerWearUnit + "。");
+                + HardnessRequirementTable.Count + " 条，磨损转换系数 " + DebugValues.DamagePerWearUnit
+                + "；加热功率" + (heatingOverridden
+                    ? "用调试样例值 " + DebugValues.HeatingKilowatts + " kW（原本未配置）"
+                    : "保持已配置值 " + HeatingPower.PreheatKilowatts + " kW（调试样例 "
+                        + DebugValues.HeatingKilowatts + " kW 未覆盖）") + "。");
         }
 
         private static int RegisterSampleZones()

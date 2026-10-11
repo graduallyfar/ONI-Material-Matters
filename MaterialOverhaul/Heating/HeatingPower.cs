@@ -9,27 +9,28 @@ namespace MaterialOverhaul.Heating
     /// **注入的是热量而不是固定温升**：实际温升由 SIM 按建筑热容与换热计算
     /// （原版建筑有效热容 = `Def.MassForTemperatureModification × Element.specificHeatCapacity`）。
     ///
-    /// **以下数值是测试值，不是最终平衡数值**（V0.0.2 开发计划 §7）：
-    ///   - 预热：用户给定 1200 W 用电，按 1:1 换算为 1.2 kW 注入热量；
-    ///   - 补热：设计文档已确认「补热额外消耗 200 W」，按同一 1:1 口径为 0.2 kW；
-    ///   - 强制运行持续加热：沿用预热值占位（设计文档明确该功率属数值阶段）。
+    /// **当前是「用电 → 注热 1:1000」的测试口径（用户指定，只为快速验证机制）**：
+    ///   - 预热：1200 W 用电 → 1.2 kW × 1000 = **1200 kW** 注热；
+    ///   - 补热：设计确认的 200 W 额外用电 → 0.2 kW × 1000 = **200 kW**；
+    ///   - 强制运行持续加热：沿用预热值 1200 kW。
     ///
-    /// 换算关系本身（用电 → 注热）仍是待定项：这里按 1:1 测试口径实现，
-    /// **没有**把「用电全部用于加热」当成已确认的统一换算比例。
-    ///
-    /// 另外，V0.0.2 尚未接入预热／补热的**额外用电**：注入的热量目前不会在电网侧多扣功率，
-    /// 建筑只要求「有实际供电」（见 <see cref="HeatingConditions"/>）。
+    /// 1200 kW 会让金属精炼器在不到一个周期内就达到 300 ℃ 级温区，**不是平衡数值**；
+    /// 1:1000 也不是已确认的正式换算关系（正式关系仍是待定项）。
+    /// 要回到正式评估，把 <see cref="TestHeatMultiplier"/> 改回 1（即 1:1）或直接改三档功率。
     /// </summary>
     public static class HeatingPower
     {
-        /// <summary>预热阶段注热功率（kW），测试值。</summary>
-        public static float PreheatKilowatts = 1.2f;
+        /// <summary>测试用「用电 → 注热」倍率。1 = 1:1（此前的口径），1000 = 用户指定的测试口径。</summary>
+        public const float TestHeatMultiplier = 1000f;
 
-        /// <summary>补热阶段注热功率（kW）：设计的 200 W 额外用电按 1:1 换算，测试值。</summary>
-        public static float TopUpKilowatts = 0.2f;
+        /// <summary>预热注热功率（kW）：1200 W 用电 × 测试倍率。</summary>
+        public static float PreheatKilowatts = 1.2f * TestHeatMultiplier;
 
-        /// <summary>强制运行的持续加热功率（kW），暂沿用预热值，测试值。</summary>
-        public static float SustainedKilowatts = 1.2f;
+        /// <summary>补热注热功率（kW）：设计的 200 W 额外用电 × 测试倍率。</summary>
+        public static float TopUpKilowatts = 0.2f * TestHeatMultiplier;
+
+        /// <summary>强制运行的持续加热功率（kW），暂沿用预热值。</summary>
+        public static float SustainedKilowatts = 1.2f * TestHeatMultiplier;
 
         /// <summary>是否已经配置过任意一项功率。</summary>
         public static bool IsConfigured

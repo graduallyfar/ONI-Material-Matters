@@ -148,4 +148,71 @@ namespace MaterialOverhaul.Patches
             }
         }
     }
+
+    /// <summary>
+    /// 建筑右侧信息卡里的**过热温度**行。
+    ///
+    /// 原版 <c>Overheatable.GetDescriptors</c> 给出的「过热温度」一行用的是属性总值。
+    /// 本 Mod 的规则值已经补偿进该属性，这里再显式重建这一行，作用有两个：
+    ///   1. 保证卡片里显示的**一定**是规则值（属性补偿万一失败也不会退回 75 ℃）；
+    ///   2. 把规则来源写进提示（主建造材料与熔点），玩家能看出这个阈值是怎么来的。
+    ///
+    /// **只在真正建成的实例上生效**（<c>MaterialOverhaulFab.Spawned</c>），
+    /// 因此建造菜单里的预制件、以及其它显示位置保持原版不变（用户要求先只改右侧卡片）。
+    /// 文本全部走本 Mod 的键，不依赖原版 LocString 的类路径。
+    /// </summary>
+    [HarmonyPatch(typeof(Overheatable), "GetDescriptors")]
+    internal static class Patch_Overheatable_GetDescriptors
+    {
+        private const string KeyOverheatLine = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE";
+        private const string KeyOverheatTooltip = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_TOOLTIP";
+
+        private static void Postfix(Overheatable __instance, ref List<Descriptor> __result)
+        {
+            try
+            {
+                if (__instance == null || __result == null)
+                {
+                    return;
+                }
+
+                MaterialOverhaulFab fab = __instance.GetComponent<MaterialOverhaulFab>();
+                if (fab == null || !fab.Spawned)
+                {
+                    return;
+                }
+
+                float overheat;
+                string materialName;
+                float meltingPoint;
+                if (!fab.TryGetOverheatRuleValue(out overheat, out materialName, out meltingPoint))
+                {
+                    return;
+                }
+
+                string overheatText = GameUtil.GetFormattedTemperature(overheat);
+                string meltingPointText = GameUtil.GetFormattedTemperature(meltingPoint);
+                string fatalText = GameUtil.GetFormattedTemperature(__instance.baseFatalTemp);
+
+                string lineTemplate = Strings.Get(KeyOverheatLine);
+                string tooltipTemplate = Strings.Get(KeyOverheatTooltip);
+
+                string text = string.IsNullOrEmpty(lineTemplate)
+                    ? overheatText
+                    : string.Format(lineTemplate, overheatText);
+
+                string tooltip = string.IsNullOrEmpty(tooltipTemplate)
+                    ? text
+                    : string.Format(tooltipTemplate, materialName, meltingPointText, overheatText, fatalText);
+
+                // 原版这一行最多一条，直接替换，避免同一信息出现两次。
+                __result.Clear();
+                __result.Add(new Descriptor(text, tooltip));
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("信息卡过热温度行补丁异常：" + e);
+            }
+        }
+    }
 }

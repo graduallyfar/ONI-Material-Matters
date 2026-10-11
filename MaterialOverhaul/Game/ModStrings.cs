@@ -60,6 +60,21 @@ namespace MaterialOverhaul.Game
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
                 }
             }
+
+            // STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.*
+            public static class BUILDINGEFFECTS
+            {
+                public static class MATERIALOVERHAUL
+                {
+                    /// <summary>信息卡里的过热温度行：{0} 过热阈值。</summary>
+                    public static LocString OVERHEAT_LINE = "过热温度：{0}（材料革新：主建造材料熔点 × 85%）";
+
+                    /// <summary>
+                    /// 过热温度行的提示：{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值、{3} 致命温度。
+                    /// </summary>
+                    public static LocString OVERHEAT_TOOLTIP = "材料革新：过热阈值 = 主建造材料 {0} 的熔点 {1} × 85% = {2}。\n建筑本体超过该温度会过热受损；温区上限只停止生产，不提供耐热保护。\n致命温度：{3}。";
+                }
+            }
         }
 
         // STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR

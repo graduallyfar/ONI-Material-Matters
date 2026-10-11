@@ -87,6 +87,12 @@ namespace MaterialOverhaul.Game
         /// <summary>本建筑的 prefab id，作为侧表索引。</summary>
         public string PrefabId { get; private set; }
 
+        /// <summary>
+        /// 是否已经生成。建造菜单里的**预制件**不算：过热阈值依赖建造材料，
+        /// 只有真正建成的实例才有规则值，预制件保持原版显示（见信息卡补丁）。
+        /// </summary>
+        public bool Spawned { get; private set; }
+
         // ---- 本 Mod 自有数据，随存档落盘（§8.1）。字段在每次变化时同步，无需保存钩子。----
         [Serialize] private string[] orderRecipeIds = new string[0];
         [Serialize] private int[] orderRemaining = new int[0];
@@ -148,6 +154,7 @@ namespace MaterialOverhaul.Game
         protected override void OnSpawn()
         {
             base.OnSpawn();
+            Spawned = true;
             fabricator = GetComponent<ComplexFabricator>();
             primaryElement = GetComponent<PrimaryElement>();
             energyConsumer = GetComponent<EnergyConsumer>();
@@ -180,6 +187,7 @@ namespace MaterialOverhaul.Game
 
         protected override void OnCleanUp()
         {
+            Spawned = false;
             Unsubscribe(RefreshUserMenuHash, OnRefreshUserMenu);
             base.OnCleanUp();
         }
@@ -962,6 +970,45 @@ namespace MaterialOverhaul.Game
         // ---- 过热阈值（V0.0.2：主建造材料熔点 × 85%，建筑细节文档 §2.1.5）----
 
         /// <summary>
+        /// 取本实例按规则算出的过热阈值与显示来源：主建造材料名、材料熔点。
+        ///
+        /// 未登记过热规则的建筑、没有本体元素、或熔点不可用时返回 false，
+        /// 调用方保持原版显示（信息卡里的过热温度行就不会被改写）。
+        /// </summary>
+        public bool TryGetOverheatRuleValue(out float overheatKelvin, out string materialName, out float meltingPointKelvin)
+        {
+            overheatKelvin = 0f;
+            materialName = null;
+            meltingPointKelvin = 0f;
+
+            if (primaryElement == null)
+            {
+                return false;
+            }
+
+            Element element = primaryElement.Element;
+            if (element == null)
+            {
+                return false;
+            }
+
+            float fraction;
+            if (!OverheatRuleTable.TryGet(PrefabId, out fraction))
+            {
+                return false;
+            }
+
+            if (!OverheatRule.TryCompute(element.highTemp, fraction, out overheatKelvin))
+            {
+                return false;
+            }
+
+            materialName = element.name;
+            meltingPointKelvin = element.highTemp;
+            return true;
+        }
+
+        /// <summary>
         /// 按「主建造材料熔点 × 规则比例」改写本建筑的过热阈值。
         ///
         /// 阈值由**建造材料**而不是配方决定：同一栋建筑换成熔点更高的材料就能在更高温度下工作，
@@ -984,21 +1031,21 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            float fraction;
-            if (!OverheatRuleTable.TryGet(PrefabId, out fraction))
-            {
-                return;
-            }
-
             float value;
-            if (!OverheatRule.TryCompute(element.highTemp, fraction, out value))
+            string materialName;
+            float meltingPoint;
+            if (!TryGetOverheatRuleValue(out value, out materialName, out meltingPoint))
             {
-                ModLog.WarnOnce("overheat|bad-melting|" + PrefabId,
-                    PrefabId + "：主建造材料 " + element.name + " 的熔点 " + element.highTemp
-                    + " K 不可用，过热阈值保持原版设定。");
+                float fraction;
+                if (OverheatRuleTable.TryGet(PrefabId, out fraction))
+                {
+                    ModLog.WarnOnce("overheat|bad-melting|" + PrefabId,
+                        PrefabId + "：主建造材料 " + element.name + " 的熔点 " + element.highTemp
+                        + " K 不可用，过热阈值保持原版设定。");
+                }
+
                 return;
             }
-
             if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f)
             {
                 return;
@@ -1036,8 +1083,14 @@ namespace MaterialOverhaul.Game
 
             MarkStructureTemperatureDirty();
 
-            ModLog.Info(PrefabId + "：主建造材料 " + element.name + " 熔点 " + element.highTemp.ToString("F1")
-                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + fraction.ToString("F2") + "）。");
+            float appliedFraction;
+            if (!OverheatRuleTable.TryGet(PrefabId, out appliedFraction))
+            {
+                appliedFraction = OverheatRule.MeltingPointFraction;
+            }
+
+            ModLog.Info(PrefabId + "：主建造材料 " + materialName + " 熔点 " + meltingPoint.ToString("F1")
+                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + appliedFraction.ToString("F2") + "）。");
         }
 
         /// <summary>
