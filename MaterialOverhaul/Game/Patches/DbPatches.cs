@@ -17,6 +17,9 @@ namespace MaterialOverhaul.Patches
             try
             {
                 DamageStatusItems.Register();
+
+                // 先登记已确认的设计数值，调试样例值只填补仍未配置的条目。
+                ContentRegistration.Apply();
                 DebugValueApplier.Apply();
             }
             catch (Exception e)

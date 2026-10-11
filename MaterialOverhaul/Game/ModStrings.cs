@@ -94,6 +94,19 @@ namespace MaterialOverhaul.Game
                     }
                 }
             }
+
+            // STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
+            // 过热温度属性修正项的说明文本（v0.0.2：过热阈值 = 主建造材料熔点 × 85%）。
+            public static class ATTRIBUTES
+            {
+                public static class MATERIALOVERHAUL
+                {
+                    public static class OVERHEAT
+                    {
+                        public static LocString DESCRIPTION = "材料革新：过热阈值取主建造材料熔点的 85%";
+                    }
+                }
+            }
         }
     }
 }

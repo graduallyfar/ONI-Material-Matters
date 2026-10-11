@@ -104,9 +104,12 @@ namespace MaterialOverhaul.Tests
             queue.Lock(queue.SelectNext(o => o.RecipeId == "copper"));
             TestRunner.CheckEqual("copper", queue.LockedBatch.RecipeId, "锁定 copper");
 
+            // 其他订单到料时，轮换指针可以轮到 iron（下一批才轮到它），
+            // 但已经开工的 copper 批次由原版锁定，不会被取消（§2.3.3）。
             HashSet<string> lateArrival = Ready("iron");
             int index = queue.SelectNext(o => lateArrival.Contains(o.RecipeId));
-            TestRunner.CheckEqual(0, index, "其他订单到料不抢占已锁定批次");
+            TestRunner.CheckEqual(1, index, "其他订单到料后指针轮到 iron");
+            TestRunner.CheckEqual(1, queue.Cursor, "指针随缺料订单推动");
             TestRunner.CheckEqual("copper", queue.LockedBatch.RecipeId, "锁定批次保持不变");
         }
 

@@ -6,13 +6,23 @@ namespace MaterialOverhaul.Orders
     /// </summary>
     public sealed class OrderEntry
     {
+        /// <summary>
+        /// 无限订单每轮的**占位**批次数。
+        ///
+        /// 已确认的规则是「无限订单完成本轮后让出，本轮批次数由玩家设定」，但原版界面只有「∞」开关、
+        /// 没有额度输入，侧屏交互尚未实现（V0.0.1 开发计划 §7.5）。因此本次用 1 批/轮作占位：
+        /// 无限订单每完成一批就让出给后面的订单，不会独占建筑。
+        /// **这不是最终数值**，侧屏额度接入后由玩家设定值取代。
+        /// </summary>
+        public const int PlaceholderInfiniteBatchQuota = 1;
+
         /// <summary>原版配方标识（ComplexRecipe.id）。原版标识可读、可预测，直接复用，不新建平行配方系统。</summary>
         public string RecipeId;
 
         /// <summary>是否为无限订单。无限表示订单持续保留，不表示永远占用建筑。</summary>
         public bool IsInfinite;
 
-        /// <summary>有限订单剩余数量（批次数）。</summary>
+        /// <summary>有限订单剩余数量（批次数），**包含正在生产的那一批**，与原版计数口径一致。</summary>
         public int Remaining;
 
         /// <summary>无限订单每轮连续生产的批次数（玩家设定额度）。</summary>
@@ -54,6 +64,12 @@ namespace MaterialOverhaul.Orders
         public bool IsFinished
         {
             get { return !IsInfinite && Remaining <= 0; }
+        }
+
+        /// <summary>无限订单本轮是否已经用满额度（用满就要让出给后面的订单）。</summary>
+        public bool IsRoundComplete
+        {
+            get { return IsInfinite && BatchesDoneThisRound >= BatchQuota; }
         }
 
         public override string ToString()

@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using KSerialization;
+using Klei.AI;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Hardness;
 using MaterialOverhaul.Heating;
 using MaterialOverhaul.Orders;
 using MaterialOverhaul.Zones;
+using UnityEngine;
 
 namespace MaterialOverhaul.Game
 {
@@ -69,6 +71,11 @@ namespace MaterialOverhaul.Game
         private BuildingHP buildingHP;
         private Overheatable overheatable;
         private LogicPorts logicPorts;
+
+        // 过热阈值（v0.0.2）：按主建造材料熔点改写，运行时不持久化，读档由 OnSpawn 重新计算。
+        private bool overheatApplied;
+        private float overheatTemperature;
+        private AttributeModifier overheatModifier;
 
         // 损坏状态：只维护当前尚未修复的原因，不做历史统计。
         private bool overheated;
@@ -157,6 +164,12 @@ namespace MaterialOverhaul.Game
 
             wear.Restore(wearAccumulated);
             RestoreOrders();
+
+            // 旧存档或其它码路可能已经有原版队列数量：先纳入订单表，再按订单表重新决定下一笔。
+            EnsureOrdersImported();
+
+            // 过热阈值按主建造材料熔点设定；Overheatable.OnSpawn 之后还会再调用一次，两处都是幂等的。
+            ApplyOverheatRule();
 
             // 面板开关随用户菜单刷新重建；对象清理时必须退订（AGENTS 实现约定）。
             Subscribe(RefreshUserMenuHash, OnRefreshUserMenu);
@@ -444,6 +457,12 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public void TickDamage()
         {
+            // 兜底：spawn 时主建造材料还没就绪（元素缺失等）时补一次，避免高温柔区运行却仍用原版阈值。
+            if (!overheatApplied)
+            {
+                ApplyOverheatRule();
+            }
+
             UpdateOverheatState();
             ClearDamageWhenFullyRepaired();
             ApplyMechanicalWear();
@@ -614,54 +633,425 @@ namespace MaterialOverhaul.Game
                 + "，允许生产 " + gate.AllowsProduction + "。");
         }
 
-        // ---- 订单顺序（本版最小部分：有序列表、轮换指针、锁定批次，§7.3）----
+        // ---- 订单流程（V0.0.2：以订单为单位接管顺序，建筑细节文档 §2.3）----
 
-        /// <summary>
-        /// 本 Mod 顺序表中下一个候选配方的标识；没有订单时返回 null。
-        /// 接入层用它把玩家添加顺序映射到原版配方列表，接管“下一个执行哪个订单”。
-        /// </summary>
-        public string PeekNextOrderRecipeId()
+        /// <summary>本 Mod 订单表里是否有数据。没有数据时轮换与原版一致。</summary>
+        public bool HasOrderData
         {
-            return orders.PeekNextRecipeId();
+            get { return orders.Count > 0; }
         }
 
-        /// <summary>记录一笔新添加的订单。同一配方重复添加视为新订单，不合并。</summary>
-        public void NoteRecipeQueued(string recipeId)
+        /// <summary>
+        /// 重新决定「下一个执行哪一笔订单」，写入原版 <c>nextOrderIdx</c> 与 <c>nextOrderIsWorkable</c>。
+        ///
+        /// 顺序完全由本 Mod 订单表给出（玩家添加顺序，同配方可重复）；
+        /// 「还有没有剩余批次」与「原料是否齐备」仍用原版判断，避免复制一份原版逻辑后产生偏差。
+        /// 全部订单都不可执行时不移动轮换指针，等材料或订单变化后再检查（不空转）。
+        /// </summary>
+        public void RefreshNextOrder()
         {
-            if (string.IsNullOrEmpty(recipeId))
+            if (fabricator == null)
             {
                 return;
             }
 
-            foreach (OrderEntry entry in orders.Orders)
+            EnsureOrdersImported();
+            if (orders.Count == 0)
             {
-                if (entry.RecipeId == recipeId)
-                {
-                    return;
-                }
+                return;
             }
 
-            orders.Add(OrderEntry.Limited(recipeId, 1));
+            ComplexRecipe[] recipes = fabricator.GetRecipes();
+            if (recipes == null || recipes.Length == 0)
+            {
+                return;
+            }
+
+            int index = orders.SelectNext(entry => IsOrderExecutable(entry, recipes));
+            if (index < 0)
+            {
+                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
+                return;
+            }
+
+            string recipeId = orders.Orders[index].RecipeId;
+            int recipeIndex = IndexOfRecipe(recipes, recipeId);
+            if (recipeIndex < 0)
+            {
+                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
+                ModLog.WarnOnce("order|recipe-unavailable|" + PrefabId + "|" + recipeId,
+                    PrefabId + "：订单表里的配方 '" + recipeId + "' 不在本建筑的配方列表中（DLC 未启用或配方被移除）。");
+                return;
+            }
+
+            FabricatorAccess.NextOrderIdx(fabricator) = recipeIndex;
+            FabricatorAccess.NextOrderIsWorkable(fabricator) = true;
+        }
+
+        /// <summary>
+        /// 订单表里没有、但原版计数里还有数量的配方（旧存档、其它码路直接改原版计数）纳入订单表，
+        /// 否则这些订单会因为不在订单表里而永远轮不到。
+        /// </summary>
+        public void EnsureOrdersImported()
+        {
+            if (fabricator == null)
+            {
+                return;
+            }
+
+            ComplexRecipe[] recipes = fabricator.GetRecipes();
+            Dictionary<string, int> counts = FabricatorAccess.QueueCounts(fabricator);
+            if (recipes == null || recipes.Length == 0 || counts == null)
+            {
+                return;
+            }
+
+            bool imported = false;
+            foreach (ComplexRecipe recipe in recipes)
+            {
+                if (recipe == null || orders.ContainsRecipe(recipe.id))
+                {
+                    continue;
+                }
+
+                int count;
+                if (!counts.TryGetValue(recipe.id, out count) || count == 0)
+                {
+                    continue;
+                }
+
+                if (FabricatorAccess.IsInfinite(count))
+                {
+                    orders.Add(OrderEntry.Infinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota));
+                }
+                else
+                {
+                    orders.Add(OrderEntry.Limited(recipe.id, count));
+                }
+
+                imported = true;
+                ModLog.Info("订单迁移：" + PrefabId + " 把原版队列里的 " + recipe.id
+                    + "（数量 " + count + "）纳入本 Mod 订单表。");
+            }
+
+            if (imported)
+            {
+                SyncOrderFields();
+            }
+        }
+
+        /// <summary>原版「+」之后同步订单表：新增一笔 1 批订单；计数越过上限变无限时整笔替换为无限订单。</summary>
+        public void OnVanillaIncrement(ComplexRecipe recipe, int previousCount)
+        {
+            if (fabricator == null || recipe == null)
+            {
+                return;
+            }
+
+            int count = fabricator.GetRecipeQueueCount(recipe);
+            if (FabricatorAccess.IsInfinite(count))
+            {
+                orders.ReplaceRecipeWithInfinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota);
+            }
+            else if (FabricatorAccess.IsInfinite(previousCount))
+            {
+                // 原版在无限状态下点「+」会把计数清成 0：订单表同样取消该配方。
+                orders.RemoveAllOfRecipe(recipe.id);
+            }
+            else
+            {
+                orders.AddBatchRequest(recipe.id);
+            }
+
+            AfterOrderChange(recipe.id);
+        }
+
+        /// <summary>原版「−」之后同步订单表：按订单逐笔回退。</summary>
+        public void OnVanillaDecrement(ComplexRecipe recipe, int previousCount)
+        {
+            if (fabricator == null || recipe == null)
+            {
+                return;
+            }
+
+            int count = fabricator.GetRecipeQueueCount(recipe);
+            if (count == previousCount)
+            {
+                // respectInfinite 为真且已是无限：原版不做改动，保留无限订单及其本轮进度。
+                return;
+            }
+
+            if (FabricatorAccess.IsInfinite(count))
+            {
+                // 原版会把数量 0 递减成无限。本 Mod 不凭一次递减凭空创建订单，并把计数改回 0。
+                ForceVanillaCount(recipe.id, 0);
+                ModLog.Info(PrefabId + "：" + recipe.id
+                    + " 原版数量为 0 时递减会变成无限，本 Mod 不创建订单，已把计数改回 0。");
+                return;
+            }
+
+            if (FabricatorAccess.IsInfinite(previousCount))
+            {
+                // 原版把无限降到队列上限：改记为对应批次数，之后继续逐笔回退。
+                orders.ReplaceRecipeWithBatches(recipe.id, count);
+            }
+            else if (count <= 0)
+            {
+                orders.RemoveAllOfRecipe(recipe.id);
+            }
+            else
+            {
+                orders.DecrementLastBatch(recipe.id);
+            }
+
+            AfterOrderChange(recipe.id);
+        }
+
+        /// <summary>侧屏直接设置数量：0 取消、-1 记为无限订单、正数改写为一笔对应批次的订单。</summary>
+        public void OnVanillaSetCount(ComplexRecipe recipe, int count)
+        {
+            if (fabricator == null || recipe == null)
+            {
+                return;
+            }
+
+            if (FabricatorAccess.IsInfinite(count))
+            {
+                orders.ReplaceRecipeWithInfinite(recipe.id, OrderEntry.PlaceholderInfiniteBatchQuota);
+            }
+            else if (count > 0)
+            {
+                orders.ReplaceRecipeWithBatches(recipe.id, count);
+            }
+            else
+            {
+                orders.RemoveAllOfRecipe(recipe.id);
+            }
+
+            AfterOrderChange(recipe.id);
+        }
+
+        /// <summary>原版开始生产时锁定对应的那一笔订单（重复配方靠轮换位置区分）。</summary>
+        public void LockOrderForStart(string recipeId)
+        {
+            if (!orders.LockForStart(recipeId))
+            {
+                ModLog.WarnOnce("order|lock-missing|" + PrefabId + "|" + recipeId,
+                    PrefabId + "：原版开始的批次 '" + recipeId + "' 在订单表里找不到对应订单，批次仍按原版结算。");
+                return;
+            }
+
             SyncOrderFields();
         }
 
-        /// <summary>原版队列中该配方数量归零时，从本 Mod 订单顺序中移除。</summary>
-        public void NoteRecipeCleared(string recipeId)
+        /// <summary>批次完成前的订单记账。必须在原版正文之前完成，无限订单的本轮额度才会即时生效。</summary>
+        public void OnBatchCompleting(string recipeId)
         {
-            if (string.IsNullOrEmpty(recipeId))
+            OrderEntry completed = orders.CompleteBatch(recipeId);
+            if (completed == null)
+            {
+                ModLog.WarnOnce("order|complete-unmanaged|" + PrefabId + "|" + recipeId,
+                    PrefabId + "：完成了一个不在订单表里的批次 '" + recipeId + "'。");
+                return;
+            }
+
+            SyncOrderFields();
+        }
+
+        /// <summary>
+        /// 批次完成后的计数对齐：原版正文内部已经自己扣过一次计数（走私有的
+        /// <c>DecrementRecipeQueueCountInternal</c>），这里以订单表为准写回并让队列重新计算。
+        /// </summary>
+        public void OnBatchCompleted(string recipeId)
+        {
+            SyncVanillaCount(recipeId);
+            if (fabricator != null)
+            {
+                fabricator.SetQueueDirty();
+            }
+        }
+
+        /// <summary>订单表变化后统一处理：写回原版计数、持久化、让队列重新计算。</summary>
+        private void AfterOrderChange(string recipeId)
+        {
+            SyncVanillaCount(recipeId);
+            SyncOrderFields();
+            if (fabricator != null)
+            {
+                fabricator.SetQueueDirty();
+            }
+        }
+
+        /// <summary>把订单表里该配方的总需求写回原版计数字典（无限订单写原版的无限哨兵值）。</summary>
+        private void SyncVanillaCount(string recipeId)
+        {
+            RecipeTotal total = orders.TotalFor(recipeId);
+            ForceVanillaCount(recipeId, total.Infinite ? ComplexFabricator.QUEUE_INFINITE : total.Batches);
+        }
+
+        private void ForceVanillaCount(string recipeId, int batches)
+        {
+            if (fabricator == null || string.IsNullOrEmpty(recipeId))
             {
                 return;
             }
 
-            for (int i = 0; i < orders.Count; i++)
+            Dictionary<string, int> counts = FabricatorAccess.QueueCounts(fabricator);
+            if (counts != null)
             {
-                if (orders.Orders[i].RecipeId == recipeId)
+                counts[recipeId] = batches;
+            }
+        }
+
+        /// <summary>
+        /// 该订单当前是否可执行：配方存在、还有剩余批次、原料齐备。
+        ///
+        /// 剩余批次与原版一致：无限订单恒有剩余，正在生产的那一批已从计数里扣掉。
+        /// 原料沿用原版判断（金属精炼器的冷却液要求也在其中）；「已投料视为本批次材料齐全」
+        /// 由原版锁定批次加计数扣减体现，因此这里不再把加工存储重复计入，避免同一批原料算两次。
+        /// </summary>
+        private bool IsOrderExecutable(OrderEntry entry, ComplexRecipe[] recipes)
+        {
+            if (entry == null)
+            {
+                return false;
+            }
+
+            int index = IndexOfRecipe(recipes, entry.RecipeId);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            ComplexRecipe recipe = recipes[index];
+            if (FabricatorAccess.GetRemainingQueueCount(fabricator, recipe) <= 0)
+            {
+                return false;
+            }
+
+            return FabricatorAccess.HasIngredients(fabricator, recipe, fabricator.inStorage);
+        }
+
+        private static int IndexOfRecipe(ComplexRecipe[] recipes, string recipeId)
+        {
+            if (recipes == null || string.IsNullOrEmpty(recipeId))
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < recipes.Length; i++)
+            {
+                if (recipes[i] != null && recipes[i].id == recipeId)
                 {
-                    orders.RemoveAt(i);
-                    SyncOrderFields();
-                    return;
+                    return i;
                 }
             }
+
+            return -1;
+        }
+
+        // ---- 过热阈值（V0.0.2：主建造材料熔点 × 85%，建筑细节文档 §2.1.5）----
+
+        /// <summary>
+        /// 按「主建造材料熔点 × 规则比例」改写本建筑的过热阈值。
+        ///
+        /// 阈值由**建造材料**而不是配方决定：同一栋建筑换成熔点更高的材料就能在更高温度下工作，
+        /// 这是材料选择的一部分代价。做法是保留原版 <c>Overheatable</c> 的行为，
+        /// 只把属性总值补偿到规则值，并让结构温度重新注册，使 SIM 使用新阈值
+        /// （原版 <c>UpdateSimState</c> 每次脏标记都会重新读取该属性）。
+        ///
+        /// 幂等：值没变时不做任何事；两处调用（组件 OnSpawn 与 Overheatable.OnSpawn）谁先谁后都成立。
+        /// </summary>
+        public void ApplyOverheatRule()
+        {
+            if (overheatable == null || primaryElement == null)
+            {
+                return;
+            }
+
+            Element element = primaryElement.Element;
+            if (element == null)
+            {
+                return;
+            }
+
+            float fraction;
+            if (!OverheatRuleTable.TryGet(PrefabId, out fraction))
+            {
+                return;
+            }
+
+            float value;
+            if (!OverheatRule.TryCompute(element.highTemp, fraction, out value))
+            {
+                ModLog.WarnOnce("overheat|bad-melting|" + PrefabId,
+                    PrefabId + "：主建造材料 " + element.name + " 的熔点 " + element.highTemp
+                    + " K 不可用，过热阈值保持原版设定。");
+                return;
+            }
+
+            if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f)
+            {
+                return;
+            }
+
+            overheatApplied = true;
+            overheatTemperature = value;
+
+            // 先写基础值，再读一次属性：这会触发原版 InitializeModifiers，
+            // 之后补偿差额不会因为修饰项在别处建立而重复叠加。
+            overheatable.baseOverheatTemp = value;
+            float current = overheatable.OverheatTemperature;
+
+            AttributeInstance instance = overheatable.GetAttributes().Get(Db.Get().BuildingAttributes.OverheatTemperature);
+            if (instance == null)
+            {
+                ModLog.WarnOnce("overheat|no-attribute|" + PrefabId,
+                    PrefabId + "：找不到过热温度属性，无法把阈值设为规则值（当前 " + current.ToString("F1") + " K）。");
+                return;
+            }
+
+            if (overheatModifier == null)
+            {
+                overheatModifier = new AttributeModifier(
+                    Db.Get().BuildingAttributes.OverheatTemperature.Id,
+                    0f,
+                    Strings.Get("STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"));
+                instance.Add(overheatModifier);
+            }
+
+            // 把原版基础值与建造材料自带的过热修正一起补偿掉，使属性总值恰好等于规则值。
+            // 这里用「总值 − 本 Mod 修正项」得到固定部分，重复调用时结果稳定（不会叠加）。
+            float fixedPart = instance.GetTotalValue() - overheatModifier.Value;
+            overheatModifier.SetValue(value - fixedPart);
+
+            MarkStructureTemperatureDirty();
+
+            ModLog.Info(PrefabId + "：主建造材料 " + element.name + " 熔点 " + element.highTemp.ToString("F1")
+                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + fraction.ToString("F2") + "）。");
+        }
+
+        /// <summary>
+        /// 让原版把新的过热阈值推给 SIM：<c>Disable</c> + <c>Enable</c> 会把结构温度标脏，
+        /// 原版 <c>UpdateSimState</c> 随后重新读取 <c>Overheatable.OverheatTemperature</c>。
+        /// 原版 <c>Overheatable.OnSpawn</c> 用的就是这个办法。
+        /// </summary>
+        private void MarkStructureTemperatureDirty()
+        {
+            if (!structureHandleResolved)
+            {
+                structureHandle = GameComps.StructureTemperatures.GetHandle(gameObject);
+                structureHandleResolved = true;
+            }
+
+            if (!structureHandle.IsValid() || !GameComps.StructureTemperatures.IsEnabled(structureHandle))
+            {
+                // 结构温度还没注册：原版注册时会读取当前属性值，因此不需要在这里处理。
+                return;
+            }
+
+            GameComps.StructureTemperatures.Disable(structureHandle);
+            GameComps.StructureTemperatures.Enable(structureHandle);
         }
 
         private void SyncOrderFields()

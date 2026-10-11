@@ -60,24 +60,22 @@ namespace MaterialOverhaul.Tests
 
         private static void HeatingPowerMapping()
         {
-            TestRunner.Section("加热功率占位（数值阶段填写）");
-            TestRunner.Check(!HeatingPower.IsConfigured, "默认未配置任何功率");
-            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "未配置时预热功率为 0");
-            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "未配置时补热功率为 0");
-            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "未配置时持续加热功率为 0");
+            TestRunner.Section("加热功率映射（v0.0.2 测试值）");
+            TestRunner.CheckClose(1.2f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热功率 1.2 kW（用户给定 1200 W 按 1:1 换算）");
+            TestRunner.CheckClose(0.2f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热功率 0.2 kW（设计 200 W 按 1:1 换算）");
+            TestRunner.CheckClose(1.2f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热沿用预热值");
             TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.None), Tol, "None 意图不注热");
+            TestRunner.Check(HeatingPower.IsConfigured, "默认已配置测试值");
 
             HeatingPower.PreheatKilowatts = 12f;
-            HeatingPower.TopUpKilowatts = 3f;
-            TestRunner.Check(HeatingPower.IsConfigured, "配置后标记为已配置");
-            TestRunner.CheckClose(12f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热取预热功率");
-            TestRunner.CheckClose(3f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热取补热功率");
-            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "未配置的项仍为 0");
-
-            // 复位，避免影响其他用例。
-            HeatingPower.PreheatKilowatts = 0f;
             HeatingPower.TopUpKilowatts = 0f;
-            TestRunner.Check(!HeatingPower.IsConfigured, "复位后回到未配置");
+            TestRunner.CheckClose(12f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "改写后取新值");
+            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "改写为 0 的项不注热");
+
+            // 复位为测试值，避免影响其他用例。
+            HeatingPower.PreheatKilowatts = 1.2f;
+            HeatingPower.TopUpKilowatts = 0.2f;
+            HeatingPower.SustainedKilowatts = 1.2f;
         }
 
         private static void Wear()

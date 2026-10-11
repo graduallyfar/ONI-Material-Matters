@@ -1,28 +1,35 @@
 namespace MaterialOverhaul.Heating
 {
     /// <summary>
-    /// 加热功率配置。**数值阶段填写，当前全部为 0。**
-    ///
-    /// 开发计划 §5.3、§5.5 明确「加热功率与热量转换关系为空函数占位」，
-    /// 因此这里默认不注入任何热量：机制就位，但不产生未定数值的玩法影响。
-    /// 填入数值即为生效，不需要改动判断层与接入层。
+    /// 加热功率配置。数值集中在这里，判断层与接入层只读这里的结果。
     ///
     /// 单位是 kW：注入热量 = kW × dt（秒）= kJ，与原版 SteamTurbine2 的写法一致
     /// （`ProduceEnergy(handle, 8f * dt, ...)`）。
     ///
     /// **注入的是热量而不是固定温升**：实际温升由 SIM 按建筑热容与换热计算
-    /// （原版建筑有效热容写作 Def.MassForTemperatureModification × Element.specificHeatCapacity）。
+    /// （原版建筑有效热容 = `Def.MassForTemperatureModification × Element.specificHeatCapacity`）。
+    ///
+    /// **以下数值是测试值，不是最终平衡数值**（V0.0.2 开发计划 §7）：
+    ///   - 预热：用户给定 1200 W 用电，按 1:1 换算为 1.2 kW 注入热量；
+    ///   - 补热：设计文档已确认「补热额外消耗 200 W」，按同一 1:1 口径为 0.2 kW；
+    ///   - 强制运行持续加热：沿用预热值占位（设计文档明确该功率属数值阶段）。
+    ///
+    /// 换算关系本身（用电 → 注热）仍是待定项：这里按 1:1 测试口径实现，
+    /// **没有**把「用电全部用于加热」当成已确认的统一换算比例。
+    ///
+    /// 另外，V0.0.2 尚未接入预热／补热的**额外用电**：注入的热量目前不会在电网侧多扣功率，
+    /// 建筑只要求「有实际供电」（见 <see cref="HeatingConditions"/>）。
     /// </summary>
     public static class HeatingPower
     {
-        /// <summary>预热阶段功率（kW）。</summary>
-        public static float PreheatKilowatts;
+        /// <summary>预热阶段注热功率（kW），测试值。</summary>
+        public static float PreheatKilowatts = 1.2f;
 
-        /// <summary>补热阶段功率（kW）。设计文档另定「补热额外消耗 200 W 用电」，那是用电口径，与注热功率不是同一个量。</summary>
-        public static float TopUpKilowatts;
+        /// <summary>补热阶段注热功率（kW）：设计的 200 W 额外用电按 1:1 换算，测试值。</summary>
+        public static float TopUpKilowatts = 0.2f;
 
-        /// <summary>强制运行的持续加热功率（kW）。</summary>
-        public static float SustainedKilowatts;
+        /// <summary>强制运行的持续加热功率（kW），暂沿用预热值，测试值。</summary>
+        public static float SustainedKilowatts = 1.2f;
 
         /// <summary>是否已经配置过任意一项功率。</summary>
         public static bool IsConfigured
