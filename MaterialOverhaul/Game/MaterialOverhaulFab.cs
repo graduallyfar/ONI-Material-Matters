@@ -160,6 +160,9 @@ namespace MaterialOverhaul.Game
 
             // 面板开关随用户菜单刷新重建；对象清理时必须退订（AGENTS 实现约定）。
             Subscribe(RefreshUserMenuHash, OnRefreshUserMenu);
+
+            // 接入证据：确认组件确实挂到了这栋建筑上。每栋实例 spawn 时打一条，便于在日志里核对。
+            ModLog.Info("已接入建筑 " + PrefabId + "（格子 " + Grid.PosToCell(this) + "）。");
         }
 
         protected override void OnCleanUp()
