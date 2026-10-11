@@ -443,23 +443,31 @@ namespace MaterialOverhaul.Game
             LogDamageCause(cause);
         }
 
+        /// <summary>
+        /// 更新过热状态。**一旦达到过热条件就计入本次损坏原因，并保持到完全修复为止**：
+        /// 建筑受损后即使温度回落，损失仍在、原因仍是过热，维修方式也要据此选择。
+        /// 没有过热组件的建筑不参与过热判定。
+        /// </summary>
         private void UpdateOverheatState()
         {
-            if (overheatable == null || primaryElement == null)
+            if (overheatable == null || primaryElement == null || overheated)
             {
-                overheated = false;
                 return;
             }
 
-            overheated = primaryElement.Temperature > overheatable.OverheatTemperature;
+            if (primaryElement.Temperature > overheatable.OverheatTemperature)
+            {
+                overheated = true;
+            }
         }
 
         private void ClearDamageWhenFullyRepaired()
         {
-            // 完全修复后结束本次损坏状态；过热状态仍由实际温度决定。
+            // 完全修复后结束本次损坏状态：机械与过热原因一并清除。
             if (buildingHP != null && !buildingHP.NeedsRepairs)
             {
                 mechanicalDamaged = false;
+                overheated = false;
             }
         }
 

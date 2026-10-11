@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Patches
     ///   ComplexFabricator.CompleteWorkingOrder      public virtual           180935
     ///   ComplexFabricatorWorkable.OnWorkTick        protected override       126157
     ///   Workable.GetEfficiencyMultiplier            public virtual           157412
+    ///   Overheatable.ResetTemperature               public                   142560
     ///
     /// 补丁只作用于白名单建筑：组件只在白名单建筑的 prefab 上挂载，其余建筑取不到组件即原样放行。
     /// </summary>
@@ -340,6 +341,42 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("批次完成同步补丁异常：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 维修时的温度重置。原版 <c>Overheatable</c> 订阅 <c>BuildingPartiallyRepaired</c> 后
+    /// **无条件**把本体温度设为 293.15 K；设计要求「只有机械损坏时维修不重置温度」，
+    /// 因此这里按当前损坏原因决定是否放行：含过热才重置。
+    ///
+    /// 白名单外的建筑取不到组件，直接放行原版行为。
+    /// </summary>
+    [HarmonyPatch(typeof(Overheatable), "ResetTemperature")]
+    internal static class Patch_Overheatable_ResetTemperature
+    {
+        private static bool Prefix(Overheatable __instance)
+        {
+            try
+            {
+                MaterialOverhaulFab fab = PatchHelpers.FabOf(__instance);
+                if (fab == null)
+                {
+                    return true;
+                }
+
+                bool reset = fab.RepairResetsTemperature;
+                if (!reset)
+                {
+                    ModLog.Info(fab.PrefabId + "：只有机械损坏，维修不重置温度。");
+                }
+
+                return reset;
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("维修温度重置补丁异常：" + e);
+                return true;
             }
         }
     }
