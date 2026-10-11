@@ -72,6 +72,15 @@ namespace MaterialOverhaul.Patches
                 {
                     __instance.gameObject.AddComponent<MaterialOverhaulFab>();
                 }
+
+                // 「允许／暂停生产」自动化输入的执行者。复用原版组件而不是自己写一套：
+                // 它的「未接线按 unNetworkedValue = 1 处理」正是设计要的默认放行语义，
+                // 并且自带原版的「逻辑控制：已启用／已暂停」状态项。
+                if (AutomationControlScope.IsEnabled(prefabId)
+                    && __instance.GetComponent<LogicOperationalController>() == null)
+                {
+                    __instance.gameObject.AddComponent<LogicOperationalController>();
+                }
             }
             catch (Exception e)
             {

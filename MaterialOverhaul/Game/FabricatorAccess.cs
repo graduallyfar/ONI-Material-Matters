@@ -130,6 +130,26 @@ namespace MaterialOverhaul.Game
             return counts != null && recipeIndex >= 0 && recipeIndex < counts.Count && counts[recipeIndex] > 0;
         }
 
+        /// <summary>是否还有任意配方保有预取额度；全为 0 通常说明队列还没被刷新过。</summary>
+        public static bool AnyPrefetchQuota(ComplexFabricator fabricator)
+        {
+            List<int> counts = OpenOrderCounts(fabricator);
+            if (counts == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < counts.Count; i++)
+            {
+                if (counts[i] > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// 旧存档的「无限」哨兵值。原版 <c>ComplexFabricator.OnSpawn</c> 会把数量 100 改写成
         /// <c>QUEUE_INFINITE</c>，这里按同一口径识别，避免导入时把无限订单读成 100 批。

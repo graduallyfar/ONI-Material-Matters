@@ -271,6 +271,19 @@ namespace MaterialOverhaul.Game
                         public static LocString ACTIVE = "已锁定批次处于最佳温区";
                         public static LocString INACTIVE = "未处于最佳温区，或没有已锁定批次";
                     }
+
+                    /// <summary>
+                    /// 「允许／暂停生产」自动化输入端口（建筑细节文档 §2.2.3）。
+                    /// 端口本身复用原版逻辑控制端口，说明文本由本 Mod 在 <c>LogicPorts.OnSpawn</c> 时改写。
+                    /// </summary>
+                    public static class PRODUCTION_CONTROL
+                    {
+                        public static LocString DESCRIPTION = "允许／暂停生产";
+
+                        public static LocString ACTIVE = "绿色：允许生产（仍需要材料、供电与对应的开工条件）";
+
+                        public static LocString INACTIVE = "红色：暂停生产；不影响配方准备、预热与补热";
+                    }
                 }
             }
 

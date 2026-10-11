@@ -242,6 +242,94 @@ namespace MaterialOverhaul.Game
         /* ---- 调度 ---- */
 
         /// <summary>
+        /// 自动化红信号下的批次准备（建筑细节文档 §2.2.3、V0.0.3 开发计划 §3.1）。
+        ///
+        /// 设计约定：**红色只暂停生产，不影响配方准备、预热和补热**。原版把「总体可运行」
+        /// 当作开始一批的前提（<c>RefreshAndStartNextOrder</c> 先判断 <c>operational.IsOperational</c>），
+        /// 因此红信号下没有当前批次时根本无法锁定，也就无从预热。这里补上准备路径：
+        ///   1. 需要时先让原版重算队列（建立预取额度并提交取料需求）；
+        ///   2. 选中材料齐备的那一笔并锁定；
+        ///   3. 调用原版唯一开始入口 <c>StartWorkingOrder</c> 完成投料与订单记账。
+        /// 整个过程**不推进生产、不结算产物**：红信号下原版不会建立操作任务，复制人不会被占用。
+        ///
+        /// 只在「确实挂了自动化输入端口」且「红信号是唯一阻塞原因」时接管，其余情况完全走原版。
+        /// </summary>
+        public void PrepareBatchWhenAutomationBlocks()
+        {
+            if (fabricator == null || !hasAutomationInput)
+            {
+                return;
+            }
+
+            if (AutomationAllowsProduction || HasLockedBatch)
+            {
+                // 绿信号走原版路径；已有当前批次时不需要准备。
+                if (!AutomationAllowsProduction && HasLockedBatch && queueRefreshNeeded)
+                {
+                    // 红信号下原版不会刷新队列：原料到货等变化时补一次，保证后续批次的取料继续。
+                    RefreshVanillaQueue();
+                }
+
+                return;
+            }
+
+            if (orders.Count == 0 || IsBrokenDown || IsManuallyDisabled || !IsPowered)
+            {
+                return;
+            }
+
+            ComplexRecipe[] recipes = fabricator.GetRecipes();
+            if (recipes == null || recipes.Length == 0)
+            {
+                return;
+            }
+
+            // 红信号下原版不会跑 RefreshQueue，预取额度与取料需求需要这里补上。
+            if (queueRefreshNeeded || !FabricatorAccess.AnyPrefetchQuota(fabricator))
+            {
+                RefreshVanillaQueue();
+            }
+
+            int orderIndex = orders.SelectNext(entry => IsOrderExecutable(entry, recipes));
+            if (orderIndex < 0)
+            {
+                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
+                return;
+            }
+
+            string recipeId = orders.Orders[orderIndex].RecipeId;
+            int recipeIndex = IndexOfRecipe(recipes, recipeId);
+            if (recipeIndex < 0)
+            {
+                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
+                return;
+            }
+
+            if (!FabricatorAccess.HasPrefetchQuota(fabricator, recipeIndex))
+            {
+                // 材料还没到齐、额度还没建立：保留订单，等存储变化后再来一次（不空转）。
+                FabricatorAccess.NextOrderIsWorkable(fabricator) = false;
+                return;
+            }
+
+            FabricatorAccess.NextOrderIdx(fabricator) = recipeIndex;
+            FabricatorAccess.NextOrderIsWorkable(fabricator) = true;
+
+            // 唯一的开始入口；锁定订单身份与运行状态由它的前缀补丁完成。
+            FabricatorAccess.StartWorkingOrder(fabricator, recipeIndex);
+
+            // 同一模拟步内立刻按新批次重新判定，避免这一帧仍报告「无批次、输出红」。
+            UpdateRunState();
+        }
+
+        /// <summary>让原版重算队列：刷新预取额度、取料需求与材料需求。</summary>
+        private void RefreshVanillaQueue()
+        {
+            queueRefreshNeeded = false;
+            FabricatorAccess.RefreshQueue(fabricator);
+        }
+
+        /// <summary>
         /// 重新决定「下一个执行哪一笔订单」，写入原版 <c>nextOrderIdx</c> 与 <c>nextOrderIsWorkable</c>。
         ///
         /// 顺序完全由本 Mod 订单表给出（玩家添加顺序，同配方可重复）；
@@ -289,8 +377,7 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>无副作用的下一批订单预告（不改轮换指针）。全部缺料或没有订单时返回 null。</summary>
-        public OrderEntry NextPreviewOrder()
-        {
+        public OrderEntry NextPreviewOrder()        {
             if (fabricator == null || orders.Count == 0)
             {
                 return null;

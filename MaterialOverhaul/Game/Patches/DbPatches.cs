@@ -93,6 +93,10 @@ namespace MaterialOverhaul.Patches
                 { "RubberMaker", new CellOffset(2, 2) }
             };
 
+        /// <summary>
+        /// 「允许／暂停生产」自动化**输入**端口的位置来自 <see cref="AutomationControlScope"/>：
+        /// 本版只给金属精炼器添加，其余白名单建筑保持接口不变。
+        /// </summary>
         private static void Prefix(object[] __args)
         {
             try
@@ -115,40 +119,87 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                if (!OutputPortOffsets.TryGetValue(def.PrefabID, out CellOffset offset))
-                {
-                    // 名单内但还没有确定端口位置的建筑：不加端口，并留下可定位记录（不静默）。
-                    ModLog.WarnOnce("port|missing|" + def.PrefabID,
-                        def.PrefabID + " 已列入白名单但还没有配置温区输出端口位置，本次不添加端口。");
-                    return;
-                }
-
-                if (def.LogicOutputPorts == null)
-                {
-                    def.LogicOutputPorts = new System.Collections.Generic.List<LogicPorts.Port>();
-                }
-
-                foreach (LogicPorts.Port existing in def.LogicOutputPorts)
-                {
-                    if (existing.id == TemperatureZoneSignal.PortId)
-                    {
-                        return;
-                    }
-                }
-
-                def.LogicOutputPorts.Add(LogicPorts.Port.OutputPort(
-                    TemperatureZoneSignal.PortId,
-                    offset,
-                    Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION"),
-                    Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"),
-                    Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE")));
-
-                ModLog.Info("已为 " + def.PrefabID + " 添加温区输出端口，位置 " + offset.x + "," + offset.y + "。");
+                AddProductionControlPort(def);
+                AddTemperatureZonePort(def);
             }
             catch (Exception e)
             {
-                ModLog.Error("添加温区输出端口失败：" + e);
+                ModLog.Error("添加逻辑端口失败：" + e);
             }
+        }
+
+        /// <summary>
+        /// 添加「允许／暂停生产」输入端口。
+        ///
+        /// 复用原版 <see cref="LogicOperationalController"/> 的端口标识与组件：
+        /// 它的「未接线按 <c>unNetworkedValue = 1</c> 处理」语义正是本设计要的默认放行，
+        /// 并且会顺带给出原版的「逻辑控制：已启用／已暂停」状态项。
+        /// 端口说明文本由本 Mod 在 <c>LogicPorts.OnSpawn</c> 时改成「允许／暂停生产」。
+        /// </summary>
+        private static void AddProductionControlPort(BuildingDef def)
+        {
+            CellOffset offset;
+            if (!AutomationControlScope.TryGetOffset(def.PrefabID, out offset))
+            {
+                return;
+            }
+
+            if (def.LogicInputPorts == null)
+            {
+                def.LogicInputPorts = new System.Collections.Generic.List<LogicPorts.Port>();
+            }
+
+            foreach (LogicPorts.Port existing in def.LogicInputPorts)
+            {
+                if (existing.id == AutomationControlScope.PortId)
+                {
+                    return;
+                }
+            }
+
+            def.LogicInputPorts.Add(LogicPorts.Port.InputPort(
+                AutomationControlScope.PortId,
+                offset,
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"),
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"),
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"),
+                show_wire_missing_icon: false));
+
+            ModLog.Info("已为 " + def.PrefabID + " 添加「允许／暂停生产」自动化输入端口，位置 "
+                + offset.x + "," + offset.y + "。");
+        }
+
+        private static void AddTemperatureZonePort(BuildingDef def)
+        {
+            if (!OutputPortOffsets.TryGetValue(def.PrefabID, out CellOffset offset))
+            {
+                // 名单内但还没有确定端口位置的建筑：不加端口，并留下可定位记录（不静默）。
+                ModLog.WarnOnce("port|missing|" + def.PrefabID,
+                    def.PrefabID + " 已列入白名单但还没有配置温区输出端口位置，本次不添加端口。");
+                return;
+            }
+
+            if (def.LogicOutputPorts == null)
+            {
+                def.LogicOutputPorts = new System.Collections.Generic.List<LogicPorts.Port>();
+            }
+
+            foreach (LogicPorts.Port existing in def.LogicOutputPorts)
+            {
+                if (existing.id == TemperatureZoneSignal.PortId)
+                {
+                    return;
+                }
+            }
+
+            def.LogicOutputPorts.Add(LogicPorts.Port.OutputPort(
+                TemperatureZoneSignal.PortId,
+                offset,
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION"),
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"),
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE")));
+
+            ModLog.Info("已为 " + def.PrefabID + " 添加温区输出端口，位置 " + offset.x + "," + offset.y + "。");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSerialization;
 using Klei.AI;
@@ -46,6 +46,9 @@ namespace MaterialOverhaul.Game
         /// <summary>原版建筑受伤事件（GameHashes.DoBuildingDamage = -794517298）。</summary>
         private const int DoBuildingDamageHash = -794517298;
 
+        /// <summary>原版存储变化事件（GameHashes.OnStorageChange = -1697596308）。</summary>
+        private const int StorageChangeHash = -1697596308;
+
         private const string KeyDamageSourceMechanical = "STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR";
 
         /* ---- 原版组件引用（不序列化）---- */
@@ -80,6 +83,8 @@ namespace MaterialOverhaul.Game
 
         private bool productionPausedByTemperature;
         private bool mechanicalDamageMark;
+        private bool hasAutomationInput;
+        private bool queueRefreshNeeded;
         private float currentRequestedWatts;
         private float currentUsedWatts;
         private float workEfficiencyMultiplier = 1f;
@@ -282,24 +287,59 @@ namespace MaterialOverhaul.Game
             // 旧存档或其它码路可能已经有原版队列数量：先纳入订单表，再按订单表重新决定下一笔。
             EnsureOrdersImported();
 
+            // 读档后以订单表为准把原版计数写回一次，保证红信号准备路径读到的额度是自洽的。
+            SyncAllVanillaCounts();
+            queueRefreshNeeded = true;
+
             // 过热阈值按主建造材料熔点设定；Overheatable.OnSpawn 之后还会再调用一次，两处都是幂等的。
             ApplyOverheatRule();
+
+            // 「允许／暂停生产」输入端口是否真的挂上了：决定是否启用自动化红信号相关逻辑。
+            hasAutomationInput = HasInputPort(AutomationControlScope.PortId);
 
             // 面板开关随用户菜单刷新重建；对象清理时必须退订（AGENTS 实现约定）。
             Subscribe(RefreshUserMenuHash, OnRefreshUserMenu);
 
+            // 存储变化事件：红信号下原版不会刷新队列，这里用它决定何时补一次刷新（原料到货等）。
+            Subscribe(StorageChangeHash, OnStorageChanged);
+
             // 电网补丁按消费者反查组件；不注册就不能改写功率读数。
             PowerRegistry.Register(energyConsumer, this);
 
-            ModLog.Info("已接入建筑 " + PrefabId + "（格子 " + Grid.PosToCell(this) + "）。");
+            ModLog.Info("已接入建筑 " + PrefabId + "（格子 " + Grid.PosToCell(this)
+                + (hasAutomationInput ? "，含「允许／暂停生产」自动化输入端口" : string.Empty) + "）。");
         }
 
         protected override void OnCleanUp()
         {
             Spawned = false;
             Unsubscribe(RefreshUserMenuHash, OnRefreshUserMenu);
+            Unsubscribe(StorageChangeHash, OnStorageChanged);
             PowerRegistry.Unregister(energyConsumer);
             base.OnCleanUp();
+        }
+
+        private void OnStorageChanged(object data)
+        {
+            queueRefreshNeeded = true;
+        }
+
+        private bool HasInputPort(HashedString portId)
+        {
+            if (logicPorts == null || logicPorts.inputPortInfo == null)
+            {
+                return false;
+            }
+
+            foreach (LogicPorts.Port port in logicPorts.inputPortInfo)
+            {
+                if (port.id == portId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>建筑本体温度。不使用周围气体温度代替（§3.1）。</summary>

@@ -367,3 +367,19 @@ msgstr "订单列表（按添加顺序）："
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_ROW"
 msgid "{0}{1}. {2}"
 msgstr "{0}{1}. {2}"
+
+#. 「允许／暂停生产」自动化输入端口（复用原版逻辑控制端口，由本 Mod 改写说明文本）
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"
+msgid "Allow / Pause Production"
+msgstr "允许／暂停生产"
+
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"
+msgid "Green: production allowed (materials, power and the mode's start conditions still apply)"
+msgstr "绿色：允许生产（仍需要材料、供电与对应的开工条件）"
+
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"
+msgid "Red: production paused; recipe preparation, preheating and top-up heating are not affected"
+msgstr "红色：暂停生产；不影响配方准备、预热与补热"

@@ -29,10 +29,73 @@ namespace MaterialOverhaul.Game
             get { return fabricator != null && fabricator.CurrentWorkingOrder != null; }
         }
 
-        /// <summary>自动化与其它非温度条件是否允许生产。金属精炼器没有原版自动化输入端口。</summary>
+        /// <summary>
+        /// 是否挂上了「允许／暂停生产」自动化输入端口。
+        /// 没挂端口的建筑（本版只有金属精炼器挂了）不参与自动化判断，行为等同原版。
+        /// </summary>
+        public bool HasAutomationInput
+        {
+            get { return hasAutomationInput; }
+        }
+
+        /// <summary>
+        /// 自动化是否允许生产（建筑细节文档 §2.2.3）。绿色允许、红色暂停。
+        ///
+        /// 读的是原版 <see cref="LogicOperationalController.LogicOperationalFlag"/>：
+        /// 它由原版组件按「未接线 → <c>unNetworkedValue = 1</c> → 允许」写入，
+        /// 因此**没有接线的建筑默认放行**，不会因为新增端口而变成默认停产。
+        /// 标记尚未初始化时同样按放行处理。
+        /// </summary>
         public bool AutomationAllowsProduction
         {
-            get { return operational == null || operational.IsOperational; }
+            get
+            {
+                if (!hasAutomationInput)
+                {
+                    return true;
+                }
+
+                bool known = false;
+                bool allowed = true;
+                if (operational != null && operational.Flags != null)
+                {
+                    known = operational.Flags.TryGetValue(LogicOperationalController.LogicOperationalFlag, out allowed);
+                }
+
+                return AutomationGate.AllowsProduction(hasAutomationInput, known, allowed);
+            }
+        }
+
+        /// <summary>自动化是否为红信号（仅当建筑确实挂了输入端口时才可能为真）。</summary>
+        public bool AutomationRed
+        {
+            get { return hasAutomationInput && !AutomationAllowsProduction; }
+        }
+
+        /// <summary>
+        /// 自动化红信号的**唯一**来源判定：机器本身可用（供电、未禁用、未损坏），
+        /// 只是自动化给了红信号。原版「不可运行就取消订单需求与取料」的行为只在不是这种情况时使用。
+        /// </summary>
+        public bool BlockedByAutomationOnly
+        {
+            get
+            {
+                bool known = false;
+                bool allowed = true;
+                if (operational != null && operational.Flags != null)
+                {
+                    known = operational.Flags.TryGetValue(LogicOperationalController.LogicOperationalFlag, out allowed);
+                }
+
+                return AutomationGate.IsAutomationOnlyBlock(
+                    hasAutomationInput,
+                    known,
+                    allowed,
+                    IsPowered,
+                    IsManuallyDisabled,
+                    IsBrokenDown,
+                    operational == null || operational.IsFunctional);
+            }
         }
 
         /// <summary>是否已有操作工到位；非复制人操作的建筑视为恒真。</summary>
@@ -124,6 +187,7 @@ namespace MaterialOverhaul.Game
             EnsureOrdersImported();
             UpdateCoolingTrend(dt);
             UpdateRunState();
+            PrepareBatchWhenAutomationBlocks();
             UpdatePowerAndHeating(dt);
             EnforceProductionGate();
             TickDamage();

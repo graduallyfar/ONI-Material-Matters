@@ -1,4 +1,4 @@
-using MaterialOverhaul.Core;
+﻿using MaterialOverhaul.Core;
 using MaterialOverhaul.Heating;
 
 namespace MaterialOverhaul.Tests
@@ -15,6 +15,35 @@ namespace MaterialOverhaul.Tests
         {
             Matrix();
             DemandSurvivesOutage();
+            AutomationInput();
+        }
+
+        private static void AutomationInput()
+        {
+            TestRunner.Section("「允许／暂停生产」自动化输入（§2.2.3）");
+            TestRunner.Check(Heating.AutomationGate.AllowsProduction(false, false, false), "没有输入端口 → 不受自动化约束");
+            TestRunner.Check(Heating.AutomationGate.AllowsProduction(true, false, false), "端口标记尚未初始化 → 默认允许（未接线放行）");
+            TestRunner.Check(Heating.AutomationGate.AllowsProduction(true, true, true), "绿色 → 允许生产");
+            TestRunner.Check(!Heating.AutomationGate.AllowsProduction(true, true, false), "红色 → 暂停生产");
+
+            TestRunner.Check(
+                Heating.AutomationGate.IsAutomationOnlyBlock(true, true, false, true, false, false, true),
+                "红信号且机器本身可用 → 只由自动化造成");
+            TestRunner.Check(
+                !Heating.AutomationGate.IsAutomationOnlyBlock(true, true, false, false, false, false, true),
+                "红信号但断电 → 不算只由自动化造成（走原版取消取料路径）");
+            TestRunner.Check(
+                !Heating.AutomationGate.IsAutomationOnlyBlock(true, true, false, true, true, false, true),
+                "手动禁用 → 不算只由自动化造成");
+            TestRunner.Check(
+                !Heating.AutomationGate.IsAutomationOnlyBlock(true, true, false, true, false, true, true),
+                "损坏停机 → 不算只由自动化造成");
+            TestRunner.Check(
+                !Heating.AutomationGate.IsAutomationOnlyBlock(true, true, true, true, false, false, true),
+                "绿信号 → 不是红信号阻塞");
+            TestRunner.Check(
+                !Heating.AutomationGate.IsAutomationOnlyBlock(false, false, false, true, false, false, true),
+                "没有端口 → 不参与自动化阻塞判定");
         }
 
         private static PowerDemandContext Base()
