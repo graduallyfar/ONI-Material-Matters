@@ -26,6 +26,7 @@ namespace MaterialOverhaul.Game
     ///   - <c>MaterialOverhaulFab.Heating.cs</c>：运行状态机、加热注热与电网需求；
     ///   - <c>MaterialOverhaulFab.Damage.cs</c>：磨损计时、损坏原因与维修。
     ///   - <c>MaterialOverhaulFab.Mode.cs</c>：输出接线与独立模式状态；风险状态在 MaterialRiskStatusItems。
+    ///   - <c>MaterialOverhaulFab.Chores.cs</c>：操作任务创建门控与温度暂停清理。
     /// </summary>
     [SerializationConfig(MemberSerialization.OptIn)]
     public partial class MaterialOverhaulFab : KMonoBehaviour

@@ -21,11 +21,15 @@
 
   <ItemGroup>
     <Compile Include="*.cs" />
+    <!-- 操作任务门控用游戏替身运行实际接入源码；不加载 Unity 或游戏程序集。 -->
+    <Compile Include="..\..\MaterialOverhaul\Game\MaterialOverhaulFab.Chores.cs" Link="Linked\Game\MaterialOverhaulFab.Chores.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\Patches\OperationChorePatches.cs" Link="Linked\Game\OperationChorePatches.cs" />
     <!--
       链接主工程的判断层源码做源码级测试。
       Core\ModLog.cs 被排除：它依赖 UnityEngine.Debug，测试用 ModLogStub.cs 替身，
       这样测试不引游戏程序集、可在纯 .NET 下运行。
-      未来的游戏接入层会放在独立目录（如 Game\），不进入本测试工程。
+      游戏接入层通常不进入本测试工程；上方仅链接操作任务门控的两份源码，
+      使用 OperationChoreGameStubs.cs 提供的游戏替身，不替代真实游戏验收。
     -->
     <Compile Include="..\..\MaterialOverhaul\Core\**\*.cs" Exclude="..\..\MaterialOverhaul\Core\ModLog.cs" LinkBase="Linked\Core" />
     <Compile Include="..\..\MaterialOverhaul\Zones\**\*.cs" LinkBase="Linked\Zones" />

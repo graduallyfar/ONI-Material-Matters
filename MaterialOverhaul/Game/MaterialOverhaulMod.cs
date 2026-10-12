@@ -40,6 +40,7 @@ namespace MaterialOverhaul
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
+            ModLog.Info("v0.1.0 操作任务温度门控修订已加载：未达到温度许可时阻止创建／重建操作任务。");
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>

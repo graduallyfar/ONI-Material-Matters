@@ -316,16 +316,9 @@ namespace MaterialOverhaul.Game
 
             if (!allowProduction)
             {
-                if (!productionPausedByTemperature)
-                {
-                    FabricatorAccess.CancelChore(fabricator);
-                    productionPausedByTemperature = true;
-                    ModLog.Info(PrefabId + "：温度条件不允许生产，已撤销操作任务并释放复制人（批次与进度保留）。");
-                }
-
                 // 原版本步可能已经把活动状态设为 true（它还认为有工作），这里明确关掉，
                 // 避免生产热与生产电耗在本步被计入。
-                SetOperationalActive(false);
+                PauseOperationForTemperature();
                 return;
             }
 
