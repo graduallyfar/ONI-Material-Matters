@@ -8,11 +8,12 @@ namespace MaterialOverhaul.Patches
     /// <summary>
     /// 温区输出端口的说明文本（端口描述／激活说明／非激活说明）与可定位日志。
     ///
-    /// **为什么要在这里再写一遍（游戏内日志已确认的问题）**：原版
+    /// 原版
     /// <c>BuildingLoader.InitializeLogicPorts</c> 在创建**建筑预制件**时就把 Def 上的端口描述
     /// 复制给 <c>LogicPorts</c>（`outputPortInfo = def.LogicOutputPorts.ToArray()`）。
     /// 那一刻本 Mod 的本地化键是否已经建好不由我们保证：一旦当时取到空串，
-    /// 这个端口在**整个游戏进程内**都没有说明文本，重新读档也不会变。
+    /// 描述会一直沿用。因此在实例初始化后刷新文本，并核对物理端口、格子命中与选择范围。
+    /// V0.1.0 静态定位的坐标错误在 Def 注册处修正；本处不是以文本重写代替悬停验收。
     ///
     /// 用**后置**补丁（v0.0.4 由前置改为后置）有两个原因：
     ///   1. 原版悬停卡（<c>SelectToolHoverTextCard</c>）要读 <c>port.activeDescription</c> 与
@@ -32,6 +33,16 @@ namespace MaterialOverhaul.Patches
         private const string KeyControlActive = "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE";
         private const string KeyControlInactive = "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE";
 
+        private static void Prefix(LogicPorts __instance)
+        {
+            KPrefabID id = __instance.GetComponent<KPrefabID>();
+            if (id == null || !BuildingWhitelist.Contains(id.PrefabTag.ToString())) return;
+            // 原版 TryGetPortAtCell / GetPortCell 无条件遍历两侧数组。
+            // 只补本 Mod 建筑的空数组，不制造额外端口。
+            if (__instance.inputPortInfo == null) __instance.inputPortInfo = new LogicPorts.Port[0];
+            if (__instance.outputPortInfo == null) __instance.outputPortInfo = new LogicPorts.Port[0];
+        }
+
         private static void Postfix(LogicPorts __instance)
         {
             try
@@ -47,12 +58,11 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                string description = Strings.Get(KeyDescription);
-                string active = Strings.Get(KeyActive);
-                string inactive = Strings.Get(KeyInactive);
+                string description = PortText(KeyDescription, "温区信号");
+                string active = PortText(KeyActive, "已锁定配方，且本体温度位于最佳温区。接线使用控制模式，绿色不代表正在生产。");
+                string inactive = PortText(KeyInactive, "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。");
 
                 bool found = Rewrite(__instance.outputPortInfo, TemperatureZoneSignal.PortId, description, active, inactive);
-                found |= Rewrite(__instance.inputPortInfo, TemperatureZoneSignal.PortId, description, active, inactive);
 
                 // 「允许／暂停生产」输入端口：端口本体来自原版逻辑控制端口，
                 // 说明文本改成设计要求的措辞（默认放行、红色只暂停生产）。
@@ -62,14 +72,14 @@ namespace MaterialOverhaul.Patches
                     hasControl = Rewrite(
                         __instance.inputPortInfo,
                         AutomationControlScope.PortId,
-                        Strings.Get(KeyControlDescription),
-                        Strings.Get(KeyControlActive),
-                        Strings.Get(KeyControlInactive));
-                    found |= hasControl;
+                        PortText(KeyControlDescription, "允许／暂停生产"),
+                        PortText(KeyControlActive, "允许生产；未接线默认放行，仍受其它开工条件约束。"),
+                        PortText(KeyControlInactive, "暂停生产，不影响配方准备、预热与补热。"));
                 }
 
                 if (found)
                 {
+                    CheckOutput(__instance, prefabId.PrefabTag.ToString());
                     ModLog.Info(prefabId.PrefabTag + "：逻辑端口说明已写入 —— 温区输出「" + description
                         + "」@格子 " + __instance.GetPortCell(TemperatureZoneSignal.PortId)
                         + (hasControl
@@ -77,6 +87,11 @@ namespace MaterialOverhaul.Patches
                                 + __instance.GetPortCell(AutomationControlScope.PortId)
                             : string.Empty)
                         + "。");
+                }
+                else
+                {
+                    ModLog.WarnOnce("port|spawn-missing|" + prefabId.PrefabTag,
+                        prefabId.PrefabTag + "：实例没有温区输出，端口注册未完整生效。");
                 }
             }
             catch (Exception e)
@@ -104,10 +119,48 @@ namespace MaterialOverhaul.Patches
                 ports[i].description = description;
                 ports[i].activeDescription = active;
                 ports[i].inactiveDescription = inactive;
+                ports[i].displayCustomName = true;
                 found = true;
             }
 
             return found;
+        }
+
+        private static string PortText(string key, string fallback)
+        {
+            string text = Strings.Get(key);
+            if (string.IsNullOrEmpty(text) || text == key || text.StartsWith("MISSING."))
+                ModLog.WarnOnce("port|text|" + key, "端口本地化键缺失：" + key + "，使用内置回退说明。");
+            return MaterialOverhaulFab.LocalizedOr(key, fallback);
+        }
+
+        /// <summary>每个已建成实例仅在生成时核对一次，不在悬停或每帧扫描建筑。</summary>
+        private static void CheckOutput(LogicPorts ports, string prefabId)
+        {
+            if (ports.GetComponent<BuildingComplete>() == null) return;
+            int cell = ports.GetPortCell(TemperatureZoneSignal.PortId);
+            LogicPorts.Port hit;
+            bool input;
+            bool hitOutput = Grid.IsValidCell(cell) && ports.TryGetPortAtCell(cell, out hit, out input)
+                && !input && hit.id == TemperatureZoneSignal.PortId;
+            int count = 0;
+            foreach (LogicPorts.Port port in ports.outputPortInfo)
+                if (port.id == TemperatureZoneSignal.PortId) count++;
+            bool physicalReady = ports.outputPorts != null
+                && ports.outputPorts.Count == ports.outputPortInfo.Length;
+            KCollider2D collider = ports.GetComponent<KCollider2D>();
+            bool selectableAtPort = false;
+            if (Grid.IsValidCell(cell) && collider != null)
+            {
+                UnityEngine.Vector3 center = Grid.CellToPosCCC(cell, Grid.SceneLayer.Building);
+                selectableAtPort = collider.Intersects(new UnityEngine.Vector2(center.x, center.y));
+            }
+            if (!hitOutput || count != 1 || !physicalReady || !selectableAtPort)
+                ModLog.Warn("端口自检 " + prefabId + " @" + cell + "：输出命中 " + hitOutput
+                    + "，同 ID 数量 " + count + "，物理列表就绪 " + physicalReady
+                    + "，端口中心在选择范围内 " + selectableAtPort + "。需核查悬停链路。");
+            else
+                ModLog.Info("端口自检 " + prefabId + " @" + cell + "：输出命中、列表与选择范围一致（悬停绘制仍待游戏验收）。");
         }
     }
 }

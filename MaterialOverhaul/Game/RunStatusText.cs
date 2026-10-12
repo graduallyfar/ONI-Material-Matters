@@ -84,9 +84,22 @@ namespace MaterialOverhaul.Game
                 return fab.Orders.Count == 0 ? RunStatusKind.NoTask : RunStatusKind.WaitingMaterials;
             }
 
-            if (fab.CurrentState == Zones.TempState.AboveWorkMax && !fab.Policy.Forced)
+            if (fab.CurrentDecision.Next.HighTempWaiting && !fab.Policy.Forced)
             {
                 return RunStatusKind.HighTempWaiting;
+            }
+
+            if (!fab.AutomationAllowsProduction && fab.IsPowered)
+            {
+                return RunStatusKind.AutomationPaused;
+            }
+
+            if (fab.ProductionRunning)
+            {
+                if (fab.CurrentState == Zones.TempState.LowEfficiency || fab.CurrentState == Zones.TempState.BelowWorkMin)
+                    return RunStatusKind.ProducingLow;
+                if (fab.CurrentState == Zones.TempState.HighEfficiency || fab.CurrentState == Zones.TempState.AboveWorkMax)
+                    return RunStatusKind.ProducingHigh;
             }
 
             if (fab.AppliedHeating == Heating.HeatingIntent.Preheat)
@@ -109,23 +122,8 @@ namespace MaterialOverhaul.Game
                 return RunStatusKind.Unpowered;
             }
 
-            if (!fab.AutomationAllowsProduction && fab.IsPowered)
-            {
-                return RunStatusKind.AutomationPaused;
-            }
-
             if (fab.ProductionRunning)
             {
-                if (fab.CurrentState == Zones.TempState.LowEfficiency)
-                {
-                    return RunStatusKind.ProducingLow;
-                }
-
-                if (fab.CurrentState == Zones.TempState.HighEfficiency)
-                {
-                    return RunStatusKind.ProducingHigh;
-                }
-
                 return RunStatusKind.Producing;
             }
 
@@ -153,7 +151,7 @@ namespace MaterialOverhaul.Game
                     return Localized("UNPOWERED", "等待供电");
 
                 case RunStatusKind.HighTempWaiting:
-                    return Localized("HIGH_TEMP_WAITING", "高温保护");
+                    return Localized("HIGH_TEMP_WAITING", "等待降温");
 
                 case RunStatusKind.Preheat:
                     return Localized("PREHEAT", "预热中");
@@ -246,8 +244,7 @@ namespace MaterialOverhaul.Game
                 return false;
             }
 
-            return fab.CurrentState == Zones.TempState.AboveWorkMax
-                || fab.CurrentState == Zones.TempState.HighEfficiency;
+            return fab.CurrentDecision.Next.HighTempWaiting;
         }
 
         private static string Localized(string keySuffix, string fallback)

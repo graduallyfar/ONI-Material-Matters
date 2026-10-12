@@ -94,7 +94,7 @@ namespace MaterialOverhaul.Game
 
         private static StatusItem Create(string id, string prefix)
         {
-            return new StatusItem(
+            StatusItem item = new StatusItem(
                 id,
                 prefix,
                 Icon,
@@ -102,6 +102,8 @@ namespace MaterialOverhaul.Game
                 NotificationType.BadMinor,
                 allow_multiples: false,
                 OverlayModes.None.ID);
+            item.resolveTooltipCallback = (text, data) => text + "\n" + (data as MaterialOverhaulFab)?.HardnessText();
+            return item;
         }
     }
 }

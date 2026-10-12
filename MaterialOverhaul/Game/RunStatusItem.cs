@@ -118,19 +118,12 @@ namespace MaterialOverhaul.Game
                 return false;
             }
 
-            // 有已锁定批次：温度与自动化状态是玩家最需要看到的实时条件，一律显示。
-            if (fab.HasLockedBatch)
-            {
-                return true;
-            }
-
-            // 没有批次时只补充原版不会显示的条件状态（断电、手动禁用、损坏停机）。
-            return IsTemperatureOrAutomationStatus(kind)
-                && kind != RunStatusKind.Preheat
-                && kind != RunStatusKind.TopUp
-                && kind != RunStatusKind.Sustained
-                && kind != RunStatusKind.ProducingLow
-                && kind != RunStatusKind.ProducingHigh;
+            // 原版已提供等待材料、操作任务、正常生产、断电、禁用和损坏停机状态。
+            // 只显示本 Mod 独有的温度／自动化条件；空闲模式由独立状态承担。
+            return fab.HasLockedBatch && IsTemperatureOrAutomationStatus(kind)
+                && kind != RunStatusKind.Unpowered
+                && kind != RunStatusKind.ManuallyDisabled
+                && kind != RunStatusKind.BrokenDown;
         }
 
         /// <summary>名称与提示都用同一套数值，保证界面显示的就是本步判断用的值。</summary>
@@ -158,7 +151,8 @@ namespace MaterialOverhaul.Game
                     GameUtil.GetFormattedWattage(fab.CurrentRequestedWatts),
                     GameUtil.GetFormattedWattage(fab.CurrentUsedWatts),
                     HeatingIntentText(fab.AppliedHeating),
-                    GameUtil.GetFormattedPercent(Mathf.Clamp01(fab.BatchProgress) * 100f));
+                    GameUtil.GetFormattedPercent(Mathf.Clamp01(fab.BatchProgress) * 100f))
+                    + "\n" + fab.HardnessText();
             }
             catch (System.Exception e)
             {

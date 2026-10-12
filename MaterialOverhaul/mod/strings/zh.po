@@ -7,27 +7,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Application: Oxygen Not Included\n"
 
-#. 建筑面板：运行模式切换
-#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_DEFAULT
-msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_DEFAULT"
-msgid "Switch to Default Mode"
-msgstr "切换为默认模式"
-
-#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_CONTROL
-msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TO_CONTROL"
-msgid "Switch to Control Mode"
-msgstr "切换为控制模式"
-
-#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_DEFAULT
-msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_DEFAULT"
-msgid "Default mode: production is allowed across the whole working temperature range; temperature only changes efficiency."
-msgstr "默认模式：在整个可工作温区内都能生产，温度只影响效率。"
-
-#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_CONTROL
-msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.RUNMODE.TOOLTIP_CONTROL"
-msgid "Control mode: production only inside the best temperature range, and top-up heating runs while producing below the top-up line."
-msgstr "控制模式：只在最佳温区内生产；生产时温度低于补热线会自动补热。"
-
 #. 建筑面板：强制运行开关
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.ENABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.ENABLE"
@@ -46,8 +25,8 @@ msgstr "强制运行：不因温区越界停止生产，并持续加热。原料
 
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE"
-msgid "Forced run is on. Turning it off re-evaluates production permission under the selected mode and keeps the current batch."
-msgstr "强制运行已开启。关闭后按当前模式的温区限制重新判断生产许可，并保留当前批次。"
+msgid "强制运行已开启。关闭后按温区输出端口当时的接线状态重新判断生产许可，并保留当前批次。"
+msgstr "强制运行已开启。关闭后按温区输出端口当时的接线状态重新判断生产许可，并保留当前批次。"
 
 #. 机械磨损的伤害来源
 #. STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR
@@ -96,13 +75,13 @@ msgstr "温区信号"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"
-msgid "Locked batch is inside the best temperature range"
-msgstr "已锁定批次处于最佳温区"
+msgid "已锁定配方，且本体温度位于该配方的最佳温区。接线使用控制模式；绿色不代表正在生产。"
+msgstr "已锁定配方，且本体温度位于该配方的最佳温区。接线使用控制模式；绿色不代表正在生产。"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
-msgid "Outside the best temperature range, or no locked batch"
-msgstr "未处于最佳温区，或没有已锁定批次"
+msgid "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。"
+msgstr "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。"
 
 #. 过热温度属性的修正项说明（v0.0.2：过热阈值 = 主建造材料熔点 × 85%）
 #. STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
@@ -113,14 +92,8 @@ msgstr "材料革新：过热阈值取主建造材料熔点的 85%"
 #. 建筑信息卡描述里追加的一句话：温度工作区间（v0.0.2）
 #. STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE
 msgctxt "STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE"
-msgid "This building only runs inside the current recipe's working temperature range: below the minimum it stops and preheats, above the maximum it stops and waits to cool down, and only the best range gives full efficiency."
-msgstr "本建筑需要在当前配方的工作温区内运行：低于最低可工作温度时停产预热，高于最高可工作温度时停产等待降温，最佳温区内才是满效率。"
-
-#. 配方名后面追加的工作温区文本（{0} 配方名、{1} 最低可工作温度、{2} 最高可工作温度）
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE"
-msgid "{0} (working temperature {1} ~ {2})"
-msgstr "{0}（工作温区 {1} ~ {2}）"
+msgid "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。"
+msgstr "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。"
 
 #. 配方详情「效果」里的温度行（{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限）
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL
@@ -131,8 +104,8 @@ msgstr "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"
 #. 信息卡里的过热温度行（{0} 过热阈值）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE"
-msgid "Overheat Temperature: {0} (Material Overhaul: primary construction material melting point × 85%)"
-msgstr "过热温度：{0}（材料革新：主建造材料熔点 × 85%）"
+msgid "过热温度：{0}"
+msgstr "过热温度：{0}"
 
 #. 过热温度行的提示（{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值、{3} 致命温度）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_TOOLTIP
@@ -163,29 +136,6 @@ msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNSTATUS.TOOLTIP"
 msgid "Material Overhaul status: {0}\nBody temperature {1}, temperature efficiency {2}\nRequested power {3}, power used {4}, heat injected {5}\nCurrent batch progress {6}"
 msgstr "材料革新状态：{0}\n本体温度 {1}，温度效率 {2}\n请求功率 {3}，实际用电 {4}，实际注热 {5}\n当前批次进度 {6}"
 
-#. 信息卡：工作温区行（{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE"
-msgid "Working temperature: {0} ~ {1} (best range {2} ~ {3})"
-msgstr "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"
-
-#. 信息卡：当前生产行（{0} 订单摘要、{1} 批次进度）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_BATCH
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_BATCH"
-msgid "Current batch: {0}; progress {1}"
-msgstr "当前生产：{0}；批次进度 {1}"
-
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER"
-msgid "No order record (migrated from an older save)"
-msgstr "无订单记录（来自旧存档迁移）"
-
-#. 信息卡：功率行（{0} 请求功率、{1} 实际用电、{2} 实际注热）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.POWER_LINE
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.POWER_LINE"
-msgid "Requested power {0}; power used {1}; heat injected {2}"
-msgstr "请求功率 {0}；实际用电 {1}；实际注热 {2}"
-
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT"
 msgid "Preheating"
@@ -210,35 +160,6 @@ msgstr "无"
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SOURCE"
 msgid "Material Overhaul: built-in heating"
 msgstr "材料革新：内置加热"
-
-#. 有限订单摘要（{0} 配方名、{1} 剩余批次数）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIMITED
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIMITED"
-msgid "{0} ({1} batches left)"
-msgstr "{0}（剩余 {1} 批）"
-
-#. 无限订单摘要（{0} 配方名、{1} 本轮已完成、{2} 本轮额度）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_INFINITE
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_INFINITE"
-msgid "{0} (infinite, this round {1}/{2})"
-msgstr "{0}（无限，本轮 {1}/{2}）"
-
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NO_TASK
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NO_TASK"
-msgid "No production task"
-msgstr "无生产任务"
-
-#. 等待材料（{0} 待检查的订单笔数）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.WAITING_MATERIALS
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.WAITING_MATERIALS"
-msgid "Waiting for materials ({0} orders to check)"
-msgstr "等待材料（待检查订单 {0} 笔）"
-
-#. 下一批预告（{0} 订单摘要）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NEXT_BATCH
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NEXT_BATCH"
-msgid "Next batch: {0}"
-msgstr "下一生产：{0}"
 
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE"
@@ -283,8 +204,8 @@ msgstr "等待供电"
 
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.HIGH_TEMP_WAITING
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.HIGH_TEMP_WAITING"
-msgid "High temperature protection"
-msgstr "高温保护"
+msgid "等待降温"
+msgstr "等待降温"
 
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.PREHEAT
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.PREHEAT"
@@ -331,55 +252,6 @@ msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.COOLING"
 msgid "Cooling down"
 msgstr "降温中"
 
-#. 逐笔订单侧屏
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.TITLE
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.TITLE"
-msgid "Material Overhaul: order list"
-msgstr "材料革新：订单列表"
-
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.EMPTY
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.EMPTY"
-msgid "No orders yet. Add them with the recipe list above."
-msgstr "还没有订单。用上方的配方列表添加。"
-
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.ROW_LIMITED
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.ROW_LIMITED"
-msgid "{0}  {1} batches left"
-msgstr "{0}　剩余 {1} 批"
-
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.ROW_INFINITE
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.ROW_INFINITE"
-msgid "{0}  infinite (this round {1}/{2})"
-msgstr "{0}　无限（本轮 {1}/{2}）"
-
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.BUTTON_REMOVE
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.BUTTON_REMOVE"
-msgid "Cancel"
-msgstr "取消"
-
-#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.LIMIT_HINT
-msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_LIST.LIMIT_HINT"
-msgid "Infinite quota range: 1-{0}."
-msgstr "无限额度范围 1–{0}。"
-
-#. 过热「条件」行：只超过阈值、还没扣血（{0} 过热阈值）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_CONDITION
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_CONDITION"
-msgid "The building body is above its overheat threshold {0}; it will take overheat damage if it keeps heating up."
-msgstr "本体温度已超过过热阈值 {0}，继续升温会过热受损。"
-
-#. 信息卡：订单列表标题
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_HEADER
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_HEADER"
-msgid "Order list (in the order added):"
-msgstr "订单列表（按添加顺序）："
-
-#. 信息卡：订单列表每一行（{0} 当前批次标记、{1} 序号、{2} 订单摘要）
-#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_ROW
-msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_ROW"
-msgid "{0}{1}. {2}"
-msgstr "{0}{1}. {2}"
-
 #. 「允许／暂停生产」自动化输入端口（复用原版逻辑控制端口，由本 Mod 改写说明文本）
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"
@@ -388,10 +260,71 @@ msgstr "允许／暂停生产"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"
-msgid "Green: production allowed (materials, power and the mode's start conditions still apply)"
-msgstr "绿色：允许生产（仍需要材料、供电与对应的开工条件）"
+msgid "绿色：允许生产（仍需要材料、供电与对应的开工条件）；未接线默认放行"
+msgstr "绿色：允许生产（仍需要材料、供电与对应的开工条件）；未接线默认放行"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"
 msgid "Red: production paused; recipe preparation, preheating and top-up heating are not affected"
 msgstr "红色：暂停生产；不影响配方准备、预热与补热"
+
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT"
+msgid "运行模式：默认模式"
+msgstr "运行模式：默认模式"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL"
+msgid "运行模式：控制模式"
+msgstr "运行模式：控制模式"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING"
+msgid "运行模式：等待自动化网络就绪"
+msgstr "运行模式：等待自动化网络就绪"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_TOOLTIP"
+msgid "温区输出端口未接线，在整个可工作温区内生产，仍受启动与恢复条件约束。输入端接线和红绿值不选择模式。"
+msgstr "温区输出端口未接线，在整个可工作温区内生产，仍受启动与恢复条件约束。输入端接线和红绿值不选择模式。"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP"
+msgid "温区输出端口已接线，只在最佳温区内生产，仍受启动与恢复条件约束。输出红绿值不选择模式；绿色不代表正在生产。"
+msgstr "温区输出端口已接线，只在最佳温区内生产，仍受启动与恢复条件约束。输出红绿值不选择模式；绿色不代表正在生产。"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING_TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING_TOOLTIP"
+msgid "自动化网络尚未重建，保留存档模式与温控回差，暂不生产或加热。"
+msgstr "自动化网络尚未重建，保留存档模式与温控回差，暂不生产或加热。"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED"
+msgid "强制运行已开启"
+msgstr "强制运行已开启"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP"
+msgid "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
+msgstr "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME"
+msgid "机械磨损风险"
+msgstr "机械磨损风险"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.TOOLTIP"
+msgid "主建造材料硬度不足，实际生产会累计机械磨损。预热、待机和暂停不累计磨损。"
+msgstr "主建造材料硬度不足，实际生产会累计机械磨损。预热、待机和暂停不累计磨损。"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.NAME"
+msgid "超过过热阈值"
+msgstr "超过过热阈值"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP"
+msgid "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。"
+msgstr "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。"

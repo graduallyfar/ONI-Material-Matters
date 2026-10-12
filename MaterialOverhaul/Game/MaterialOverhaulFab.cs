@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using KSerialization;
 using Klei.AI;
 using MaterialOverhaul.Core;
@@ -21,23 +20,20 @@ namespace MaterialOverhaul.Game
     ///   - 把判断结果接到原版流程（效率、操作任务、功率、损坏）上；
     ///   - 保存本 Mod 自有数据（V0.0.3 开发计划 §5.3）。
     ///
-    /// 按职责拆成四个 partial 文件，避免单个建筑组件过大：
+    /// 按职责拆成 partial 文件，避免单个建筑组件过大：
     ///   - 本文件：生命周期、状态、序列化与对外只读视图；
     ///   - <c>MaterialOverhaulFab.Orders.cs</c>：订单身份、批次锁定与逐笔编辑；
     ///   - <c>MaterialOverhaulFab.Heating.cs</c>：运行状态机、加热注热与电网需求；
     ///   - <c>MaterialOverhaulFab.Damage.cs</c>：磨损计时、损坏原因与维修。
+    ///   - <c>MaterialOverhaulFab.Mode.cs</c>：输出接线与独立模式状态；风险状态在 MaterialRiskStatusItems。
     /// </summary>
     [SerializationConfig(MemberSerialization.OptIn)]
-    public partial class MaterialOverhaulFab : KMonoBehaviour, IGameObjectEffectDescriptor
+    public partial class MaterialOverhaulFab : KMonoBehaviour
     {
         /// <summary>原版重新构建建筑用户菜单的事件（GameHashes.RefreshUserMenu = 493375141）。</summary>
         private const int RefreshUserMenuHash = 493375141;
 
         private const string KeyPrefix = "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.";
-        private const string KeyModeToDefault = KeyPrefix + "RUNMODE.TO_DEFAULT";
-        private const string KeyModeToControl = KeyPrefix + "RUNMODE.TO_CONTROL";
-        private const string KeyModeTooltipDefault = KeyPrefix + "RUNMODE.TOOLTIP_DEFAULT";
-        private const string KeyModeTooltipControl = KeyPrefix + "RUNMODE.TOOLTIP_CONTROL";
         private const string KeyForcedEnable = KeyPrefix + "FORCEDRUN.ENABLE";
         private const string KeyForcedDisable = KeyPrefix + "FORCEDRUN.DISABLE";
         private const string KeyForcedTooltipEnable = KeyPrefix + "FORCEDRUN.TOOLTIP_ENABLE";
@@ -81,6 +77,11 @@ namespace MaterialOverhaul.Game
         private PowerDemand powerDemand;
         private DamageCauseState damageState = DamageCauseState.Fresh;
 
+        private bool modeConnectionReady;
+        private bool modeInitializationLogged;
+        private int restoredBatchOrderId;
+        private string lastAppliedModeText;
+
         private bool productionPausedByTemperature;
         private bool mechanicalDamageMark;
         private bool hasAutomationInput;
@@ -101,6 +102,7 @@ namespace MaterialOverhaul.Game
         /// <summary>状态栏条目的上一次分类与是否已经写入过一次（避免每个模拟步重建状态项）。</summary>
         private RunStatusKind lastAppliedRunStatusKind = RunStatusKind.None;
         private bool hasRunStatusItemApplied;
+        private bool lastAppliedRunStatusVisible;
 
         private int lastZoneSignal = -1;
         private TempState lastLoggedState = TempState.Disabled;
@@ -288,8 +290,9 @@ namespace MaterialOverhaul.Game
 
             RestoreState();
 
-            // v0.0.4：模式固定默认，旧存档的控制模式在这里迁移（见方法注释）。
-            MigrateControlModeToDefault();
+            // 接线网络尚未重建；保存模式和回差，首次就绪后按现场连接校验。
+            restoredBatchOrderId = orders.LockedOrderId;
+            UpdateModeStatusItem();
 
             // 旧存档或其它码路可能已经有原版队列数量：先纳入订单表，再按订单表重新决定下一笔。
             EnsureOrdersImported();
@@ -453,24 +456,8 @@ namespace MaterialOverhaul.Game
 
         /* ---- 运行模式与强制运行（建筑细节文档 §2.1、§2.1.4）---- */
 
-        /// <summary>
-        /// v0.0.4：界面不再提供默认／控制模式切换（用户要求），模式固定为默认模式。
-        /// 旧存档里 `controlMode == true` 的建筑如果直接沿用，玩家会被永久锁在控制模式且没有入口，
-        /// 因此在读档时迁移一次并留下可定位日志。控制模式的判定代码保留，以后恢复入口即可再用。
-        /// </summary>
-        private void MigrateControlModeToDefault()
-        {
-            if (!controlMode)
-            {
-                return;
-            }
-
-            controlMode = false;
-            ModLog.Info(PrefabId + "：v0.0.4 起模式固定为默认模式，本建筑旧存档中的控制模式已迁移为默认模式。");
-        }
-
         /// <summary>切换默认／控制模式。保留批次与进度，只重建启动条件与加热意图。</summary>
-        public void SetControlMode(bool control)
+        private void SetControlMode(bool control)
         {
             if (controlMode == control)
             {
@@ -489,6 +476,7 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
+            RefreshModeFromOutputConnection();
             forcedRun = forced;
             OnPolicyOrModeChanged();
         }
@@ -497,9 +485,10 @@ namespace MaterialOverhaul.Game
         private void OnPolicyOrModeChanged()
         {
             ComplexRecipe working = CurrentWorkingRecipe;
-            if (working != null)
+            string recipeId = working != null ? working.id : orders.LockedBatch?.RecipeId;
+            if (recipeId != null)
             {
-                UpdateCachedZone(working.id);
+                UpdateCachedZone(recipeId);
                 if (cachedZoneConfigured)
                 {
                     runState = RunController.OnPolicyChanged(BodyTemperature, cachedZone, Policy, runState);
@@ -507,7 +496,15 @@ namespace MaterialOverhaul.Game
                 }
             }
 
-            productionPausedByTemperature = false;
+            // 不清暂停标记：许可恢复时由闸门重新创建之前撤销的任务。
+            runDecision = RunDecision.Passthrough;
+            if (modeConnectionReady)
+            {
+                UpdateRunState();
+                EnforceProductionGate();
+            }
+            UpdateModeStatusItem();
+            UpdateRunStatusItem();
 
             if (fabricator != null)
             {
@@ -524,8 +521,7 @@ namespace MaterialOverhaul.Game
         /* ---- 界面入口 ---- */
 
         /// <summary>
-        /// 建筑面板用户菜单。v0.0.4 只保留强制运行开关：默认／控制模式的切换按用户要求移除，
-        /// 模式固定为默认模式（旧存档由 <see cref="MigrateControlModeToDefault"/> 迁移）。
+        /// 建筑面板只保留独立强制运行开关；基础模式由温区输出接线决定。
         /// </summary>
         private void OnRefreshUserMenu(object data)
         {
@@ -555,129 +551,10 @@ namespace MaterialOverhaul.Game
         internal static string LocalizedOr(string key, string fallback)
         {
             string value = Strings.Get(key);
-            return string.IsNullOrEmpty(value) ? fallback : value;
+            return string.IsNullOrEmpty(value) || value == key || value.StartsWith("MISSING.") ? fallback : value;
         }
 
-        /* ---- 信息卡 ---- */
-
-        /// <summary>
-        /// 建筑信息卡的效果条目（V0.0.4 开发计划 §2.1）。
-        ///
-        /// 与 v0.0.3 的差别：
-        ///   - **不再**写运行状态文字：状态改到信息卡状态栏（<see cref="RunStatusItem"/>）；
-        ///   - **不再**列订单列表：逐笔查看与编辑在「材料革新：订单列表」侧屏里；
-        ///   - **当前生产／下一生产改读原版数据**（<c>CurrentWorkingOrder</c> / <c>NextOrder</c>）
-        ///     与原版文案，与配方侧屏完全同源，不再由本 Mod 自己推算调度。
-        /// </summary>
-        public List<Descriptor> GetDescriptors(GameObject go)
-        {
-            List<Descriptor> list = new List<Descriptor>();
-            try
-            {
-                if (cachedZoneConfigured)
-                {
-                    list.Add(DescriptorText(string.Format(
-                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE", "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"),
-                        GameUtil.GetFormattedTemperature(cachedZone.WorkMin),
-                        GameUtil.GetFormattedTemperature(cachedZone.WorkMax),
-                        GameUtil.GetFormattedTemperature(cachedZone.BestMin),
-                        GameUtil.GetFormattedTemperature(cachedZone.BestMax))));
-                }
-
-                list.Add(DescriptorText(VanillaOrderLine()));
-
-                list.Add(DescriptorText(string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.POWER_LINE", "请求功率 {0}，实际用电 {1}，实际注热 {2}"),
-                    GameUtil.GetFormattedWattage(currentRequestedWatts),
-                    GameUtil.GetFormattedWattage(currentUsedWatts),
-                    HeatingIntentText(powerDemand.AppliedHeating))));
-
-                list.Add(DescriptorText(HardnessText()));
-
-                // 过热「条件」与「已受损」分开显示：只超过阈值时说明后果，不写成已经受损。
-                if (IsAboveOverheatThreshold && !HasOverheatDamage)
-                {
-                    list.Add(DescriptorText(string.Format(
-                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_CONDITION", "本体温度已超过过热阈值 {0}，继续升温会过热受损。"),
-                        GameUtil.GetFormattedTemperature(overheatable != null ? overheatable.OverheatTemperature : 0f))));
-                }
-            }
-            catch (Exception e)
-            {
-                ModLog.Error("生成建筑信息卡条目失败：" + e);
-            }
-
-            return list;
-        }
-
-        /// <summary>
-        /// 原版口径的「当前生产 / 下一生产」：直接取原版配方侧屏用的同一对字段与同一套文案
-        /// （<c>CurrentWorkingOrder</c>、<c>NextOrder</c>、<c>NO_WORKABLE_ORDER</c>），
-        /// 因此信息卡与配方侧屏不会出现两套说法。
-        /// </summary>
-        private string VanillaOrderLine()
-        {
-            if (fabricator == null)
-            {
-                return string.Empty;
-            }
-
-            ComplexRecipe working = fabricator.CurrentWorkingOrder;
-            if (working != null)
-            {
-                return string.Format(
-                    VanillaText(
-                        "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.CURRENT_ORDER",
-                        "Current order: {0}",
-                        "当前订单：{0}"),
-                    working.GetUIName(includeAmounts: false));
-            }
-
-            ComplexRecipe next = fabricator.NextOrder;
-            if (next != null)
-            {
-                return string.Format(
-                    VanillaText(
-                        "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.NEXT_ORDER",
-                        "Next order: {0}",
-                        "下一订单：{0}"),
-                    next.GetUIName(includeAmounts: false));
-            }
-
-            return VanillaText(
-                "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.NO_WORKABLE_ORDER",
-                "No workable order",
-                "无可执行订单");
-        }
-
-        /// <summary>
-        /// 取原版键的文本。原版键缺失时 <c>Strings.Get</c> 会返回空串**或原样返回键名**，
-        /// 两种都按缺失处理并回退到本 Mod 内置文案（中文回退与游戏文案口径一致），
-        /// 保证信息卡不会出现键名或空白。
-        /// </summary>
-        private static string VanillaText(string key, string englishFallback, string chineseFallback)
-        {
-            string value = Strings.Get(key);
-            if (!string.IsNullOrEmpty(value) && value != key)
-            {
-                return value;
-            }
-
-            return LocalizedOr(key, IsChineseLocale() ? chineseFallback : englishFallback);
-        }
-
-        private static bool IsChineseLocale()
-        {
-            try
-            {
-                string code = Localization.GetCurrentLanguageCode();
-                return !string.IsNullOrEmpty(code) && code.StartsWith("zh");
-            }
-            catch (Exception)
-            {
-                return true;
-            }
-        }
+        /* ---- 状态悬停说明 ---- */
 
         /// <summary>批次进度：优先用原版进度值，缺失时返回 0；信息卡与状态栏共用同一个口径。</summary>
         public float BatchProgress
@@ -694,30 +571,7 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        private static Descriptor DescriptorText(string text)
-        {
-            return new Descriptor(text, text, Descriptor.DescriptorType.Effect);
-        }
-
-        private static string HeatingIntentText(HeatingIntent intent)
-        {
-            switch (intent)
-            {
-                case HeatingIntent.Preheat:
-                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT", "预热中");
-
-                case HeatingIntent.TopUp:
-                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_TOPUP", "补热中");
-
-                case HeatingIntent.Sustained:
-                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SUSTAINED", "持续加热");
-
-                default:
-                    return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_NONE", "无");
-            }
-        }
-
-        private string HardnessText()
+        public string HardnessText()
         {
             byte required;
             bool hasRequirement = HardnessRequirementTable.TryGet(PrefabId, out required);

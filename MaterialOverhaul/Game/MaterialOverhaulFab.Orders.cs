@@ -447,6 +447,7 @@ namespace MaterialOverhaul.Game
         /// <summary>由补丁在原版 <c>StartWorkingOrder</c> 之前调用：把「开始的那一笔」按身份锁定。</summary>
         public void LockOrderForStart(string recipeId, int recipeIndex)
         {
+            RefreshModeFromOutputConnection();
             if (orders.Count == 0)
             {
                 return;
@@ -479,7 +480,17 @@ namespace MaterialOverhaul.Game
             UpdateCachedZone(recipeId);
             if (cachedZoneConfigured)
             {
-                runState = RunController.OnBatchLocked(BodyTemperature, cachedZone, Policy, runState);
+                // 原版 OnSpawn 把加工仓退回输入仓后重新锁定同一批，不视为新批次。
+                // 网络尚未就绪时先保留已保存回差，由连接初始化再校验。
+                if (orders.LockedOrderId == restoredBatchOrderId && restoredBatchOrderId > 0)
+                {
+                    if (modeConnectionReady)
+                        runState = RunController.OnLoaded(BodyTemperature, cachedZone, Policy, runState);
+                }
+                else
+                {
+                    runState = RunController.OnBatchLocked(BodyTemperature, cachedZone, Policy, runState);
+                }
                 SyncRunStateFields();
             }
             else
@@ -487,6 +498,8 @@ namespace MaterialOverhaul.Game
                 runState = RunState.Fresh;
             }
 
+            restoredBatchOrderId = 0;
+            runDecision = RunDecision.Passthrough;
             productionPausedByTemperature = false;
         }
 

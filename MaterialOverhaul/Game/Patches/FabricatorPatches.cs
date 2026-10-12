@@ -196,6 +196,18 @@ namespace MaterialOverhaul.Patches
     [HarmonyPatch(typeof(ComplexFabricator), "Sim200ms")]
     internal static class Patch_ComplexFabricator_Sim200ms
     {
+        private static void Prefix(ComplexFabricator __instance)
+        {
+            try
+            {
+                PatchHelpers.FabOf(__instance)?.PrepareRunStep();
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("生产前模式与温控刷新异常：" + e);
+            }
+        }
+
         private static void Postfix(ComplexFabricator __instance, float dt)
         {
             try

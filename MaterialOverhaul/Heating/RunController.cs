@@ -153,7 +153,9 @@ namespace MaterialOverhaul.Heating
             }
 
             // 高温等待与低温资格按实际温度重新校验，不能无条件重新预热或保留等待。
-            state.HighTempWaiting = bodyTemp > StartThreshold.HighPauseLine(zone, policy);
+            state.HighTempWaiting = saved.HighTempWaiting
+                ? bodyTemp > StartThreshold.HighResumeLine(zone, policy)
+                : bodyTemp > StartThreshold.HighPauseLine(zone, policy);
 
             if (!state.HighTempWaiting)
             {
@@ -172,7 +174,8 @@ namespace MaterialOverhaul.Heating
                 // 默认模式没有补热阶段。
                 state.TopUpActive = false;
             }
-            else if (state.TopUpActive && bodyTemp >= HeatingPlanner.TopUpStopLine(zone, policy))
+            else if (!state.Started || state.HighTempWaiting
+                || (state.TopUpActive && bodyTemp >= HeatingPlanner.TopUpStopLine(zone, policy)))
             {
                 state.TopUpActive = false;
             }

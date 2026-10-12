@@ -16,7 +16,7 @@ namespace MaterialOverhaul.Patches
     //   Decrement  「−」        181419（respectInfinite:false 用于面板按钮）
     //   SetCount   「∞」与数量输入框  181391
     //
-    // 逐笔编辑走本 Mod 的侧屏（Game/OrderListSideScreen.cs），不再依赖这三个有歧义的合计入口。
+    // V0.1.0 移除逐笔侧屏；保留原版三个入口及底层订单身份。
 
     /// <summary>「+」：新增一笔 1 批的有限订单；原版计数到达上限后会变成无限，这里同步为无限订单。</summary>
     [HarmonyPatch(typeof(ComplexFabricator), "IncrementRecipeQueueCount")]
@@ -113,7 +113,7 @@ namespace MaterialOverhaul.Patches
 
     /// <summary>
     /// 侧屏直接设置数量：原版界面沿用合计口径（0 取消该配方全部订单、-1 记为无限、正数改写为一批）。
-    /// 逐笔编辑走本 Mod 的订单列表侧屏，两处不互相覆盖：都以订单表为准写回原版计数。
+    /// V0.1.0 只提供原版合计编辑界面，底层仍以有序订单表为准。
     /// </summary>
     [HarmonyPatch(typeof(ComplexFabricator), "SetRecipeQueueCount")]
     internal static class Patch_ComplexFabricator_SetRecipeQueueCount

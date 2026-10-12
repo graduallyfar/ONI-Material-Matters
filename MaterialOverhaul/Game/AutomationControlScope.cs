@@ -16,8 +16,7 @@ namespace MaterialOverhaul.Game
     {
         private static readonly Dictionary<string, CellOffset> Offsets = new Dictionary<string, CellOffset>
         {
-            // 金属精炼器 3×4，位置取左上角：与液体输入 (−1,1)/(1,0)、液体输出 (1,0)
-            // 以及本 Mod 的温区输出 (2,3) 都不重叠。
+            // 金属精炼器 3×4，输入保留顶排中间；与液体接口和温区输出 (1,3) 不重叠。
             { "MetalRefinery", new CellOffset(0, 3) }
         };
 

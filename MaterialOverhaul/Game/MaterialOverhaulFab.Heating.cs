@@ -129,11 +129,16 @@ namespace MaterialOverhaul.Game
                 return ProductionDecision.Passthrough;
             }
 
-            if (runDecision.ZoneConfigured && cachedRecipeId == recipe.id)
+            RefreshModeFromOutputConnection();
+            if (!modeConnectionReady)
             {
-                return ToProduction(runDecision);
+                ProductionDecision pending = ProductionDecision.Passthrough;
+                pending.ZoneConfigured = true;
+                pending.AllowsProduction = false;
+                return pending;
             }
 
+            // 操作效率可能早于 Sim200ms 被读取，按本次温度和最新模式评估。
             return ToProduction(RunController.Update(BodyTemperature, cachedZone, Policy, runState));
         }
 
@@ -185,13 +190,25 @@ namespace MaterialOverhaul.Game
             }
 
             EnsureOrdersImported();
+            RefreshModeFromOutputConnection();
+            UpdateModeStatusItem();
+            if (!modeConnectionReady)
+            {
+                powerDemand = default(PowerDemand);
+                currentRequestedWatts = 0f;
+                currentUsedWatts = 0f;
+                EnforceProductionGate();
+                TickDamage();
+                return;
+            }
             UpdateCoolingTrend(dt);
             UpdateRunState();
             PrepareBatchWhenAutomationBlocks();
             UpdatePowerAndHeating(dt);
             EnforceProductionGate();
-            UpdateRunStatusItem();
             TickDamage();
+            UpdateRunStatusItem();
+            UpdateMaterialRiskStatusItems();
         }
 
         private void UpdateRunState()
@@ -295,7 +312,7 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            bool allowProduction = runDecision.AllowsProduction;
+            bool allowProduction = modeConnectionReady && runDecision.AllowsProduction;
 
             if (!allowProduction)
             {
@@ -345,13 +362,14 @@ namespace MaterialOverhaul.Game
             RunStatusKind kind = RunStatusText.Classify(this);
             bool shouldShow = RunStatusItem.ShouldShow(this, kind);
 
-            if (hasRunStatusItemApplied && shouldShow && kind == lastAppliedRunStatusKind)
+            if (hasRunStatusItemApplied && shouldShow == lastAppliedRunStatusVisible && kind == lastAppliedRunStatusKind)
             {
                 return;
             }
 
             hasRunStatusItemApplied = true;
             lastAppliedRunStatusKind = kind;
+            lastAppliedRunStatusVisible = shouldShow;
 
             // SetStatusItem 会先移除同类别里的旧条目再按新条目重建，因此状态项文本随最新状态刷新。
             selectable.SetStatusItem(RunStatusItem.Category, shouldShow ? RunStatusItem.Item : null, this);

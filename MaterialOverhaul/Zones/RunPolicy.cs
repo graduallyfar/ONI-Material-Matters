@@ -31,6 +31,14 @@ namespace MaterialOverhaul.Zones
             return copy;
         }
 
+        /// <summary>基础模式只取温区输出接线事实，强制开关独立保留。</summary>
+        public RunPolicy WithOutputConnection(bool connected)
+        {
+            RunPolicy copy = this;
+            copy.ControlMode = connected;
+            return copy;
+        }
+
         public override string ToString()
         {
             return (ControlMode ? "控制模式" : "默认模式") + (Forced ? " · 强制运行" : string.Empty);

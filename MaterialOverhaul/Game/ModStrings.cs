@@ -24,24 +24,13 @@ namespace MaterialOverhaul.Game
             {
                 public static class MATERIALOVERHAUL
                 {
-                    /// <summary>
-                    /// v0.0.4：默认／控制模式切换按钮已按用户要求移除，模式固定为默认模式。
-                    /// 这组键**保留但不注册**（未注册的键不会出现在游戏里），以后要恢复入口时直接复用。
-                    /// </summary>
-                    public static class RUNMODE
-                    {
-                        public static LocString TO_DEFAULT = "切换为默认模式";
-                        public static LocString TO_CONTROL = "切换为控制模式";
-                        public static LocString TOOLTIP_DEFAULT = "默认模式：在整个可工作温区内都能生产，温度只影响效率。";
-                        public static LocString TOOLTIP_CONTROL = "控制模式：只在最佳温区内生产；生产时温度低于补热线会自动补热。";
-                    }
 
                     public static class FORCEDRUN
                     {
                         public static LocString ENABLE = "开启强制运行";
                         public static LocString DISABLE = "关闭强制运行";
                         public static LocString TOOLTIP_ENABLE = "强制运行：不因温区越界停止生产，并持续加热。原料、供电、自动化生产许可与建筑完好仍然必须满足。";
-                        public static LocString TOOLTIP_DISABLE = "强制运行已开启。关闭后按当前模式的温区限制重新判断生产许可，并保留当前批次。";
+                        public static LocString TOOLTIP_DISABLE = "强制运行已开启。关闭后按温区输出端口当时的接线状态重新判断生产许可，并保留当前批次。";
                     }
                 }
             }
@@ -51,11 +40,6 @@ namespace MaterialOverhaul.Game
             {
                 public static class MATERIALOVERHAUL
                 {
-                    /// <summary>
-                    /// 配方名后面追加的工作温区文本。{0} 配方名、{1} 最低可工作温度、{2} 最高可工作温度。
-                    /// 由 <c>ComplexRecipe.GetUIName</c> 的后置补丁追加，只对有温区数值的配方生效。
-                    /// </summary>
-                    public static LocString RECIPE_TEMP_RANGE = "{0}（工作温区 {1} ~ {2}）";
 
                     /// <summary>
                     /// 配方详情「效果」里的温度行。{0} 最低可工作温度、{1} 最高可工作温度、
@@ -63,47 +47,6 @@ namespace MaterialOverhaul.Game
                     /// </summary>
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
 
-                    /// <summary>逐笔订单面板（V0.0.3 §5.1）：侧屏标题。</summary>
-                    public static class ORDER_LIST
-                    {
-                        public static LocString TITLE = "材料革新：订单列表";
-
-                        public static LocString EMPTY = "还没有订单。用上方的配方列表添加。";
-
-                        public static LocString ROW_CURRENT = "▶";
-
-                        public static LocString ROW_OTHER = "　";
-
-                        public static LocString ROW_LIMITED = "{0}　剩余 {1} 批";
-
-                        public static LocString ROW_INFINITE = "{0}　无限（本轮 {1}/{2}）";
-
-                        public static LocString ROW_TOOLTIP = "本行的配方：{0}\n按玩家添加顺序排列，同一配方可以重复添加。";
-
-                        public static LocString BUTTON_REMOVE = "取消";
-
-                        public static LocString BUTTON_REMOVE_TOOLTIP = "取消这一笔订单。如果它正是当前批次，原料会退回输入仓，本批进度清零。";
-
-                        public static LocString BUTTON_MINUS = "−";
-
-                        public static LocString BUTTON_MINUS_TOOLTIP = "这一笔的剩余批次数减 1；减到 0 等于取消该笔。";
-
-                        public static LocString BUTTON_PLUS = "+";
-
-                        public static LocString BUTTON_PLUS_TOOLTIP = "这一笔的剩余批次数加 1。";
-
-                        public static LocString BUTTON_INFINITE = "∞";
-
-                        public static LocString BUTTON_INFINITE_TOOLTIP = "把这一笔改为无限订单（每轮按额度生产后让出）。再点一次改回有限订单。";
-
-                        public static LocString BUTTON_QUOTA_DOWN = "≤";
-
-                        public static LocString BUTTON_QUOTA_UP = "≥";
-
-                        public static LocString BUTTON_QUOTA_TOOLTIP = "无限订单每轮额度的上下限：1–99 批。修改额度保留本轮已完成数。";
-
-                        public static LocString LIMIT_HINT = "无限额度范围 1–{0}。";
-                    }
                 }
             }
 
@@ -113,26 +56,12 @@ namespace MaterialOverhaul.Game
                 public static class MATERIALOVERHAUL
                 {
                     /// <summary>信息卡里的过热温度行：{0} 过热阈值。</summary>
-                    public static LocString OVERHEAT_LINE = "过热温度：{0}（材料革新：主建造材料熔点 × 85%）";
+                    public static LocString OVERHEAT_LINE = "过热温度：{0}";
 
                     /// <summary>
                     /// 过热温度行的提示：{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值、{3} 致命温度。
                     /// </summary>
                     public static LocString OVERHEAT_TOOLTIP = "材料革新：过热阈值 = 主建造材料 {0} 的熔点 {1} × 85% = {2}。\n建筑本体超过该温度会过热受损；温区上限只停止生产，不提供耐热保护。\n致命温度：{3}。";
-
-                    /// <summary>工作温区行：{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限。</summary>
-                    public static LocString TEMPZONE_LINE = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
-
-                    /// <summary>
-                    /// v0.0.4：信息卡的「当前生产／下一生产」改为原版口径（原版键 + 原版
-                    /// <c>CurrentWorkingOrder</c> / <c>NextOrder</c>），以下这组键**保留但不注册**。
-                    /// </summary>
-                    public static LocString CURRENT_BATCH = "当前生产：{0}；批次进度 {1}";
-
-                    public static LocString CURRENT_NO_ORDER = "无订单记录（来自旧存档迁移）";
-
-                    /// <summary>功率行：{0} 请求功率、{1} 实际用电、{2} 实际注热。</summary>
-                    public static LocString POWER_LINE = "请求功率 {0}；实际用电 {1}；实际注热 {2}";
 
                     public static LocString HEAT_PREHEAT = "预热中";
 
@@ -144,34 +73,11 @@ namespace MaterialOverhaul.Game
 
                     public static LocString HEAT_SOURCE = "材料革新：内置加热";
 
-                    /// <summary>有限订单摘要：{0} 配方名、{1} 剩余批次数。</summary>
-                    public static LocString ORDER_LIMITED = "{0}（剩余 {1} 批）";
-
-                    /// <summary>无限订单摘要：{0} 配方名、{1} 本轮已完成、{2} 本轮额度。</summary>
-                    public static LocString ORDER_INFINITE = "{0}（无限，本轮 {1}/{2}）";
-
-                    public static LocString NO_TASK = "无生产任务";
-
-                    /// <summary>等待材料：{0} 待检查的订单笔数。</summary>
-                    public static LocString WAITING_MATERIALS = "等待材料（待检查订单 {0} 笔）";
-
-                    /// <summary>下一批预告：{0} 订单摘要。</summary>
-                    public static LocString NEXT_BATCH = "下一生产：{0}";
-
                     public static LocString HARDNESS_NONE = "主建造材料 {0}，生命值 {1}；该建筑未登记要求硬度，不产生机械磨损。";
 
                     public static LocString HARDNESS_OK = "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度合格，机械磨损为零。";
 
                     public static LocString HARDNESS_WEAK = "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度不足，按实际生产时间磨损（{4} 磨损单位/生产秒，{5} HP/磨损单位）。";
-
-                    /// <summary>过热「条件」行：只超过阈值、还没扣血时的提示（{0} 过热阈值）。</summary>
-                    public static LocString OVERHEAT_CONDITION = "本体温度已超过过热阈值 {0}，继续升温会过热受损。";
-
-                    /// <summary>信息卡里的订单列表标题；v0.0.4 起不再显示，键保留。</summary>
-                    public static LocString ORDER_LIST_HEADER = "订单列表（按添加顺序）：";
-
-                    /// <summary>订单列表每一行（{0} 当前批次标记、{1} 序号、{2} 订单摘要）；v0.0.4 起不再显示，键保留。</summary>
-                    public static LocString ORDER_LIST_ROW = "{0}{1}. {2}";
 
                     /// <summary>
                     /// 运行状态文字（v0.0.4 起显示在信息卡**状态栏**的状态项里），键名与 <c>RunStatusText</c> 一一对应。
@@ -188,7 +94,7 @@ namespace MaterialOverhaul.Game
 
                         public static LocString UNPOWERED = "等待供电";
 
-                        public static LocString HIGH_TEMP_WAITING = "高温保护";
+                        public static LocString HIGH_TEMP_WAITING = "等待降温";
 
                         public static LocString PREHEAT = "预热中";
 
@@ -232,7 +138,7 @@ namespace MaterialOverhaul.Game
                     /// 建筑信息卡描述里追加的一句话：告诉玩家本建筑需要处在配方的工作温区内。
                     /// 由 <c>BuildingDef.Desc</c> 的后置补丁追加到原版描述之后，只对已有温区数值的建筑生效。
                     /// </summary>
-                    public static LocString TEMPZONE_NOTE = "本建筑需要在当前配方的工作温区内运行：低于最低可工作温度时停产预热，高于最高可工作温度时停产等待降温，最佳温区内才是满效率。";
+                    public static LocString TEMPZONE_NOTE = "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。";
                 }
             }
         }
@@ -244,6 +150,30 @@ namespace MaterialOverhaul.Game
             {
                 public static class MATERIALOVERHAUL
                 {
+                    public static class RUNMODE
+                    {
+                        public static LocString DEFAULT = "运行模式：默认模式";
+                        public static LocString CONTROL = "运行模式：控制模式";
+                        public static LocString PENDING = "运行模式：等待自动化网络就绪";
+                        public static LocString DEFAULT_TOOLTIP = "温区输出端口未接线，在整个可工作温区内生产，仍受启动与恢复条件约束。输入端接线和红绿值不选择模式。";
+                        public static LocString CONTROL_TOOLTIP = "温区输出端口已接线，只在最佳温区内生产，仍受启动与恢复条件约束。输出红绿值不选择模式；绿色不代表正在生产。";
+                        public static LocString PENDING_TOOLTIP = "自动化网络尚未重建，保留存档模式与温控回差，暂不生产或加热。";
+                        public static LocString FORCED = "强制运行已开启";
+                        public static LocString FORCED_TOOLTIP = "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。";
+                    }
+
+                    public static class WEARRISK
+                    {
+                        public static LocString NAME = "机械磨损风险";
+                        public static LocString TOOLTIP = "主建造材料硬度不足，实际生产会累计机械磨损。预热、待机和暂停不累计磨损。";
+                    }
+
+                    public static class HEATRISK
+                    {
+                        public static LocString NAME = "超过过热阈值";
+                        public static LocString TOOLTIP = "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。";
+                    }
+
                     public static class MECHANICAL
                     {
                         public static LocString NAME = "机械损坏";
@@ -291,8 +221,8 @@ namespace MaterialOverhaul.Game
                     public static class TEMPERATURE_ZONE
                     {
                         public static LocString DESCRIPTION = "温区信号";
-                        public static LocString ACTIVE = "已锁定批次处于最佳温区";
-                        public static LocString INACTIVE = "未处于最佳温区，或没有已锁定批次";
+                        public static LocString ACTIVE = "已锁定配方，且本体温度位于该配方的最佳温区。接线使用控制模式；绿色不代表正在生产。";
+                        public static LocString INACTIVE = "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。";
                     }
 
                     /// <summary>
@@ -303,7 +233,7 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString DESCRIPTION = "允许／暂停生产";
 
-                        public static LocString ACTIVE = "绿色：允许生产（仍需要材料、供电与对应的开工条件）";
+                        public static LocString ACTIVE = "绿色：允许生产（仍需要材料、供电与对应的开工条件）；未接线默认放行";
 
                         public static LocString INACTIVE = "红色：暂停生产；不影响配方准备、预热与补热";
                     }

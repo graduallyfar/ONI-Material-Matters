@@ -20,6 +20,8 @@ namespace MaterialOverhaul.Patches
 
                 // 运行状态改到信息卡状态栏显示（V0.0.4 开发计划 §2.3）；同样是 Db 初始化之后登记。
                 RunStatusItem.Register();
+                RunModeStatusItem.Register();
+                MaterialRiskStatusItems.Register();
 
                 // 先登记已确认的设计数值，调试样例值只填补仍未配置的条目。
                 ContentRegistration.Apply();
@@ -74,7 +76,8 @@ namespace MaterialOverhaul.Patches
         /// <summary>
         /// 温区输出端口位置，按建筑逐个确定，**不是统一偏移**。
         ///
-        /// 坐标语义（已核实）：`CellOffset` 相对建筑**原点格**（左下角），
+        /// 坐标语义：`CellOffset` 相对建筑原点，横向不是左下角。
+        /// BuildingDef.GenerateOffsets 的左界为 width / 2 - width + 1，右界为 width / 2。
         /// 由 `LogicPorts.GetActualCell` 经 `Grid.OffsetCell(Grid.PosToCell(建筑位置), offset)` 换算；
         /// 建筑可旋转时偏移会跟着旋转（这五个配方建筑不可旋转）。
         ///
@@ -89,11 +92,11 @@ namespace MaterialOverhaul.Patches
         private static readonly System.Collections.Generic.Dictionary<string, CellOffset> OutputPortOffsets =
             new System.Collections.Generic.Dictionary<string, CellOffset>
             {
-                { "MetalRefinery", new CellOffset(2, 3) },
-                { "GlassForge", new CellOffset(4, 3) },
+                { "MetalRefinery", new CellOffset(1, 3) },
+                { "GlassForge", new CellOffset(2, 3) },
                 { "Kiln", new CellOffset(1, 1) },
-                { "RockCrusher", new CellOffset(3, 3) },
-                { "RubberMaker", new CellOffset(2, 2) }
+                { "RockCrusher", new CellOffset(2, 3) },
+                { "RubberMaker", new CellOffset(1, 2) }
             };
 
         /// <summary>

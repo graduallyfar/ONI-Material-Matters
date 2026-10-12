@@ -39,6 +39,7 @@ namespace MaterialOverhaul
                 + "，要求硬度条目 " + HardnessRequirementTable.Count
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
+            ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>

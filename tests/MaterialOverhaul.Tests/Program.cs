@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Tests
             Run("温区许可与加热意图（v0.0.3）", RunPolicyAndHeatingTests.Run);
             Run("温控运行状态机（v0.0.3）", RunControllerTests.Run);
             Run("默认模式冷机启动（v0.0.4）", DefaultModeStartupTests.Run);
+            Run("输出接线模式与读档回差（v0.1.0）", OutputConnectionModeTests.Run);
             Run("耗电矩阵（v0.0.3）", PowerDemandTests.Run);
             Run("Heating / Hardness", HeatingAndWearTests.Run);
             Run("损坏原因与维修", DamageCauseTests.Run);

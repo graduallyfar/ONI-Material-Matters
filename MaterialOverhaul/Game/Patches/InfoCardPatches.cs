@@ -17,10 +17,7 @@ namespace MaterialOverhaul.Patches
     ///    <c>STRINGS.BUILDINGS.PREFABS.&lt;ID&gt;.DESC</c>，因此在这里追加一句
     ///    「本建筑需要在当前配方的工作温区内运行」。建筑名下方的描述与建造菜单同源，都会看到这句话。
     ///
-    /// 2. 配方选择：原版 <c>ComplexRecipe.GetUIName</c> 给出配方显示名，侧屏的配方行、
-    ///    配方详情标题、当前／下一订单标签都用它，所以在名字后面追加工作温区
-    ///    （「铝矿 → 铝（工作温区 300 °C ~ 800 °C）」），配方选择时直接能看到。
-    ///    温度用 <c>GameUtil.GetFormattedTemperature</c> 格式化，跟随玩家的温度单位设置。
+    /// 2. 配方详情：AdditionalEffectsForRecipe 追加所选配方温区，配方名保持原版。
     /// </summary>
     [HarmonyPatch(typeof(BuildingDef), "get_Desc")]
     internal static class Patch_BuildingDef_Desc
@@ -47,45 +44,6 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("信息卡温度提示补丁异常：" + e);
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(ComplexRecipe), "GetUIName")]
-    internal static class Patch_ComplexRecipe_GetUIName
-    {
-        private const string KeyRecipeTempRange = "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE";
-
-        private static void Postfix(ComplexRecipe __instance, ref string __result)
-        {
-            try
-            {
-                if (__instance == null || string.IsNullOrEmpty(__result))
-                {
-                    return;
-                }
-
-                TempZone zone;
-                if (!RecipeZoneTable.TryGet(__instance.id, out zone) || zone.IsDisabled)
-                {
-                    return;
-                }
-
-                string template = Strings.Get(KeyRecipeTempRange);
-                if (string.IsNullOrEmpty(template))
-                {
-                    return;
-                }
-
-                __result = string.Format(
-                    template,
-                    __result,
-                    GameUtil.GetFormattedTemperature(zone.WorkMin),
-                    GameUtil.GetFormattedTemperature(zone.WorkMax));
-            }
-            catch (Exception e)
-            {
-                ModLog.Error("配方温度提示补丁异常：" + e);
             }
         }
     }
@@ -154,7 +112,7 @@ namespace MaterialOverhaul.Patches
     ///
     /// 原版 <c>Overheatable.GetDescriptors</c> 给出的「过热温度」一行用的是属性总值。
     /// 本 Mod 的规则值已经补偿进该属性，这里再显式重建这一行，作用有两个：
-    ///   1. 保证卡片里显示的**一定**是规则值（属性补偿万一失败也不会退回 75 ℃）；
+    ///   1. 规则值与实际属性一致时缩短常驻行；补偿失败时保留实际阈值；
     ///   2. 把规则来源写进提示（主建造材料与熔点），玩家能看出这个阈值是怎么来的。
     ///
     /// **只在真正建成的实例上生效**（<c>MaterialOverhaulFab.Spawned</c>），
@@ -190,7 +148,15 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                string overheatText = GameUtil.GetFormattedTemperature(overheat);
+                // 属性补偿失败时保持真实阈值显示，不伪造规则已经生效。
+                if (Math.Abs(__instance.OverheatTemperature - overheat) > 0.1f)
+                {
+                    ModLog.WarnOnce("overheat|display-mismatch|" + fab.PrefabId,
+                        fab.PrefabId + "：实际过热阈值与规则值不一致，信息卡保留实际值。");
+                    return;
+                }
+
+                string overheatText = GameUtil.GetFormattedTemperature(__instance.OverheatTemperature);
                 string meltingPointText = GameUtil.GetFormattedTemperature(meltingPoint);
                 string fatalText = GameUtil.GetFormattedTemperature(__instance.baseFatalTemp);
 
