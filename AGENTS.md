@@ -32,7 +32,7 @@
 
 工程已建立：`MaterialOverhaul\`（netstandard2.1 类库，引用本机游戏程序集与游戏自带 0Harmony，两者都不进产物）、`tests\MaterialOverhaul.Tests\`（判断层与操作任务门控源码级测试；接入替身不代替游戏验收）、`MaterialOverhaul\tools\deploy.ps1`（部署到本地 mod 目录）。构建入口、依赖路径与部署目录见 [V0.0.1 开发计划](<开发计划/V0.0.1开发计划.md>) §2.2；目标框架由游戏程序集核实，**不依据本机已安装的 .NET SDK 推断**。
 
-版本控制已建立：本目录已是 Git 仓库（分支 `main`，初始提交 `21efa29`），根目录 `.gitignore` 忽略构建产物与 Obsidian 个人界面状态，仓库局部设置 `core.autocrlf=false` 以免改写现有文件换行符；尚未配置远程仓库，推送或发布需用户明确授权。
+版本控制已建立：本目录已是 Git 仓库（分支 `main`），根目录 `.gitignore` 忽略构建产物与 Obsidian 个人界面状态，仓库局部设置 `core.autocrlf=false` 以免改写现有文件换行符；推送或发布需用户明确授权（见第 10 节）。2026-10-12 已配置远程 `origin` = `https://github.com/graduallyfar/ONI-Reform.git`（Private，`main` 跟踪 `origin/main`），本地历史已与远程 `main` 一致。远程建立时只有自动生成的 `Initial commit`（`2d2dd0a`，仅 `README.md`），本地当时的 44 个提交已变基到它之后，**因此全部本地提交哈希被重写**，旧哈希（如 `21efa29`）只保留在本地分支 `backup/pre-rebase-main` 与 reflog 中。在 DSH 沙箱内推送需 `http.sslBackend=openssl`，并把 `gh` 令牌经 `GIT_CONFIG_*` 环境变量作为 `Authorization` 头传入：沙箱禁止 MSYS 程序创建命名管道，`sh` 与凭据助手／askpass 都不可用；该变通不写入仓库或全局 git 配置，令牌不落盘。
 
 设计判断顺序：用户最新明确指示 → 对应系统的最新细节文档 → 总体设计 → 本文件中的摘要。本文件不代替详细设计；发现文档冲突时明确指出并按已确认意图同步修正，不凭实现方便改变玩法。
 
