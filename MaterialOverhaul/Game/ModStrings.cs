@@ -24,6 +24,10 @@ namespace MaterialOverhaul.Game
             {
                 public static class MATERIALOVERHAUL
                 {
+                    /// <summary>
+                    /// v0.0.4：默认／控制模式切换按钮已按用户要求移除，模式固定为默认模式。
+                    /// 这组键**保留但不注册**（未注册的键不会出现在游戏里），以后要恢复入口时直接复用。
+                    /// </summary>
                     public static class RUNMODE
                     {
                         public static LocString TO_DEFAULT = "切换为默认模式";
@@ -119,7 +123,10 @@ namespace MaterialOverhaul.Game
                     /// <summary>工作温区行：{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限。</summary>
                     public static LocString TEMPZONE_LINE = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
 
-                    /// <summary>当前生产行：{0} 订单摘要、{1} 批次进度百分比。</summary>
+                    /// <summary>
+                    /// v0.0.4：信息卡的「当前生产／下一生产」改为原版口径（原版键 + 原版
+                    /// <c>CurrentWorkingOrder</c> / <c>NextOrder</c>），以下这组键**保留但不注册**。
+                    /// </summary>
                     public static LocString CURRENT_BATCH = "当前生产：{0}；批次进度 {1}";
 
                     public static LocString CURRENT_NO_ORDER = "无订单记录（来自旧存档迁移）";
@@ -160,13 +167,15 @@ namespace MaterialOverhaul.Game
                     /// <summary>过热「条件」行：只超过阈值、还没扣血时的提示（{0} 过热阈值）。</summary>
                     public static LocString OVERHEAT_CONDITION = "本体温度已超过过热阈值 {0}，继续升温会过热受损。";
 
-                    /// <summary>信息卡里的订单列表标题。</summary>
+                    /// <summary>信息卡里的订单列表标题；v0.0.4 起不再显示，键保留。</summary>
                     public static LocString ORDER_LIST_HEADER = "订单列表（按添加顺序）：";
 
-                    /// <summary>订单列表每一行（{0} 当前批次标记、{1} 序号、{2} 订单摘要）。</summary>
+                    /// <summary>订单列表每一行（{0} 当前批次标记、{1} 序号、{2} 订单摘要）；v0.0.4 起不再显示，键保留。</summary>
                     public static LocString ORDER_LIST_ROW = "{0}{1}. {2}";
 
-                    /// <summary>运行状态文字（信息卡首行），键名与 <c>RunStatusText</c> 一一对应。</summary>
+                    /// <summary>
+                    /// 运行状态文字（v0.0.4 起显示在信息卡**状态栏**的状态项里），键名与 <c>RunStatusText</c> 一一对应。
+                    /// </summary>
                     public static class STATUS
                     {
                         public static LocString NO_TASK = "无生产任务";
@@ -257,6 +266,20 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString NAME = "损坏（来源未知）";
                         public static LocString TOOLTIP = "损伤来自旧版本存档，当时没有记录来源。保留原版维修温度行为，不把它当成纯机械损坏。";
+                    }
+
+                    /// <summary>
+                    /// 建筑信息卡**状态栏**里的运行状态条目（V0.0.4 开发计划 §2.3）。
+                    /// NAME 与 TOOLTIP 都是格式化模板：NAME 只带状态文字；
+                    /// TOOLTIP 依次带状态、本体温度、温度效率、请求功率、实际功率、实际注热、批次进度。
+                    /// 原版已有的「无生产任务」「等待材料」「等待操作」「生产中」仍由原版状态项显示，
+                    /// 这里只补充温度与自动化造成的状态，避免同一条信息出现两次。
+                    /// </summary>
+                    public static class RUNSTATUS
+                    {
+                        public static LocString NAME = "材料革新：{0}";
+
+                        public static LocString TOOLTIP = "材料革新状态：{0}\n本体温度 {1}，温度效率 {2}\n请求功率 {3}，实际用电 {4}，实际注热 {5}\n当前批次进度 {6}";
                     }
                 }
             }

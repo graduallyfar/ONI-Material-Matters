@@ -18,6 +18,9 @@ namespace MaterialOverhaul.Patches
             {
                 DamageStatusItems.Register();
 
+                // 运行状态改到信息卡状态栏显示（V0.0.4 开发计划 §2.3）；同样是 Db 初始化之后登记。
+                RunStatusItem.Register();
+
                 // 先登记已确认的设计数值，调试样例值只填补仍未配置的条目。
                 ContentRegistration.Apply();
                 DebugValueApplier.Apply();
@@ -163,7 +166,8 @@ namespace MaterialOverhaul.Patches
                 Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"),
                 Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"),
                 Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"),
-                show_wire_missing_icon: false));
+                show_wire_missing_icon: false,
+                display_custom_name: true));
 
             ModLog.Info("已为 " + def.PrefabID + " 添加「允许／暂停生产」自动化输入端口，位置 "
                 + offset.x + "," + offset.y + "。");
@@ -197,7 +201,9 @@ namespace MaterialOverhaul.Patches
                 offset,
                 Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION"),
                 Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"),
-                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE")));
+                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"),
+                show_wire_missing_icon: false,
+                display_custom_name: true));
 
             ModLog.Info("已为 " + def.PrefabID + " 添加温区输出端口，位置 " + offset.x + "," + offset.y + "。");
         }

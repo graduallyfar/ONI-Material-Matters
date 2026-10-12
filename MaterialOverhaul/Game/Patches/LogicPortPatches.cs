@@ -6,7 +6,7 @@ using MaterialOverhaul.Game;
 namespace MaterialOverhaul.Patches
 {
     /// <summary>
-    /// 温区输出端口的说明文本（端口描述／激活说明／非激活说明）。
+    /// 温区输出端口的说明文本（端口描述／激活说明／非激活说明）与可定位日志。
     ///
     /// **为什么要在这里再写一遍（游戏内日志已确认的问题）**：原版
     /// <c>BuildingLoader.InitializeLogicPorts</c> 在创建**建筑预制件**时就把 Def 上的端口描述
@@ -14,8 +14,12 @@ namespace MaterialOverhaul.Patches
     /// 那一刻本 Mod 的本地化键是否已经建好不由我们保证：一旦当时取到空串，
     /// 这个端口在**整个游戏进程内**都没有说明文本，重新读档也不会变。
     ///
-    /// 因此在实例生成时（<c>LogicPorts.OnSpawn</c>）按当前文本重写一遍：
-    /// 文本正确时是空操作，文本为空时修正，并记录一条日志便于核对。
+    /// 用**后置**补丁（v0.0.4 由前置改为后置）有两个原因：
+    ///   1. 原版悬停卡（<c>SelectToolHoverTextCard</c>）要读 <c>port.activeDescription</c> 与
+    ///      <c>inactiveDescription</c>，后置时物理端口已经建好，文本与端口状态一定一致；
+    ///   2. 可以在同一处用 <c>GetPortCell</c> 打印端口的实际格子，便于在游戏内核对端口位置
+    ///      （v0.0.4 开发计划 §2.4、验收 G04）。
+    /// 文本正确时仍然只是重写一遍，属于幂等操作。
     /// </summary>
     [HarmonyPatch(typeof(LogicPorts), "OnSpawn")]
     internal static class Patch_LogicPorts_OnSpawn
@@ -28,7 +32,7 @@ namespace MaterialOverhaul.Patches
         private const string KeyControlActive = "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE";
         private const string KeyControlInactive = "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE";
 
-        private static void Prefix(LogicPorts __instance)
+        private static void Postfix(LogicPorts __instance)
         {
             try
             {
@@ -52,20 +56,27 @@ namespace MaterialOverhaul.Patches
 
                 // 「允许／暂停生产」输入端口：端口本体来自原版逻辑控制端口，
                 // 说明文本改成设计要求的措辞（默认放行、红色只暂停生产）。
+                bool hasControl = false;
                 if (AutomationControlScope.IsEnabled(prefabId.PrefabTag.ToString()))
                 {
-                    found |= Rewrite(
+                    hasControl = Rewrite(
                         __instance.inputPortInfo,
                         AutomationControlScope.PortId,
                         Strings.Get(KeyControlDescription),
                         Strings.Get(KeyControlActive),
                         Strings.Get(KeyControlInactive));
+                    found |= hasControl;
                 }
 
                 if (found)
                 {
                     ModLog.Info(prefabId.PrefabTag + "：逻辑端口说明已写入 —— 温区输出「" + description
-                        + "」「" + active + "」／「" + inactive + "」。");
+                        + "」@格子 " + __instance.GetPortCell(TemperatureZoneSignal.PortId)
+                        + (hasControl
+                            ? "，生产控制输入「" + Strings.Get(KeyControlDescription) + "」@格子 "
+                                + __instance.GetPortCell(AutomationControlScope.PortId)
+                            : string.Empty)
+                        + "。");
                 }
             }
             catch (Exception e)

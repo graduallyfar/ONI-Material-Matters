@@ -8,7 +8,7 @@ namespace MaterialOverhaul.Core
     {
         public const string StaticID = "MaterialOverhaul";
         public const string DisplayName = "Material Overhaul";
-        public const string Version = "0.0.3";
+        public const string Version = "0.0.4";
 
         /// <summary>Harmony 实例标识，用于按 Mod 归属补丁。</summary>
         public const string HarmonyID = StaticID;

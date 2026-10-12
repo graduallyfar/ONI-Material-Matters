@@ -98,6 +98,10 @@ namespace MaterialOverhaul.Game
         private float overheatTemperature;
         private AttributeModifier overheatModifier;
 
+        /// <summary>状态栏条目的上一次分类与是否已经写入过一次（避免每个模拟步重建状态项）。</summary>
+        private RunStatusKind lastAppliedRunStatusKind = RunStatusKind.None;
+        private bool hasRunStatusItemApplied;
+
         private int lastZoneSignal = -1;
         private TempState lastLoggedState = TempState.Disabled;
         private bool hasLoggedState;
@@ -284,6 +288,9 @@ namespace MaterialOverhaul.Game
 
             RestoreState();
 
+            // v0.0.4：模式固定默认，旧存档的控制模式在这里迁移（见方法注释）。
+            MigrateControlModeToDefault();
+
             // 旧存档或其它码路可能已经有原版队列数量：先纳入订单表，再按订单表重新决定下一笔。
             EnsureOrdersImported();
 
@@ -446,6 +453,22 @@ namespace MaterialOverhaul.Game
 
         /* ---- 运行模式与强制运行（建筑细节文档 §2.1、§2.1.4）---- */
 
+        /// <summary>
+        /// v0.0.4：界面不再提供默认／控制模式切换（用户要求），模式固定为默认模式。
+        /// 旧存档里 `controlMode == true` 的建筑如果直接沿用，玩家会被永久锁在控制模式且没有入口，
+        /// 因此在读档时迁移一次并留下可定位日志。控制模式的判定代码保留，以后恢复入口即可再用。
+        /// </summary>
+        private void MigrateControlModeToDefault()
+        {
+            if (!controlMode)
+            {
+                return;
+            }
+
+            controlMode = false;
+            ModLog.Info(PrefabId + "：v0.0.4 起模式固定为默认模式，本建筑旧存档中的控制模式已迁移为默认模式。");
+        }
+
         /// <summary>切换默认／控制模式。保留批次与进度，只重建启动条件与加热意图。</summary>
         public void SetControlMode(bool control)
         {
@@ -500,25 +523,16 @@ namespace MaterialOverhaul.Game
 
         /* ---- 界面入口 ---- */
 
+        /// <summary>
+        /// 建筑面板用户菜单。v0.0.4 只保留强制运行开关：默认／控制模式的切换按用户要求移除，
+        /// 模式固定为默认模式（旧存档由 <see cref="MigrateControlModeToDefault"/> 迁移）。
+        /// </summary>
         private void OnRefreshUserMenu(object data)
         {
             if (fabricator == null || global::Game.Instance == null)
             {
                 return;
             }
-
-            string modeText = controlMode
-                ? LocalizedOr(KeyModeToDefault, "Switch to Default Mode")
-                : LocalizedOr(KeyModeToControl, "Switch to Control Mode");
-            string modeTooltip = controlMode
-                ? LocalizedOr(KeyModeTooltipDefault, "Default mode: production is allowed across the whole working temperature range.")
-                : LocalizedOr(KeyModeTooltipControl, "Control mode: production only inside the best temperature range, with top-up heating while producing.");
-
-            global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
-                iconName: "action_control",
-                text: modeText,
-                on_click: () => SetControlMode(!controlMode),
-                tooltipText: modeTooltip));
 
             string forcedText = forcedRun
                 ? LocalizedOr(KeyForcedDisable, "Disable Forced Run")
@@ -547,19 +561,19 @@ namespace MaterialOverhaul.Game
         /* ---- 信息卡 ---- */
 
         /// <summary>
-        /// 建筑信息卡的效果条目（§7.1）。文本只反映本步的真实条件：
-        /// 允许生产不会被写成正在生产，只有实际注热才写预热／补热／持续加热。
+        /// 建筑信息卡的效果条目（V0.0.4 开发计划 §2.1）。
+        ///
+        /// 与 v0.0.3 的差别：
+        ///   - **不再**写运行状态文字：状态改到信息卡状态栏（<see cref="RunStatusItem"/>）；
+        ///   - **不再**列订单列表：逐笔查看与编辑在「材料革新：订单列表」侧屏里；
+        ///   - **当前生产／下一生产改读原版数据**（<c>CurrentWorkingOrder</c> / <c>NextOrder</c>）
+        ///     与原版文案，与配方侧屏完全同源，不再由本 Mod 自己推算调度。
         /// </summary>
         public List<Descriptor> GetDescriptors(GameObject go)
         {
             List<Descriptor> list = new List<Descriptor>();
             try
             {
-                ComplexRecipe working = CurrentWorkingRecipe;
-                OrderEntry current = CurrentOrder;
-
-                list.Add(DescriptorText(RunStatusText.Compose(this)));
-
                 if (cachedZoneConfigured)
                 {
                     list.Add(DescriptorText(string.Format(
@@ -570,20 +584,7 @@ namespace MaterialOverhaul.Game
                         GameUtil.GetFormattedTemperature(cachedZone.BestMax))));
                 }
 
-                if (working != null)
-                {
-                    string orderText = current != null
-                        ? OrderSummary(current)
-                        : LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER", "当前批次未关联订单记录（读档迁移）");
-                    list.Add(DescriptorText(string.Format(
-                        LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_BATCH", "当前生产：{0}，批次进度 {1}"),
-                        orderText,
-                        GameUtil.GetFormattedPercent(Mathf.Clamp01(OrderProgressValue()) * 100f))));
-                }
-                else
-                {
-                    list.Add(DescriptorText(NextBatchText()));
-                }
+                list.Add(DescriptorText(VanillaOrderLine()));
 
                 list.Add(DescriptorText(string.Format(
                     LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.POWER_LINE", "请求功率 {0}，实际用电 {1}，实际注热 {2}"),
@@ -600,8 +601,6 @@ namespace MaterialOverhaul.Game
                         LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_CONDITION", "本体温度已超过过热阈值 {0}，继续升温会过热受损。"),
                         GameUtil.GetFormattedTemperature(overheatable != null ? overheatable.OverheatTemperature : 0f))));
                 }
-
-                AddOrderListDescriptors(list);
             }
             catch (Exception e)
             {
@@ -611,47 +610,93 @@ namespace MaterialOverhaul.Game
             return list;
         }
 
-        /// <summary>批次进度：优先用原版进度值，缺失时返回 0。</summary>
-        private float OrderProgressValue()
+        /// <summary>
+        /// 原版口径的「当前生产 / 下一生产」：直接取原版配方侧屏用的同一对字段与同一套文案
+        /// （<c>CurrentWorkingOrder</c>、<c>NextOrder</c>、<c>NO_WORKABLE_ORDER</c>），
+        /// 因此信息卡与配方侧屏不会出现两套说法。
+        /// </summary>
+        private string VanillaOrderLine()
         {
             if (fabricator == null)
             {
-                return 0f;
+                return string.Empty;
             }
 
-            float progress = fabricator.GetPercentComplete();
-            return float.IsNaN(progress) ? 0f : progress;
+            ComplexRecipe working = fabricator.CurrentWorkingOrder;
+            if (working != null)
+            {
+                return string.Format(
+                    VanillaText(
+                        "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.CURRENT_ORDER",
+                        "Current order: {0}",
+                        "当前订单：{0}"),
+                    working.GetUIName(includeAmounts: false));
+            }
+
+            ComplexRecipe next = fabricator.NextOrder;
+            if (next != null)
+            {
+                return string.Format(
+                    VanillaText(
+                        "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.NEXT_ORDER",
+                        "Next order: {0}",
+                        "下一订单：{0}"),
+                    next.GetUIName(includeAmounts: false));
+            }
+
+            return VanillaText(
+                "STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.NO_WORKABLE_ORDER",
+                "No workable order",
+                "无可执行订单");
+        }
+
+        /// <summary>
+        /// 取原版键的文本。原版键缺失时 <c>Strings.Get</c> 会返回空串**或原样返回键名**，
+        /// 两种都按缺失处理并回退到本 Mod 内置文案（中文回退与游戏文案口径一致），
+        /// 保证信息卡不会出现键名或空白。
+        /// </summary>
+        private static string VanillaText(string key, string englishFallback, string chineseFallback)
+        {
+            string value = Strings.Get(key);
+            if (!string.IsNullOrEmpty(value) && value != key)
+            {
+                return value;
+            }
+
+            return LocalizedOr(key, IsChineseLocale() ? chineseFallback : englishFallback);
+        }
+
+        private static bool IsChineseLocale()
+        {
+            try
+            {
+                string code = Localization.GetCurrentLanguageCode();
+                return !string.IsNullOrEmpty(code) && code.StartsWith("zh");
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+        }
+
+        /// <summary>批次进度：优先用原版进度值，缺失时返回 0；信息卡与状态栏共用同一个口径。</summary>
+        public float BatchProgress
+        {
+            get
+            {
+                if (fabricator == null)
+                {
+                    return 0f;
+                }
+
+                float progress = fabricator.GetPercentComplete();
+                return float.IsNaN(progress) ? 0f : progress;
+            }
         }
 
         private static Descriptor DescriptorText(string text)
         {
             return new Descriptor(text, text, Descriptor.DescriptorType.Effect);
-        }
-
-        /// <summary>
-        /// 信息卡里的完整订单列表（按添加顺序）。逐笔编辑在订单列表侧屏里，
-        /// 这里保证即使侧屏不可用也能看到每一笔的身份与剩余数量。
-        /// </summary>
-        private void AddOrderListDescriptors(List<Descriptor> list)
-        {
-            if (orders.Count == 0)
-            {
-                return;
-            }
-
-            list.Add(DescriptorText(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_HEADER", "订单列表（按添加顺序）：")));
-
-            int currentId = orders.LockedOrderId;
-            for (int i = 0; i < orders.Count; i++)
-            {
-                OrderEntry entry = orders.Orders[i];
-                bool isCurrent = entry.Id == currentId;
-                list.Add(DescriptorText(string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIST_ROW", "{0}{1}. {2}"),
-                    isCurrent ? "▶ " : "   ",
-                    i + 1,
-                    OrderSummary(entry))));
-            }
         }
 
         private static string HeatingIntentText(HeatingIntent intent)
@@ -670,41 +715,6 @@ namespace MaterialOverhaul.Game
                 default:
                     return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_NONE", "无");
             }
-        }
-
-        private string OrderSummary(OrderEntry entry)
-        {
-            if (entry == null)
-            {
-                return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.CURRENT_NO_ORDER", "无订单记录");
-            }
-
-            string name = RecipeDisplayName(entry.RecipeId);
-            return entry.IsInfinite
-                ? string.Format(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_INFINITE", "{0}（无限，本轮 {1}/{2}）"),
-                    name, entry.BatchesDoneThisRound, entry.BatchQuota)
-                : string.Format(LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.ORDER_LIMITED", "{0}（剩余 {1} 批）"),
-                    name, entry.Remaining);
-        }
-
-        private string NextBatchText()
-        {
-            if (orders.Count == 0)
-            {
-                return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NO_TASK", "无生产任务");
-            }
-
-            OrderEntry next = NextPreviewOrder();
-            if (next == null)
-            {
-                return string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.WAITING_MATERIALS", "等待材料（待检查订单 {0} 笔）"),
-                    orders.Count);
-            }
-
-            return string.Format(
-                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.NEXT_BATCH", "下一生产：{0}"),
-                OrderSummary(next));
         }
 
         private string HardnessText()

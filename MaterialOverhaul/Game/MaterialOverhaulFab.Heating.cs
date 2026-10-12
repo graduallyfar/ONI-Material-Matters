@@ -190,6 +190,7 @@ namespace MaterialOverhaul.Game
             PrepareBatchWhenAutomationBlocks();
             UpdatePowerAndHeating(dt);
             EnforceProductionGate();
+            UpdateRunStatusItem();
             TickDamage();
         }
 
@@ -326,6 +327,34 @@ namespace MaterialOverhaul.Game
             {
                 operational.SetActive(active);
             }
+        }
+
+        /* ---- 信息卡状态栏（V0.0.4 开发计划 §2.3）---- */
+
+        /// <summary>
+        /// 把运行状态写进建筑信息卡的状态栏。只在状态分类真的变化时动状态项，
+        /// 不在每个模拟步反复增删（AGENTS 约定：不每步刷日志、不做无意义重建）。
+        /// </summary>
+        private void UpdateRunStatusItem()
+        {
+            if (selectable == null || RunStatusItem.Item == null || RunStatusItem.Category == null)
+            {
+                return;
+            }
+
+            RunStatusKind kind = RunStatusText.Classify(this);
+            bool shouldShow = RunStatusItem.ShouldShow(this, kind);
+
+            if (hasRunStatusItemApplied && shouldShow && kind == lastAppliedRunStatusKind)
+            {
+                return;
+            }
+
+            hasRunStatusItemApplied = true;
+            lastAppliedRunStatusKind = kind;
+
+            // SetStatusItem 会先移除同类别里的旧条目再按新条目重建，因此状态项文本随最新状态刷新。
+            selectable.SetStatusItem(RunStatusItem.Category, shouldShow ? RunStatusItem.Item : null, this);
         }
 
         /// <summary>

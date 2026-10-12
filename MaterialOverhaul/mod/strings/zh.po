@@ -151,6 +151,18 @@ msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.UNKNOWN.TOOLTIP"
 msgid "This damage came from an older save that did not record its source. Vanilla repair temperature behaviour is kept; it is not treated as pure mechanical damage."
 msgstr "损伤来自旧版本存档，当时没有记录来源。保留原版维修温度行为，不把它当成纯机械损坏。"
 
+#. 状态栏运行状态条目（v0.0.4）：{0} 状态文字
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNSTATUS.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNSTATUS.NAME"
+msgid "Material Overhaul: {0}"
+msgstr "材料革新：{0}"
+
+#. 状态栏运行状态提示（v0.0.4）：{0} 状态、{1} 本体温度、{2} 温度效率、{3} 请求功率、{4} 实际用电、{5} 实际注热、{6} 批次进度
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNSTATUS.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNSTATUS.TOOLTIP"
+msgid "Material Overhaul status: {0}\nBody temperature {1}, temperature efficiency {2}\nRequested power {3}, power used {4}, heat injected {5}\nCurrent batch progress {6}"
+msgstr "材料革新状态：{0}\n本体温度 {1}，温度效率 {2}\n请求功率 {3}，实际用电 {4}，实际注热 {5}\n当前批次进度 {6}"
+
 #. 信息卡：工作温区行（{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE"
