@@ -58,7 +58,12 @@ namespace MaterialOverhaul.Patches
     [HarmonyPatch(typeof(BuildingHP), "OnDoBuildingDamage")]
     internal static class Patch_BuildingHP_OnDoBuildingDamage
     {
-        private static void Postfix(BuildingHP __instance)
+        private static void Prefix(BuildingHP __instance, out int __state)
+        {
+            __state = __instance.HitPoints;
+        }
+
+        private static void Postfix(BuildingHP __instance, int __state)
         {
             try
             {
@@ -74,7 +79,8 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                if (fab.IsAboveOverheatThreshold)
+                // invincible 或未实际扣血的事件不能触发过热加热保护。
+                if (__instance.HitPoints < __state && fab.IsAboveOverheatThreshold)
                 {
                     fab.LatchOverheatDamage();
                 }

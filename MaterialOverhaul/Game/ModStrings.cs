@@ -196,7 +196,7 @@ namespace MaterialOverhaul.Game
                         public static LocString CONTROL_TOOLTIP = "温区输出端口已接线，只在最佳温区内生产，仍受启动与恢复条件约束。输出红绿值不选择模式；绿色不代表正在生产。";
                         public static LocString PENDING_TOOLTIP = "自动化网络尚未重建，保留存档模式与温控回差，暂不生产或加热。";
                         public static LocString FORCED = "强制运行已开启";
-                        public static LocString FORCED_TOOLTIP = "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。";
+                        public static LocString FORCED_TOOLTIP = "强制运行覆盖温区停机限制；过热受损前持续加热，受损后停止内置加热，完全维修后解除。关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。";
                     }
 
                     public static class WEARRISK
@@ -230,13 +230,13 @@ namespace MaterialOverhaul.Game
                     public static class OVERHEAT
                     {
                         public static LocString NAME = "过热损坏";
-                        public static LocString TOOLTIP = "建筑本体温度超过过热阈值导致损坏。维修按原版过热方式处理并重置温度。";
+                        public static LocString TOOLTIP = "建筑本体温度超过过热阈值导致损坏。内置加热已停止，完全维修后解除；维修按原版过热方式处理并重置温度。";
                     }
 
                     public static class BOTH
                     {
                         public static LocString NAME = "机械损坏＋过热损坏";
-                        public static LocString TOOLTIP = "同时存在机械磨损与过热损坏。维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。";
+                        public static LocString TOOLTIP = "同时存在机械磨损与过热损坏。内置加热已停止，完全维修后解除；维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。";
                     }
 
                     public static class UNKNOWN

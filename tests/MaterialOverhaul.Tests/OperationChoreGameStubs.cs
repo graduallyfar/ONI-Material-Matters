@@ -20,7 +20,7 @@ public sealed class ComplexRecipe
 
 public sealed class Chore { }
 
-public sealed class ComplexFabricator
+public sealed partial class ComplexFabricator
 {
     public bool duplicantOperated = true;
     public bool Operational = true;
@@ -56,12 +56,14 @@ namespace MaterialOverhaul.Patches
     internal static class PatchHelpers
     {
         public static MaterialOverhaulFab FabOf(ComplexFabricator fabricator) { return fabricator.Mod; }
+        public static MaterialOverhaulFab FabOf(BuildingHP hp) { return hp.Mod; }
+        public static MaterialOverhaulFab FabOf(Overheatable heat) { return heat.Mod; }
     }
 }
 
 namespace MaterialOverhaul.Game
 {
-    internal static class FabricatorAccess
+    internal static partial class FabricatorAccess
     {
         public static Chore ChoreField(ComplexFabricator fabricator) { return fabricator.CurrentChore; }
         public static void CancelChore(ComplexFabricator fabricator)

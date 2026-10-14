@@ -54,7 +54,7 @@ msgstr "过热损坏"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.TOOLTIP"
 msgid "The building body exceeded its overheat threshold. Repaired as an overheat repair, which resets temperature."
-msgstr "建筑本体温度超过过热阈值导致损坏。维修按原版过热方式处理并重置温度。"
+msgstr "建筑本体温度超过过热阈值导致损坏。内置加热已停止，完全维修后解除；维修按原版过热方式处理并重置温度。"
 
 #. 损坏原因状态项：机械与过热同时存在
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.NAME
@@ -65,7 +65,7 @@ msgstr "机械损坏＋过热损坏"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.BOTH.TOOLTIP"
 msgid "Both mechanical wear and overheat damage are present. Repair is handled as an overheat repair and resets temperature; this does not add an extra mechanical damage tick."
-msgstr "同时存在机械磨损与过热损坏。维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。"
+msgstr "同时存在机械磨损与过热损坏。内置加热已停止，完全维修后解除；维修按过热方式处理并重置温度，但这不代表额外多扣一份机械伤害。"
 
 #. 逻辑端口：温区输出信号
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION
@@ -368,8 +368,8 @@ msgstr "强制运行已开启"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP"
-msgid "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
-msgstr "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
+msgid "强制运行覆盖温区停机限制；过热受损前持续加热，受损后停止内置加热，完全维修后解除。关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
+msgstr "强制运行覆盖温区停机限制；过热受损前持续加热，受损后停止内置加热，完全维修后解除。关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME"

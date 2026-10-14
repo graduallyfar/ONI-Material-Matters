@@ -268,6 +268,8 @@ namespace MaterialOverhaul.Game
                 TickDamage();
                 return;
             }
+            // 先清理完全修复的原因，再判断本步加热；损坏检测仍在步末执行。
+            ClearDamageWhenFullyRepaired();
             UpdateCoolingTrend(dt);
             UpdateRunState();
             PrepareBatchWhenAutomationBlocks();
@@ -316,13 +318,7 @@ namespace MaterialOverhaul.Game
 
         private void UpdatePowerAndHeating(float dt)
         {
-            HeatingContext heatingContext = default(HeatingContext);
-            heatingContext.HasLockedBatch = HasLockedBatch;
-            // 已投料即视为本批次材料齐全：不要求输入仓再次备齐一份原料。
-            heatingContext.BatchMaterialsReady = HasLockedBatch;
-            heatingContext.Powered = IsPowered;
-            heatingContext.ManuallyDisabled = IsManuallyDisabled;
-            heatingContext.BrokenDown = IsBrokenDown;
+            HeatingContext heatingContext = CreateHeatingContext();
 
             HeatingIntent commanded = HeatingIntent.None;
             if (SupportsBuiltInHeating && cachedZoneConfigured && HeatingConditions.CanRequestHeat(heatingContext))
@@ -335,6 +331,7 @@ namespace MaterialOverhaul.Game
             context.PowerAvailable = IsPowered;
             context.ManuallyDisabled = IsManuallyDisabled;
             context.BrokenDown = IsBrokenDown;
+            context.OverheatDamaged = HasOverheatDamage;
             context.TemperatureAllowsProduction = runDecision.AllowsProduction;
             context.AutomationAllowsProduction = AutomationAllowsProduction;
             context.HasWorker = HasWorker;

@@ -19,6 +19,9 @@ namespace MaterialOverhaul.Heating
 
         /// <summary>是否因损坏停机。</summary>
         public bool BrokenDown;
+
+        /// <summary>当前尚未完全修复的过热损伤；轻微受损也禁止内置加热。</summary>
+        public bool OverheatDamaged;
     }
 
     /// <summary>
@@ -38,7 +41,8 @@ namespace MaterialOverhaul.Heating
             return context.HasLockedBatch
                 && context.BatchMaterialsReady
                 && !context.ManuallyDisabled
-                && !context.BrokenDown;
+                && !context.BrokenDown
+                && !context.OverheatDamaged;
         }
 
         /// <summary>是否可以**实际**加热：在需求条件之上再要求已确认供电。</summary>

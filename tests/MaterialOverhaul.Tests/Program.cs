@@ -24,6 +24,7 @@ namespace MaterialOverhaul.Tests
             Run("共用加热功率滑条（v0.1.1，实际接口源码＋游戏替身）", HeatingPowerControlTests.Run);
             Run("Heating / Hardness", HeatingAndWearTests.Run);
             Run("损坏原因与维修", DamageCauseTests.Run);
+            Run("v0.1.3 数量点击与过热停热（实际源码＋游戏替身）", BugFixRegressionTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

@@ -20,6 +20,9 @@ namespace MaterialOverhaul.Heating
         /// <summary>是否因损坏停机。</summary>
         public bool BrokenDown;
 
+        /// <summary>过热受损后只关闭加热，生产仍按原有许可判断。</summary>
+        public bool OverheatDamaged;
+
         /// <summary>温度条件是否允许生产（来自 <see cref="RunDecision.AllowsProduction"/>）。</summary>
         public bool TemperatureAllowsProduction;
 
@@ -89,7 +92,8 @@ namespace MaterialOverhaul.Heating
                 context.TemperatureAllowsProduction && context.AutomationAllowsProduction && context.HasWorker;
 
             demand.RequestedProductionWatts = productionAllowedByMachine ? Balance.ProductionWatts : 0f;
-            demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(context.CommandedHeating, context.ConfiguredHeatingWatts);
+            HeatingIntent heating = context.OverheatDamaged ? HeatingIntent.None : context.CommandedHeating;
+            demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(heating, context.ConfiguredHeatingWatts);
 
             if (!context.PowerAvailable)
             {
@@ -99,7 +103,7 @@ namespace MaterialOverhaul.Heating
 
             demand.UsedProductionWatts = demand.RequestedProductionWatts;
             demand.UsedHeatingWatts = demand.RequestedHeatingWatts;
-            demand.AppliedHeating = context.CommandedHeating;
+            demand.AppliedHeating = heating;
             demand.ProductionRunning = demand.UsedProductionWatts > 0f;
             return demand;
         }

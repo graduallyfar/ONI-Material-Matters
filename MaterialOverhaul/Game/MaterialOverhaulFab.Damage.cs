@@ -48,12 +48,6 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        /// <summary>是否已经锁存过热原因。</summary>
-        public bool HasOverheatDamage
-        {
-            get { return damageState.OverheatLatched; }
-        }
-
         /// <summary>
         /// 主建造材料硬度是否低于要求硬度。
         /// 实际硬度取主建造材料（原版索引 0 的材料写入 PrimaryElement.ElementID），辅料不参与（§6.1）。
@@ -181,27 +175,6 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 锁存过热损坏原因。强制运行期间发生的过热损坏会额外锁存一条「附加机械显示原因」，
-        /// 使硬度合格的材料也同时显示两种原因；这只是显示，不额外制造机械伤害。
-        /// 锁存只看**事件发生当时**的强制开关，关闭开关不会丢原因，也不会伪造一次强制过热。
-        /// </summary>
-        public void LatchOverheatDamage()
-        {
-            if (damageState.OverheatLatched && (!forcedRun || damageState.ForcedOverheatLatched))
-            {
-                return;
-            }
-
-            damageState.OverheatLatched = true;
-            if (forcedRun)
-            {
-                damageState.ForcedOverheatLatched = true;
-            }
-
-            SyncDamageFields();
-        }
-
-        /// <summary>
         /// 消费「本次扣血来自本 Mod 机械磨损」的标记。伤害事件处理器用它区分来源：
         /// 不是本 Mod 发的扣血事件才可能是过热伤害。
         /// </summary>
@@ -210,15 +183,6 @@ namespace MaterialOverhaul.Game
             bool marked = mechanicalDamageMark;
             mechanicalDamageMark = false;
             return marked;
-        }
-
-        private void ClearDamageWhenFullyRepaired()
-        {
-            if (buildingHP != null && !buildingHP.NeedsRepairs && !damageState.IsClean)
-            {
-                damageState.Clear();
-                SyncDamageFields();
-            }
         }
 
         /// <summary>

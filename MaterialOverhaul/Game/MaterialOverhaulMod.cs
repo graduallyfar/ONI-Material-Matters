@@ -40,7 +40,7 @@ namespace MaterialOverhaul
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
-            ModLog.Info("操作任务温度门控已加载；v0.1.2 建筑下限与配方最佳区拆分、最高工作温度 = 过热阈值 = 主材料熔点 × 75%。");
+            ModLog.Info("v0.1.3 修订已加载：数量点击防重复记账；过热受损立即停止内置加热，完全维修后解除。");
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
