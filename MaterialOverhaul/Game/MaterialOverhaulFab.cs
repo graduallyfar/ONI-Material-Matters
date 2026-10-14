@@ -592,13 +592,13 @@ namespace MaterialOverhaul.Game
             }
 
             string forcedText = forcedRun
-                ? LocalizedOr(KeyForcedDisable, "Disable Forced Run")
-                : LocalizedOr(KeyForcedEnable, "Enable Forced Run");
+                ? LocalizedOr(KeyForcedDisable, "禁用强制运行")
+                : LocalizedOr(KeyForcedEnable, "启用强制运行");
             string forcedTooltip = forcedRun
-                ? LocalizedOr(KeyForcedTooltipDisable, "Turning it off re-evaluates production permission from the output port wiring at that moment and keeps the current batch.")
+                ? LocalizedOr(KeyForcedTooltipDisable, "恢复这个建筑的温度限制。\n当前生产进度会保留。")
                 : SupportsBuiltInHeating
-                    ? LocalizedOr(KeyForcedTooltipEnable, "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required.")
-                    : LocalizedOr(KeyPrefix + "FORCEDRUN.TOOLTIP_NO_HEATING", "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。");
+                    ? LocalizedOr(KeyForcedTooltipEnable, "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。")
+                    : LocalizedOr(KeyPrefix + "FORCEDRUN.TOOLTIP_NO_HEATING", "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。");
 
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_power",
@@ -608,7 +608,7 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 取本地化文本；键缺失时回退到内置英文，避免界面出现空白或原始键名。
+        /// 取本地化文本；键缺失时回退到内置中文，避免界面出现空白或原始键名。
         /// 键本身是主路径（AGENTS 实现约定：新增界面文本使用本地化键）。
         /// </summary>
         internal static string LocalizedOr(string key, string fallback)
@@ -644,7 +644,7 @@ namespace MaterialOverhaul.Game
             if (!hasRequirement)
             {
                 return string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE", "{0} · 无硬度要求，不磨损（HP {1}）"),
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE", "建造材料：{0}\n生命值：{1}\n这个建筑没有硬度要求，不会产生机械磨损。"),
                     material, hp);
             }
 
@@ -655,12 +655,12 @@ namespace MaterialOverhaul.Game
             if (!HasHardnessDeficit())
             {
                 return string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_OK", "{0} · 硬度 {1}/{2} · 无机械磨损（HP {3}）"),
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_OK", "建造材料：{0} · 硬度：{1}（要求：{2}）\n生命值：{3}\n材料硬度足够，不会产生机械磨损。"),
                     material, actual, required, hp);
             }
 
             return string.Format(
-                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "{0} · 硬度 {1}/{2} 不足，按生产时间磨损（HP {3}，{4} 磨损/生产秒，{5} HP/磨损单位）"),
+                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "建造材料：{0} · 硬度：{1}（要求：{2}）\n生命值：{3}\n机械磨损：{4}单位/工作秒，每单位损失{5}生命值。"),
                 material, actual, required, hp,
                 DamageConversion.WearPerProductionSecond.ToString("F2"),
                 MechanicalDamagePerWearUnit.ToString("F3"));

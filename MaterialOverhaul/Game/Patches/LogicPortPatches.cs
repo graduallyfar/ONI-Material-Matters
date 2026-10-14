@@ -58,9 +58,9 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                string description = PortText(KeyDescription, "温区信号");
-                string active = PortText(KeyActive, "已锁定配方且温度在最佳温区；接线即控制模式，绿色不代表正在生产。");
-                string inactive = PortText(KeyInactive, "未锁定配方或温度不在最佳温区；未接线即默认模式。");
+                string description = PortText(KeyDescription, "最佳温度信号");
+                string active = PortText(KeyActive, "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后，建筑使用控制模式。信号只表示温度，不表示建筑正在生产。");
+                string inactive = PortText(KeyInactive, "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。");
 
                 bool found = Rewrite(__instance.outputPortInfo, TemperatureZoneSignal.PortId, description, active, inactive);
 
@@ -72,9 +72,9 @@ namespace MaterialOverhaul.Patches
                     hasControl = Rewrite(
                         __instance.inputPortInfo,
                         AutomationControlScope.PortId,
-                        PortText(KeyControlDescription, "允许／暂停生产"),
-                        PortText(KeyControlActive, "绿色：允许生产（仍需材料、供电与开工条件）；未接线默认放行"),
-                        PortText(KeyControlInactive, "红色：暂停生产；不影响配方准备、预热与补热"));
+                        PortText(KeyControlDescription, "生产控制"),
+                        PortText(KeyControlActive, "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足材料、电力和操作条件。未连接自动化线时允许生产。"),
+                        PortText(KeyControlInactive, "<b><style=\"logic_off\">红色信号</style></b>：暂停生产。\n仍会准备当前配方；如有内置加热，预热和维持温度不受影响。"));
                 }
 
                 if (found)

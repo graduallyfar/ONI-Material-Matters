@@ -102,8 +102,19 @@ namespace MaterialOverhaul.Game
                 NotificationType.BadMinor,
                 allow_multiples: false,
                 OverlayModes.None.ID);
-            item.resolveTooltipCallback = (text, data) => text + "\n" + (data as MaterialOverhaulFab)?.HardnessText();
+            item.resolveTooltipCallback = Tooltip;
             return item;
+        }
+
+        private static string Tooltip(string text, object data)
+        {
+            MaterialOverhaulFab fab = data as MaterialOverhaulFab;
+            if (fab == null) return text;
+            if (fab.SupportsBuiltInHeating && fab.HasOverheatDamage)
+                text += "\n" + MaterialOverhaulFab.LocalizedOr(
+                    OverheatPrefix + ".HEATING_STOPPED_TOOLTIP",
+                    "内置加热已停止，完全修复后才能恢复。");
+            return text + "\n" + fab.HardnessText();
         }
     }
 }

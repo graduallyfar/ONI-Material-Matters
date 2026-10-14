@@ -55,7 +55,7 @@ namespace MaterialOverhaul.Game
             nameFormat = MaterialOverhaulFab.LocalizedOr(NameKey, "{0}");
             tooltipFormat = MaterialOverhaulFab.LocalizedOr(
                 TooltipKey,
-                "Temperature {1} · efficiency {2} · batch {6}\nPower {4} (requested {3}) · heat injected {5}");
+                "建筑温度：{1}\n温度效率：{2} · 生产进度：{6}\n耗电：{4}（需求：{3}）\n内置加热：{5}");
 
             Db db = Db.Get();
             if (db == null)
@@ -179,19 +179,19 @@ namespace MaterialOverhaul.Game
             {
                 case HeatingIntent.Preheat:
                     return MaterialOverhaulFab.LocalizedOr(
-                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT", "Preheating");
+                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_PREHEAT", "预热中");
 
                 case HeatingIntent.TopUp:
                     return MaterialOverhaulFab.LocalizedOr(
-                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_TOPUP", "Top-up heating");
+                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_TOPUP", "补热中");
 
                 case HeatingIntent.Sustained:
                     return MaterialOverhaulFab.LocalizedOr(
-                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SUSTAINED", "Sustained heating");
+                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SUSTAINED", "持续加热");
 
                 default:
                     return MaterialOverhaulFab.LocalizedOr(
-                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_NONE", "None");
+                        "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_NONE", "无");
             }
         }
     }

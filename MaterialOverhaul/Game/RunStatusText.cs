@@ -62,12 +62,14 @@ namespace MaterialOverhaul.Game
             //    不写成「只是自动化暂停」。
             if (!fab.Policy.Forced)
             {
+                if (IsHeldAtMaterialLimit(fab))
+                {
+                    return RunStatusKind.TemperatureLimited;
+                }
+
                 if (fab.CurrentDecision.Next.HighTempWaiting)
                 {
-                    // 控制模式最佳温区不可达且已经停在受限目标：写成温度受限，不写等待操作。
-                    return IsHeldAtMaterialLimit(fab)
-                        ? RunStatusKind.TemperatureLimited
-                        : RunStatusKind.HighTempWaiting;
+                    return RunStatusKind.HighTempWaiting;
                 }
 
                 if (IsControlBandBlocked(fab))
@@ -110,16 +112,16 @@ namespace MaterialOverhaul.Game
             switch (kind)
             {
                 case RunStatusKind.NoTask:
-                    return Localized("NO_TASK", "无生产任务");
+                    return Localized("NO_TASK", "无制作队列");
 
                 case RunStatusKind.WaitingMaterials:
                     return Localized("WAITING_MATERIALS", "等待材料");
 
                 case RunStatusKind.BrokenDown:
-                    return Localized("BROKEN_DOWN", "损坏停机");
+                    return Localized("BROKEN_DOWN", "建筑损坏");
 
                 case RunStatusKind.ManuallyDisabled:
-                    return Localized("MANUALLY_DISABLED", "手动禁用");
+                    return Localized("MANUALLY_DISABLED", "已禁用");
 
                 case RunStatusKind.Unpowered:
                     return Localized("UNPOWERED", "等待供电");
@@ -137,19 +139,19 @@ namespace MaterialOverhaul.Game
                     return Localized("SUSTAINED", "持续加热");
 
                 case RunStatusKind.AutomationPaused:
-                    return Localized("AUTOMATION_PAUSED", "自动化暂停生产");
+                    return Localized("AUTOMATION_PAUSED", "自动化暂停");
 
                 case RunStatusKind.WaitingWorker:
-                    return Localized("WAITING_WORKER", "等待操作");
+                    return Localized("WAITING_WORKER", "操作任务");
 
                 case RunStatusKind.Producing:
                     return Localized("PRODUCING", "生产中");
 
                 case RunStatusKind.ProducingLow:
-                    return Localized("PRODUCING_LOW", "低温低效生产");
+                    return Localized("PRODUCING_LOW", "低温生产（效率降低）");
 
                 case RunStatusKind.ProducingHigh:
-                    return Localized("PRODUCING_HIGH", "高温低效生产");
+                    return Localized("PRODUCING_HIGH", "高温生产（效率降低）");
 
                 case RunStatusKind.WaitingHeat:
                     return Localized("WAITING_HEAT", "等待升温");
@@ -158,7 +160,7 @@ namespace MaterialOverhaul.Game
                     return Localized("HIGH_TEMP_WAITING", "等待降温");
 
                 case RunStatusKind.TemperatureLimited:
-                    return Localized("TEMP_LIMITED", "温度受限 · 生产暂停");
+                    return Localized("TEMP_LIMITED", "生产暂停：温区受限");
 
                 default:
                     return string.Empty;
@@ -230,7 +232,7 @@ namespace MaterialOverhaul.Game
             ResolvedZone zone = fab.CurrentZone;
             string text = string.Format(
                 Localized("ZONE_DETAIL",
-                    "温度 {0} · 工作范围 {1} ~ {2}（{3}）· 最佳温区 {4} ~ {5}"),
+                    "工作温度：{1} - {2}\n建造材料：{3}\n配方最佳温度：{4} - {5}"),
                 GameUtil.GetFormattedTemperature(fab.BodyTemperature),
                 GameUtil.GetFormattedTemperature(zone.Min),
                 GameUtil.GetFormattedTemperature(zone.Max),
@@ -241,21 +243,21 @@ namespace MaterialOverhaul.Game
             float original = StartThreshold.Original(zone, fab.Policy);
             float actual = StartThreshold.Start(zone, fab.Policy);
 
-            if (actual < original - 0.01f)
+            if (!fab.Policy.Forced && actual < original - 0.01f)
             {
                 text = text + "\n" + string.Format(
                     fab.SupportsBuiltInHeating
-                        ? Localized("ZONE_TARGET_CAPPED", "加热目标 {1}（原 {0}，受建材上限限制）")
-                        : Localized("ZONE_START_CAPPED", "启动温度 {1}（原 {0}，受建材上限限制；无内置加热）"),
+                        ? Localized("ZONE_TARGET_CAPPED", "加热目标：{1}（原目标：{0}，受建造材料限制）")
+                        : Localized("ZONE_START_CAPPED", "启动温度：{1}（原目标：{0}，受建造材料限制）\n这个建筑没有内置加热。"),
                     GameUtil.GetFormattedTemperature(original),
                     GameUtil.GetFormattedTemperature(actual));
             }
-            else
+            else if (!fab.Policy.Forced)
             {
                 text = text + "\n" + string.Format(
                     fab.SupportsBuiltInHeating
-                        ? Localized("ZONE_TARGET", "加热目标 {0}")
-                        : Localized("ZONE_START", "启动温度 {0}（无内置加热）"),
+                        ? Localized("ZONE_TARGET", "加热目标：{0}")
+                        : Localized("ZONE_START", "启动温度：{0}\n这个建筑没有内置加热。"),
                     GameUtil.GetFormattedTemperature(actual));
             }
 
@@ -264,8 +266,8 @@ namespace MaterialOverhaul.Game
                 text = text + "\n" + string.Format(
                     fab.SupportsBuiltInHeating
                         ? Localized("ZONE_UNREACHABLE_DETAIL",
-                            "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，预热到上限后暂停，不自动跳单。改用默认模式或熔点更高的建材。")
-                        : Localized("ZONE_UNREACHABLE_NO_HEATING", "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。"),
+                            "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产，加热到上限后停止。\n可改用默认模式，或换用熔点更高的建造材料。")
+                        : Localized("ZONE_UNREACHABLE_NO_HEATING", "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产。\n可改用默认模式，或换用熔点更高的建造材料。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.Max));
             }
@@ -273,7 +275,7 @@ namespace MaterialOverhaul.Game
             {
                 text = text + "\n" + string.Format(
                     Localized("ZONE_LIMITED_DETAIL",
-                        "控制模式可用 {0} ~ {1}（受建材上限限制，最佳上限 {2}）；默认模式仍在 {3} ~ {4} 内按效率生产。"),
+                        "控制模式的可用温度：{0} - {1}（配方最佳上限：{2}）\n建造材料无法支持整个最佳温区；强制运行可以越过这个限制。\n默认模式仍可在{3} - {4}内生产。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.ControlMax),
                     GameUtil.GetFormattedTemperature(zone.BestMax),

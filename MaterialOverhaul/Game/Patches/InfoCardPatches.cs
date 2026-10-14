@@ -8,61 +8,35 @@ using MaterialOverhaul.Zones;
 namespace MaterialOverhaul.Patches
 {
     /// <summary>
-    /// 信息卡与配方选择界面的温度提示（细节文档 §2.3.5、§2.4.5 的第一步）。
+    /// 信息卡与配方详情的温度行（细节文档 §2.3.5、§2.4.5 的第一步）。
     ///
-    /// 两处都只针对**已经有配方温区数值的建筑与配方**：没有数值的对象保持原版显示，
-    /// 不向玩家暗示一个还不存在的约束。
+    /// **按原版分工排布**（已核实原版机制）：建筑描述只讲用途（<c>BuildingDef.Desc</c> 读
+    /// <c>STRINGS.BUILDINGS.PREFABS.&lt;ID&gt;.DESC</c>，原版金属精炼器只有一句材料用途），
+    /// 机制与数值放在效果列表里（<c>Building.EffectDescriptors</c> 收集
+    /// <c>def.EffectDescription</c> 与各组件 <c>IGameObjectEffectDescriptor.GetDescriptors</c>），
+    /// 效果行的悬停是「一句结论 + 来源明细」。因此本文件不再改写原版描述与过热行，
+    /// 只补一条本 Mod 自己的效果行。
     ///
-    /// 1. 建筑信息卡：原版 <c>BuildingDef.Desc</c> 是计算属性，读取
-    ///    <c>STRINGS.BUILDINGS.PREFABS.&lt;ID&gt;.DESC</c>，因此在这里追加一句
-    ///    「本建筑需要在当前配方的工作温区内运行」。建筑名下方的描述与建造菜单同源，都会看到这句话。
+    /// 1. 配方详情：<c>ComplexFabricator.AdditionalEffectsForRecipe</c> 追加所选配方的最佳温区。
+    ///    这是原版自己的接口调用点，配方名与其它效果保持原版。
     ///
-    /// 2. 配方详情：AdditionalEffectsForRecipe 追加所选配方温区，配方名保持原版。
-    /// </summary>
-    [HarmonyPatch(typeof(BuildingDef), "get_Desc")]
-    internal static class Patch_BuildingDef_Desc
-    {
-        private const string KeyTempZoneNote = "STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE";
-
-        private static void Postfix(BuildingDef __instance, ref string __result)
-        {
-            try
-            {
-                if (__instance == null || !ContentRegistration.HasConfirmedZone(__instance.PrefabID))
-                {
-                    return;
-                }
-
-                string note = Strings.Get(KeyTempZoneNote);
-                if (string.IsNullOrEmpty(note) || (!string.IsNullOrEmpty(__result) && __result.Contains(note)))
-                {
-                    return;
-                }
-
-                __result = string.IsNullOrEmpty(__result) ? note : __result + "\n\n" + note;
-            }
-            catch (Exception e)
-            {
-                ModLog.Error("信息卡温度提示补丁异常：" + e);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 配方详情面板的温度行（V0.1.2 §2.3.5）。
+    /// 2. 建筑信息卡效果列表：在 <c>Overheatable.GetDescriptors</c> 之后追加一条
+    ///    「工作温区：下限 ~ 上限」。借这个注入点是因为它已经在本 Mod 的建筑上生效，
+    ///    追加后温区行紧跟原版「过热温度」行，语义相邻。
     ///
-    /// 侧屏「配方详情」里的**效果**列表由 <c>SelectedRecipeQueueScreen.RefreshResultDescriptors</c>
-    /// 取 `target.AdditionalEffectsForRecipe(配方)` 逐条生成，所以这里给配方追加一条说明：
+    /// **V0.1.2 及以前的两处覆盖已按原版分工撤销：**
+    ///   - 不再重建过热行：原版那一行本来就只显示标签与数值，标签带热量百科链接；
+    ///     悬停由「一句说明 + 属性明细」组成，而本 Mod 的规则来源已经作为属性修正项写在
+    ///     那份明细里（见 <c>MaterialOverhaulFab.Damage.cs</c> 的
+    ///     <c>STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION</c>），
+    ///     重建只会丢掉百科链接与明细。
+    ///   - 不再往 <c>BuildingDef.Desc</c> 追加机制说明：机制改由下面的效果行承担，
+    ///     描述恢复原版用途句。
     ///
-    /// <code>最佳温区：450 °C ~ 650 °C</code>
-    ///
-    /// **只显示配方自己的最佳温区。** V0.1.2 起建筑最低工作温度属于建筑类型、最高工作温度由
-    /// 主建造材料决定，两者都不再是配方属性；继续把旧「工作温区：300 °C ~ 800 °C」写在这里
-    /// 会让玩家以为换个建材也还是这个范围。
-    ///
-    /// 只对**已有最佳温区数值**的配方生效；`AdditionalEffectsForRecipe` 每次调用都新建列表，
-    /// 因此每次刷新只追加一条，不会重复叠加。温度用 <c>GameUtil.GetFormattedTemperature</c>，
-    /// 跟随玩家的温度单位设置。
+    /// 温区行只对**已登记最低工作温度的建筑**（<see cref="BuildingZoneTable"/>）生效，
+    /// 没有数值的建筑保持原版显示，不向玩家暗示一个还不存在的约束。
+    /// 行里的数值取建筑级静态数据（建筑下限 + 当前过热阈值），不随配方与订单变化，
+    /// 避免效果行在切配方时跳动；配方最佳温区仍在配方详情里显示。
     /// </summary>
     [HarmonyPatch(typeof(ComplexFabricator), "AdditionalEffectsForRecipe")]
     internal static class Patch_ComplexFabricator_AdditionalEffectsForRecipe
@@ -100,7 +74,10 @@ namespace MaterialOverhaul.Patches
                     __result = new List<Descriptor>();
                 }
 
-                __result.Add(new Descriptor(text, text, Descriptor.DescriptorType.Effect));
+                string tooltip = MaterialOverhaulFab.LocalizedOr(
+                    "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_TOOLTIP",
+                    "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。");
+                __result.Add(new Descriptor(text, tooltip, Descriptor.DescriptorType.Effect));
             }
             catch (Exception e)
             {
@@ -110,22 +87,20 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
-    /// 建筑右侧信息卡里的**过热温度**行。
+    /// 建筑信息卡效果列表里的**工作温区**行。
     ///
-    /// 原版 <c>Overheatable.GetDescriptors</c> 给出的「过热温度」一行用的是属性总值。
-    /// 本 Mod 的规则值已经补偿进该属性，这里再显式重建这一行，作用有两个：
-    ///   1. 规则值与实际属性一致时缩短常驻行；补偿失败时保留实际阈值；
-    ///   2. 把规则来源写进提示（主建造材料与熔点），玩家能看出这个阈值是怎么来的。
+    /// 原版把机制写在效果区、把用途写在描述区；这条效果行就是本 Mod 温控机制的常驻入口：
+    /// 常驻只给「工作温区：80 ℃ ~ 240 ℃」这样的标签与数值，规则与模式选择放在悬停里，
+    /// 配方最佳温区引导到配方详情。
     ///
-    /// **只在真正建成的实例上生效**（<c>MaterialOverhaulFab.Spawned</c>），
-    /// 因此建造菜单里的预制件、以及其它显示位置保持原版不变（用户要求先只改右侧卡片）。
-    /// 文本全部走本 Mod 的键，不依赖原版 LocString 的类路径。
+    /// **只在真正建成的实例上生效**（<c>MaterialOverhaulFab.Spawned</c>），因此建造菜单里的
+    /// 预制件预览保持原版不变。文本全部走本 Mod 的键，不依赖原版 LocString 的类路径。
     /// </summary>
     [HarmonyPatch(typeof(Overheatable), "GetDescriptors")]
     internal static class Patch_Overheatable_GetDescriptors
     {
-        private const string KeyOverheatLine = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE";
-        private const string KeyOverheatTooltip = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_TOOLTIP";
+        private const string KeyTempZoneLine = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE";
+        private const string KeyTempZoneTooltip = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP";
 
         private static void Postfix(Overheatable __instance, ref List<Descriptor> __result)
         {
@@ -142,44 +117,42 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                float overheat;
-                string materialName;
-                float meltingPoint;
-                if (!fab.TryGetOverheatRuleValue(out overheat, out materialName, out meltingPoint))
+                // 只对已登记最低工作温度的建筑显示；其它建筑完全保持原版效果列表。
+                float floorKelvin;
+                if (!BuildingZoneTable.TryGet(fab.PrefabId, out floorKelvin))
                 {
                     return;
                 }
 
-                // 属性补偿失败时保持真实阈值显示，不伪造规则已经生效。
-                if (Math.Abs(__instance.OverheatTemperature - overheat) > 0.1f)
+                // 上限取当前过热阈值：V0.1.2 起它就是建筑最高工作温度，与上方原版过热行同源。
+                float ceilingKelvin = __instance.OverheatTemperature;
+                if (!(ceilingKelvin > floorKelvin + 0.01f))
                 {
-                    ModLog.WarnOnce("overheat|display-mismatch|" + fab.PrefabId,
-                        fab.PrefabId + "：实际过热阈值与规则值不一致，信息卡保留实际值。");
+                    ModLog.WarnOnce("zone|display-invalid|" + fab.PrefabId,
+                        fab.PrefabId + "：下限 " + floorKelvin.ToString("F1") + " K 不低于上限 "
+                        + ceilingKelvin.ToString("F1") + " K，信息卡不显示工作温区行。");
                     return;
                 }
 
-                string overheatText = GameUtil.GetFormattedTemperature(__instance.OverheatTemperature);
-                string meltingPointText = GameUtil.GetFormattedTemperature(meltingPoint);
-                string fatalText = GameUtil.GetFormattedTemperature(__instance.baseFatalTemp);
+                string lineTemplate = Strings.Get(KeyTempZoneLine);
+                if (string.IsNullOrEmpty(lineTemplate))
+                {
+                    return;
+                }
 
-                string lineTemplate = Strings.Get(KeyOverheatLine);
-                string tooltipTemplate = Strings.Get(KeyOverheatTooltip);
+                string line = string.Format(
+                    lineTemplate,
+                    GameUtil.GetFormattedTemperature(floorKelvin),
+                    GameUtil.GetFormattedTemperature(ceilingKelvin));
 
-                string text = string.IsNullOrEmpty(lineTemplate)
-                    ? overheatText
-                    : string.Format(lineTemplate, overheatText);
+                string tooltipTemplate = Strings.Get(KeyTempZoneTooltip);
+                string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
 
-                string tooltip = string.IsNullOrEmpty(tooltipTemplate)
-                    ? text
-                    : string.Format(tooltipTemplate, materialName, meltingPointText, overheatText, fatalText);
-
-                // 原版这一行最多一条，直接替换，避免同一信息出现两次。
-                __result.Clear();
-                __result.Add(new Descriptor(text, tooltip));
+                __result.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));
             }
             catch (Exception e)
             {
-                ModLog.Error("信息卡过热温度行补丁异常：" + e);
+                ModLog.Error("信息卡工作温区行补丁异常：" + e);
             }
         }
     }
