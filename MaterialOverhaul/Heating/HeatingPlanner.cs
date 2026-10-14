@@ -11,8 +11,8 @@ namespace MaterialOverhaul.Heating
     ///   - 补热停止线 = S（原实现取同一值，本版只增加封顶）；
     ///   - 补热启动线 = max(控制模式生产下限 B₁, 停止线 − 回差)。
     ///
-    /// **回差的取法是本版暂定值**（V0.1.2 §7 第 3 项）：仍用固定开尔文数而不是比例，
-    /// 但不允许启动线跌到 B₁ 以下，也不允许出现「预热目标高于停止线」的倒置目标。
+    /// v0.2.0 回差取有效控制交集宽度的5%，且不超过实际启动目标到 B₁ 的余量；
+    /// 不允许启动线跌到 B₁ 以下，也不允许出现倒置目标。
     /// 单点交集（`B₁ = U`）时回差为 0，不给玩家一个达不到的保温目标。
     ///
     /// 完整运行状态机（启动资格、高温等待、回差状态）在 <see cref="RunController"/>；
@@ -20,7 +20,7 @@ namespace MaterialOverhaul.Heating
     /// </summary>
     public static class HeatingPlanner
     {
-        /// <summary>补热回差（K）。本版暂定值，见 <see cref="Balance.TopUpHysteresisKelvin"/>。</summary>
+        /// <summary>旧铝配方兼容回差（K）；实际回差见 Hysteresis。旧值见 <see cref="Balance.TopUpHysteresisKelvin"/>。</summary>
         public const float HysteresisKelvin = Balance.TopUpHysteresisKelvin;
 
         /// <summary>补热停止线：达到此线关闭补热。等于（已封顶的）启动目标。</summary>
@@ -58,7 +58,7 @@ namespace MaterialOverhaul.Heating
             return line;
         }
 
-        /// <summary>当前温区下的补热回差：固定开尔文数，但不允许超过最佳温区宽度。</summary>
+        /// <summary>当前温区下的补热回差：有效控制交集宽度的5%，受启动余量限制。</summary>
         public static float Hysteresis(ResolvedZone zone)
         {
             if (!zone.Configured)
@@ -66,13 +66,7 @@ namespace MaterialOverhaul.Heating
                 return 0f;
             }
 
-            float width = zone.BestMax - zone.BestMin;
-            if (width <= 0f)
-            {
-                return 0f;
-            }
-
-            return HysteresisKelvin > width ? width : HysteresisKelvin;
+            return StartThreshold.ControlHysteresis(zone);
         }
 
         /// <summary>未跟踪补热状态时的简化入口：按「尚未补热」判断，只会启动补热、不会维持。</summary>
@@ -89,7 +83,7 @@ namespace MaterialOverhaul.Heating
         /// <param name="topUpActive">当前是否正在补热；为 true 时按停止线判断是否关闭，实现回差。</param>
         public static HeatingIntent Decide(float bodyTemp, ResolvedZone zone, RunPolicy policy, bool productionRunning, bool topUpActive)
         {
-            if (!zone.Configured)
+            if (!zone.Configured || zone.NoBuiltInHeating)
             {
                 return HeatingIntent.None;
             }
@@ -104,6 +98,9 @@ namespace MaterialOverhaul.Heating
                 // 高温保护：停止生产和内置加热，等待降温。
                 return HeatingIntent.None;
             }
+
+            if (policy.ControlMode && zone.ControlRangeUnreachable)
+                return bodyTemp < PreheatTarget(zone, policy) ? HeatingIntent.Preheat : HeatingIntent.None;
 
             if (productionRunning)
             {

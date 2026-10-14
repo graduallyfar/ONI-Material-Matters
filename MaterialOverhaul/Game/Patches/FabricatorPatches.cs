@@ -28,7 +28,7 @@ namespace MaterialOverhaul.Patches
     ///   Overheatable.ResetTemperature               public                   142560
     ///
     /// 补丁只作用于白名单建筑：组件只在白名单建筑的 prefab 上挂载，其余建筑取不到组件即原样放行；
-    /// 加热与电网需求再进一步限定在 <see cref="HeatingScope"/> 名单内。
+    /// 内置加热再限定在 <see cref="HeatingScope"/>；电网需求覆盖首发三栋各自生产功率。
     /// </summary>
     internal static class PatchHelpers
     {
@@ -45,7 +45,8 @@ namespace MaterialOverhaul.Patches
 
         public static MaterialOverhaulFab FabOf(Component component)
         {
-            return component != null ? component.GetComponent<MaterialOverhaulFab>() : null;
+            if (component == null || !BuildingWhitelist.Contains(PrefabIdOf(component.gameObject))) return null;
+            return component.GetComponent<MaterialOverhaulFab>();
         }
     }
 

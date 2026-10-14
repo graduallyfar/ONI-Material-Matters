@@ -79,14 +79,12 @@ namespace MaterialOverhaul.Patches
         /// 坐标语义：`CellOffset` 相对建筑原点，横向不是左下角。
         /// BuildingDef.GenerateOffsets 的左界为 width / 2 - width + 1，右界为 width / 2。
         /// 由 `LogicPorts.GetActualCell` 经 `Grid.OffsetCell(Grid.PosToCell(建筑位置), offset)` 换算；
-        /// 建筑可旋转时偏移会跟着旋转（这五个配方建筑不可旋转）。
+        /// 建筑可旋转时偏移会跟着旋转（首发三栋配方建筑不可旋转）。
         ///
         /// 位置取自各建筑的**右上角**，依据是目标版本里这些建筑已有的端口分布：
         ///   - MetalRefinery 3×4：液体输入 (-1,1)、液体输出 (1,0)，都在左下侧
         ///   - GlassForge    5×4：液体输出 (1,3)，在顶排中段
-        ///   - Kiln          2×2：自动化输入 (0,1)，在左上角
         ///   - RockCrusher   4×4：无其它端口
-        ///   - RubberMaker   3×3：自动化输入 (0,1)、液体输入 (1,0)
         /// 右上角与上述位置均不重叠，也避开建筑底部的接口与操作位。
         /// </summary>
         private static readonly System.Collections.Generic.Dictionary<string, CellOffset> OutputPortOffsets =
@@ -94,14 +92,12 @@ namespace MaterialOverhaul.Patches
             {
                 { "MetalRefinery", new CellOffset(1, 3) },
                 { "GlassForge", new CellOffset(2, 3) },
-                { "Kiln", new CellOffset(1, 1) },
-                { "RockCrusher", new CellOffset(2, 3) },
-                { "RubberMaker", new CellOffset(1, 2) }
+                { "RockCrusher", new CellOffset(2, 3) }
             };
 
         /// <summary>
         /// 「允许／暂停生产」自动化**输入**端口的位置来自 <see cref="AutomationControlScope"/>：
-        /// 本版只给金属精炼器添加，其余白名单建筑保持接口不变。
+        /// 本版给首发三栋添加，三栋以外保持原有接口。
         /// </summary>
         private static void Prefix(object[] __args)
         {

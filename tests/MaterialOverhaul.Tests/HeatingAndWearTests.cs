@@ -66,14 +66,14 @@ namespace MaterialOverhaul.Tests
 
         private static void HeatingPowerMapping()
         {
-            TestRunner.Section("加热功率映射（v0.1.1 共用滑条，暂定倍率 1000）");
-            TestRunner.CheckClose(1000f, HeatingPower.TestHeatMultiplier, Tol, "测试倍率为 1000");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热 1200 W 用电 × 1000 = 1200 kW");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热沿用共用滑条默认 1200 W");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热沿用预热值");
+            TestRunner.Section("加热功率映射（v0.1.1 共用滑条，暂定倍率 100）");
+            TestRunner.CheckClose(100f, HeatingPower.TestHeatMultiplier, Tol, "首发倍率为 100");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热 1200 W 用电 × 100 = 120 kW");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热沿用共用滑条默认 1200 W");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热沿用预热值");
             TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.None), Tol, "None 意图不注热");
-            TestRunner.CheckClose(20f, HeatingPower.KilowattsFor(HeatingIntent.Preheat, 20f), Tol, "最低功率对应注热");
-            TestRunner.CheckClose(4000f, HeatingPower.KilowattsFor(HeatingIntent.TopUp, 4000f), Tol, "最高功率对应补热注热");
+            TestRunner.CheckClose(2f, HeatingPower.KilowattsFor(HeatingIntent.Preheat, 20f), Tol, "最低功率对应注热");
+            TestRunner.CheckClose(400f, HeatingPower.KilowattsFor(HeatingIntent.TopUp, 4000f), Tol, "最高功率对应补热注热");
         }
 
         private static void Wear()

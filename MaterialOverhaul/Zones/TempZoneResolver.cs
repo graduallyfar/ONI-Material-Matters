@@ -37,6 +37,10 @@ namespace MaterialOverhaul.Zones
         /// <summary>本温区是否可参与运算；false 表示退化为原版行为。</summary>
         public bool Configured;
 
+        public float LowBoundaryEfficiency;
+        public float HighBoundaryEfficiency;
+        public bool NoBuiltInHeating;
+
         public static ResolvedZone Unconfigured
         {
             get { return default(ResolvedZone); }
@@ -135,7 +139,8 @@ namespace MaterialOverhaul.Zones
         /// <param name="floorKelvin">建筑最低工作温度 L。</param>
         /// <param name="zone">配方最佳温区。</param>
         /// <param name="ceiling">主建造材料上限取值委托；不可用时返回 false。</param>
-        public static ResolvedZone Resolve(string id, float floorKelvin, TempZone zone, HeatCeilingResolver ceiling)
+        public static ResolvedZone Resolve(string id, float floorKelvin, TempZone zone, HeatCeilingResolver ceiling, float lowEfficiency = Balance.LowBoundaryEfficiency,
+            float highEfficiency = Balance.HighBoundaryEfficiency, bool noBuiltInHeating = false)
         {
             if (!zone.Configured)
             {
@@ -188,6 +193,9 @@ namespace MaterialOverhaul.Zones
             resolved.BestMax = zone.BestMax;
             resolved.Max = ceilingKelvin;
             resolved.Configured = true;
+            resolved.LowBoundaryEfficiency = lowEfficiency;
+            resolved.HighBoundaryEfficiency = highEfficiency;
+            resolved.NoBuiltInHeating = noBuiltInHeating;
 
             if (resolved.ControlRangeUnreachable)
             {

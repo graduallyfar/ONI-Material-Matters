@@ -244,22 +244,28 @@ namespace MaterialOverhaul.Game
             if (actual < original - 0.01f)
             {
                 text = text + "\n" + string.Format(
-                    Localized("ZONE_TARGET_CAPPED", "加热目标 {1}（原 {0}，受建材上限限制）"),
+                    fab.SupportsBuiltInHeating
+                        ? Localized("ZONE_TARGET_CAPPED", "加热目标 {1}（原 {0}，受建材上限限制）")
+                        : Localized("ZONE_START_CAPPED", "启动温度 {1}（原 {0}，受建材上限限制；无内置加热）"),
                     GameUtil.GetFormattedTemperature(original),
                     GameUtil.GetFormattedTemperature(actual));
             }
             else
             {
                 text = text + "\n" + string.Format(
-                    Localized("ZONE_TARGET", "加热目标 {0}"),
+                    fab.SupportsBuiltInHeating
+                        ? Localized("ZONE_TARGET", "加热目标 {0}")
+                        : Localized("ZONE_START", "启动温度 {0}（无内置加热）"),
                     GameUtil.GetFormattedTemperature(actual));
             }
 
             if (zone.ControlRangeUnreachable)
             {
                 text = text + "\n" + string.Format(
-                    Localized("ZONE_UNREACHABLE_DETAIL",
-                        "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，预热到上限后暂停，不自动跳单。改用默认模式或熔点更高的建材。"),
+                    fab.SupportsBuiltInHeating
+                        ? Localized("ZONE_UNREACHABLE_DETAIL",
+                            "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，预热到上限后暂停，不自动跳单。改用默认模式或熔点更高的建材。")
+                        : Localized("ZONE_UNREACHABLE_NO_HEATING", "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.Max));
             }

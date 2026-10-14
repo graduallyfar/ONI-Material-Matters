@@ -46,7 +46,7 @@ namespace MaterialOverhaul.Heating
             {
                 // 强制运行覆盖温区停机与启动等待，并持续加热；效率仍按温度状态取值。
                 decision.AllowsProduction = true;
-                decision.Heating = HeatingIntent.Sustained;
+                decision.Heating = zone.NoBuiltInHeating ? HeatingIntent.None : HeatingIntent.Sustained;
                 decision.Next.Started = true;
                 decision.Next.HighTempWaiting = false;
                 decision.Next.TopUpActive = false;
@@ -105,7 +105,9 @@ namespace MaterialOverhaul.Heating
             if (!decision.Next.Started)
             {
                 decision.AllowsProduction = false;
-                decision.Heating = bodyTemp < lowStart ? HeatingIntent.Preheat : HeatingIntent.None;
+                decision.Heating = !zone.NoBuiltInHeating && bodyTemp < lowStart ? HeatingIntent.Preheat : HeatingIntent.None;
+                decision.Next.ZoneUnreachableLatched = control && zone.ControlRangeUnreachable
+                    && (state.ZoneUnreachableLatched || bodyTemp >= lowStart);
                 return decision;
             }
 
@@ -209,6 +211,7 @@ namespace MaterialOverhaul.Heating
                 state.ZoneUnreachableLatched = zone.ControlRangeUnreachable;
             }
 
+            if (zone.NoBuiltInHeating) state.TopUpActive = false;
             return state;
         }
 
@@ -233,6 +236,9 @@ namespace MaterialOverhaul.Heating
         /// </summary>
         private static HeatingIntent DecideTopUp(float bodyTemp, ResolvedZone zone, RunPolicy policy, bool topUpActive)
         {
+            if (zone.NoBuiltInHeating) return HeatingIntent.None;
+            if (zone.ControlRangeUnreachable)
+                return bodyTemp < StartThreshold.Start(zone, policy) ? HeatingIntent.Preheat : HeatingIntent.None;
             float line = topUpActive
                 ? HeatingPlanner.TopUpStopLine(zone, policy)
                 : HeatingPlanner.TopUpLine(zone, policy);

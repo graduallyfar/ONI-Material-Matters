@@ -16,6 +16,29 @@ namespace HarmonyLib
 public sealed class ComplexRecipe
 {
     public string id;
+    public System.Collections.Generic.List<Tag> fabricators;
+    public RecipeElement[] ingredients;
+    public RecipeElement[] results;
+    public sealed class RecipeElement
+    {
+        public Tag material;
+        public Tag[] possibleMaterials;
+        public float amount;
+    }
+}
+
+public sealed class Tag
+{
+    private readonly string value;
+    public Tag(string text) { value = text; }
+    public override string ToString() { return value; }
+}
+
+public sealed class ComplexRecipeManager
+{
+    public static readonly ComplexRecipeManager Instance = new ComplexRecipeManager();
+    public System.Collections.Generic.List<ComplexRecipe> recipes = new System.Collections.Generic.List<ComplexRecipe>();
+    public static ComplexRecipeManager Get() { return Instance; }
 }
 
 public sealed class Chore { }

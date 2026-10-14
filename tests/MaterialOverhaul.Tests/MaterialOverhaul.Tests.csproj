@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <Compile Include="*.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\ContentRegistration.cs" Link="Linked\Game\ContentRegistration.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\MaterialOverhaulFab.Balance.cs" Link="Linked\Game\MaterialOverhaulFab.Balance.cs" />
     <!-- 操作任务门控与加热滑条接口用游戏替身运行实际接入源码；不加载 Unity 或游戏程序集。 -->
     <Compile Include="..\..\MaterialOverhaul\Game\MaterialOverhaulFab.Chores.cs" Link="Linked\Game\MaterialOverhaulFab.Chores.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\MaterialOverhaulFab.PowerControl.cs" Link="Linked\Game\MaterialOverhaulFab.PowerControl.cs" />

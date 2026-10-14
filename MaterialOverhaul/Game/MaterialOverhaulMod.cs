@@ -40,13 +40,18 @@ namespace MaterialOverhaul
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
-            ModLog.Info("v0.1.3 修订已加载：数量点击防重复记账；过热受损立即停止内置加热，完全维修后解除。");
+            ModLog.Info("v0.2.0 首发三建筑已接入：全量配方温区、独立效率与磨损、交集回差、注热倍率100；粉碎机无内置加热。");
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
         private static void LogBalanceSummary()
         {
-            ModLog.Info("本版数值：炼铝配方最佳温区 450/650 ℃，建筑下限 "
+            foreach (var entry in Core.BuildingProfiles.All)
+                ModLog.Info(entry.Key + "：下限 " + entry.Value.WorkMinCelsius + " ℃，生产 "
+                    + entry.Value.ProductionWatts + " W，效率底值 " + entry.Value.LowEfficiency + "/"
+                    + entry.Value.HighEfficiency + "，磨损转换 " + entry.Value.DamagePerWearUnit
+                    + " HP/单位，内置加热 " + entry.Value.BuiltInHeating + "。");
+            ModLog.Info("金属精炼器基准数值：炼铝配方最佳温区 450/650 ℃，建筑下限 "
                 + Core.Balance.MetalRefineryWorkMinCelsius.ToString("F0")
                 + " ℃（金属精炼器，建筑级），最高工作温度 = 过热阈值 = 主建造材料熔点 × "
                 + Heating.OverheatRule.MeltingPointFraction.ToString("F2")

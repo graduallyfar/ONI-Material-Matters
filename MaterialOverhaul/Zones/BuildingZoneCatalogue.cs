@@ -39,7 +39,8 @@ namespace MaterialOverhaul.Zones
         private static Dictionary<string, float> BuildEntries()
         {
             Dictionary<string, float> entries = new Dictionary<string, float>();
-            entries.Add("MetalRefinery", Temperatures.FromCelsius(Balance.MetalRefineryWorkMinCelsius));
+            foreach (KeyValuePair<string, BuildingProfile> entry in BuildingProfiles.All)
+                entries.Add(entry.Key, Temperatures.FromCelsius(entry.Value.WorkMinCelsius));
             return entries;
         }
     }

@@ -29,12 +29,13 @@ namespace MaterialOverhaul.Hardness
         /// <summary>按实际生产秒数累计磨损与伤害余额。</summary>
         public static void AccumulateProduction(WearAccumulator accumulator, float productionSeconds)
         {
-            if (accumulator == null || !IsConfigured)
-            {
-                return;
-            }
+            AccumulateProduction(accumulator, productionSeconds, DamagePerWearUnit);
+        }
 
-            accumulator.AccumulateProduction(productionSeconds, WearPerProductionSecond, DamagePerWearUnit);
+        public static void AccumulateProduction(WearAccumulator accumulator, float productionSeconds, float damagePerWearUnit)
+        {
+            if (accumulator == null || damagePerWearUnit <= 0f || WearPerProductionSecond <= 0f) return;
+            accumulator.AccumulateProduction(productionSeconds, WearPerProductionSecond, damagePerWearUnit);
         }
 
         /// <summary>把伤害余额换算回磨损单位数（显示用）。</summary>

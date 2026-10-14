@@ -1,7 +1,7 @@
 namespace MaterialOverhaul.Core
 {
     /// <summary>
-    /// 本版数值的唯一集中配置（V0.0.3 开发计划 §2.1）。
+    /// 共用数值配置；首发建筑独立参数见 BuildingProfiles（V0.0.3 开发计划 §2.1）。
     ///
     /// 单位口径严格区分，禁止把同一数值分别硬编码到判断、注热、界面与测试里：
     ///   - **W**：电功率（电网需求与实际消费）；
@@ -12,7 +12,7 @@ namespace MaterialOverhaul.Core
     /// 数值性质分三档，改动时必须同时更新这里的注释与文档：
     ///   - **已确认**：用户定下的规则（炼铝最佳温区 450–650 ℃、金属精炼器建筑下限 80 ℃、
     ///     过热系数 0.75 按 K 计算、加热共用 20–4000 W 滑条、启动线公式比例 0.1）。
-    ///   - **本版暂定**：为让机制可运行、可验收而给出的工作值，不代表最终平衡（倍率 1000、
+    ///   - **本版暂定**：为让机制可运行、可验收而给出的工作值，不代表最终平衡（倍率 100、
     ///     加热默认值、要求硬度、磨损速率、伤害转换、无限额度默认值与上限、
     ///     效率两侧底值 0.30／0.80、补热与高温恢复回差、上限不高于下限时的退回口径）。
     ///   - **实验参数**：只影响观察方式、不改变规则（降温趋势显示阈值）。
@@ -34,11 +34,11 @@ namespace MaterialOverhaul.Core
         public const float DefaultHeatingWatts = 1200f;
 
         /// <summary>
-        /// 「用电（W）→ 注热（kW）」测试倍率。本版暂定，沿用 v0.0.2 最后的测试口径。
+        /// 「用电（W）→ 注热（kW）」测试倍率。本版暂定，首发接入初值 100（由旧测试值 1000 下调）。
         ///
         /// 已知它会放大温度跨步与能源收益；本版不把它认定为平衡完成，也不是正式换算关系。
         /// </summary>
-        public const float HeatMultiplier = 1000f;
+        public const float HeatMultiplier = 100f;
 
         // ---- 温度效率边界（§2.1、§2.2）----
 
@@ -47,7 +47,7 @@ namespace MaterialOverhaul.Core
         /// 到配方最佳下限 B₁ 连续升到 100%。
         ///
         /// 本版暂定值，沿用旧实现的 0.30；V0.1.2 只改了段宽（旧实现用 L→B₁ 的配方低温段），
-        /// 没有改边界值。效率曲线与强制越界效率仍属 V0.1.2 开发计划 §7 第 2 项待定项。
+        /// 没有改边界值。该常量保留为金属精炼器的兼容默认值；实际三栋系数读取 BuildingProfiles。
         /// </summary>
         public const float LowBoundaryEfficiency = 0.3f;
 
@@ -62,7 +62,7 @@ namespace MaterialOverhaul.Core
         /// <summary>
         /// 建筑最低工作温度 L 的登记值：金属精炼器 80 ℃（用户 2026-10-14 给定）。
         ///
-        /// V0.1.2 起 L **由建筑类型决定**，不随配方或建材改变；本版只登记这一栋。
+        /// V0.1.2 起 L **由建筑类型决定**，不随配方或建材改变；三栋实际下限读取 BuildingProfiles。
         /// 登记动作在 <c>ContentRegistration.RegisterBuildingZones</c>，这里只放数值。
         /// </summary>
         public const float MetalRefineryWorkMinCelsius = 80f;
@@ -73,8 +73,8 @@ namespace MaterialOverhaul.Core
         /// <summary>
         /// 控制模式补热回差（K）。本版暂定，等于最佳温区宽度 200 K 的 5%（对应铝配方）。
         ///
-        /// V0.1.2 起它只作为上界：实际回差还要满足「补热启动线不低于 B₁」与
-        /// 「不出现高于停止线的启动线」，取法见 V0.1.2 开发计划 §7 第 3 项。
+        /// 保留作旧铝配方的兼容常量。实际回差由 StartThreshold.ControlHysteresis
+        /// 按有效交集宽度的5%与启动余量共同计算。
         /// </summary>
         public const float TopUpHysteresisKelvin = 10f;
 
@@ -82,14 +82,13 @@ namespace MaterialOverhaul.Core
         /// 默认模式高温暂停后的恢复回差（K）：暂停线为建筑上限 U，回落到 U − 回差 才重新检查。
         /// 本版暂定，沿用旧实现的 15 K（旧口径为 0.1 × 铝配方低温段宽度）。
         ///
-        /// 实际恢复线还会被钳制在 `[生产下限, 实际启动目标]` 内，因此窄交集与低熔点建材下
-        /// 不会出现倒置的恢复线。
+        /// 实际回差还受低温段宽度的10%与启动余量限制，恢复线不低于生产下限。
         /// </summary>
         public const float DefaultHighRecoveryKelvin = 15f;
 
         /// <summary>
         /// 控制模式高温暂停后的恢复回差（K）：T &gt; 650 ℃ 暂停，回落到 T ≤ 640 ℃ 才重新检查。
-        /// 本版暂定，与补热回差同值。
+        /// 旧铝配方兼容常量；实际按有效交集宽度的5%计算。
         /// </summary>
         public const float ControlHighRecoveryKelvin = 10f;
 

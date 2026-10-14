@@ -107,13 +107,13 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public void AccumulateProduction(float realSeconds)
         {
-            if (realSeconds <= 0f || !HasHardnessDeficit() || !DamageConversion.IsConfigured)
+            if (realSeconds <= 0f || !HasHardnessDeficit() || MechanicalDamagePerWearUnit <= 0f)
             {
                 return;
             }
 
             float capped = realSeconds > Balance.MaxWearSecondsPerTick ? Balance.MaxWearSecondsPerTick : realSeconds;
-            DamageConversion.AccumulateProduction(wear, capped);
+            DamageConversion.AccumulateProduction(wear, capped, MechanicalDamagePerWearUnit);
             SyncWearField();
         }
 

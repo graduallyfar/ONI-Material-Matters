@@ -73,6 +73,8 @@ namespace MaterialOverhaul.Zones
         /// <summary>温度效率 η_T。分段与边界见类注释。</summary>
         public static float Efficiency(TempState state, float bodyTemp, ResolvedZone zone)
         {
+            float low = zone.LowBoundaryEfficiency > 0f ? zone.LowBoundaryEfficiency : LowBoundaryEfficiency;
+            float high = zone.HighBoundaryEfficiency > 0f ? zone.HighBoundaryEfficiency : HighBoundaryEfficiency;
             switch (state)
             {
                 case TempState.Disabled:
@@ -81,19 +83,19 @@ namespace MaterialOverhaul.Zones
 
                 case TempState.BelowMin:
                     // 只有强制运行会走到这里：保持低温侧底值，不继续下降、不归零。
-                    return LowBoundaryEfficiency;
+                    return low;
 
                 case TempState.AboveMax:
                     // 只有强制运行会走到这里：保持高温侧底值。
-                    return HighBoundaryEfficiency;
+                    return high;
 
                 case TempState.LowEfficiency:
                     // 0.3 ^ ratio，ratio 从 1（在 L）降到 0（在 B₁）。
-                    return Power(LowBoundaryEfficiency, 1f - Ratio(bodyTemp, zone.Min, zone.BestMin), LowBoundaryEfficiency);
+                    return Power(low, 1f - Ratio(bodyTemp, zone.Min, zone.BestMin), low);
 
                 case TempState.HighEfficiency:
                     // 0.8 ^ ratio，ratio 从 0（在 B₂）升到 1（在 U）。
-                    return Power(HighBoundaryEfficiency, Ratio(bodyTemp, zone.BestMax, zone.Max), HighBoundaryEfficiency);
+                    return Power(high, Ratio(bodyTemp, zone.BestMax, zone.Max), high);
 
                 default:
                     return 1f;

@@ -105,6 +105,8 @@ namespace MaterialOverhaul.Game
                 HasLockedBatch = HasLockedBatch, PowerAvailable = IsPowered,
                 ManuallyDisabled = IsManuallyDisabled, BrokenDown = IsBrokenDown,
                 OverheatDamaged = HasOverheatDamage,
+                ProductionWatts = NumericProfile == null ? 0f : NumericProfile.ProductionWatts,
+                DisallowBuiltInHeating = !SupportsBuiltInHeating,
                 TemperatureAllowsProduction = true, AutomationAllowsProduction = true, HasWorker = true,
                 CommandedHeating = HeatingConditions.CanRequestHeat(heat) ? SafetyIntent : HeatingIntent.None
             });

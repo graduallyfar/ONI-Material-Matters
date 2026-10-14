@@ -31,6 +31,7 @@ namespace MaterialOverhaul.Game
                         public static LocString DISABLE = "关闭强制运行";
                         public static LocString TOOLTIP_ENABLE = "不因温区越界停产，并持续加热；原料、供电、自动化许可与建筑完好仍需满足。";
                         public static LocString TOOLTIP_DISABLE = "关闭后按输出端口当时的接线重判生产许可，保留当前批次。";
+                        public static LocString TOOLTIP_NO_HEATING = "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。";
                     }
                 }
             }
@@ -91,6 +92,9 @@ namespace MaterialOverhaul.Game
                     /// </summary>
                     public static class STATUS
                     {
+                        public static LocString ZONE_START = "启动温度 {0}（无内置加热）";
+                        public static LocString ZONE_START_CAPPED = "启动温度 {1}（原 {0}，受建材上限限制；无内置加热）";
+                        public static LocString ZONE_UNREACHABLE_NO_HEATING = "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。";
                         public static LocString NO_TASK = "无生产任务";
 
                         public static LocString WAITING_MATERIALS = "等待材料";
@@ -197,6 +201,7 @@ namespace MaterialOverhaul.Game
                         public static LocString PENDING_TOOLTIP = "自动化网络未就绪：保留存档模式与温控回差，暂不生产或加热。";
                         public static LocString FORCED = "强制运行已开启";
                         public static LocString FORCED_TOOLTIP = "覆盖温区停机限制；过热受损后停止内置加热，完全维修后解除。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。";
+                        public static LocString FORCED_NO_HEATING_TOOLTIP = "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。";
                     }
 
                     public static class WEARRISK

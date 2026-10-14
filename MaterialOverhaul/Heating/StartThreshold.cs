@@ -1,3 +1,4 @@
+using System;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Zones;
 
@@ -16,8 +17,8 @@ namespace MaterialOverhaul.Heating
     /// 其余边界：
     ///   - 生产下限（**已开工**后仍可生产的线）：默认模式 L，控制模式 B₁。开工后再跌到这条线以下才重新停机。
     ///   - 高温暂停线：默认模式 U，控制模式 `min(B₂, U)`。
-    ///   - 高温恢复线：暂停线减去暂定回差，并**钳制在实际启动目标以下**且不低于生产下限，
-    ///     使窄交集与单点交集下不会出现倒置的恢复线（取法仍属 V0.1.2 §7 第 3 项待定项）。
+    ///   - 高温恢复线：暂停线减去回差，结果不低于生产下限；回差不超过启动余量。
+    ///     默认回差上限15 K、低温段宽度的10%；控制回差取有效交集宽度的5%。
     ///
     /// 封顶不会绕过 B₁：控制模式达到 S 之后仍必须满足最佳区才生产，否则就是「最佳温区不可达」，
     /// 由 <see cref="RunController"/> 给出「温度受限 · 生产暂停」。
@@ -82,6 +83,15 @@ namespace MaterialOverhaul.Heating
             return target < zone.Min ? zone.Min : target;
         }
 
+        /// <summary>控制交集回差：有效交集的5%，且不越过实际启动目标到最佳下限的余量。</summary>
+        public static float ControlHysteresis(ResolvedZone zone)
+        {
+            if (!zone.HasControlRange) return 0f;
+            float width = Math.Max(0f, zone.ControlMax - zone.BestMin);
+            float available = Math.Max(0f, Start(zone, RunPolicy.ControlModePolicy) - zone.BestMin);
+            return Math.Min(0.05f * width, available);
+        }
+
         /// <summary>当前模式的生产下限：开工后跌破它才重新进入低温停机。</summary>
         public static float WorkLine(ResolvedZone zone, RunPolicy policy)
         {
@@ -97,11 +107,11 @@ namespace MaterialOverhaul.Heating
         /// <summary>
         /// 高温暂停后的恢复线：暂停线减去本版暂定回差。
         ///
-        /// 回差的取法属 V0.1.2 §7 第 3 项待定项，本版按「不产生倒置目标、也不越过实际启动目标」的口径处理：
+        /// v0.2.0 取交集比例回差，按「不产生倒置目标、回差不超过启动余量」处理：
         ///   - 回差最多取「实际启动目标 − 生产下限」，因此在窄交集与单点交集下不会出现
         ///     「恢复线高于暂停线」或「恢复后仍然无法开工」的倒置目标；
         ///   - 单点交集（`B₁ = U`）时回差退化为 0，恢复条件就是该点本身；
-        ///   - 不暗中新增安全余量、保温模式或百分比。
+        ///   - 只使用首发数值设计的比例，不另加安全余量或保温模式。
         ///
         /// 标准炼铝口径（默认 1262.25 / 117 ℃；控制 650 / 470 / 450 ℃）下回差就是
         /// 默认 15 K、控制 10 K，与旧实现读数一致。
@@ -117,8 +127,8 @@ namespace MaterialOverhaul.Heating
             float target = Start(zone, policy);
 
             float margin = policy.ControlMode
-                ? Balance.ControlHighRecoveryKelvin
-                : Balance.DefaultHighRecoveryKelvin;
+                ? ControlHysteresis(zone)
+                : Math.Min(Balance.DefaultHighRecoveryKelvin, Fraction * (zone.BestMin - zone.Min));
 
             float available = target - floor;
             if (available < 0f)

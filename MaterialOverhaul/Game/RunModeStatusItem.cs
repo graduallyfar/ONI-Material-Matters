@@ -38,7 +38,9 @@ namespace MaterialOverhaul.Game
             string text = fab.Policy.ControlMode
                 ? Text("CONTROL_TOOLTIP", "输出端口已接线：只在最佳温区内生产。红绿值不决定模式，绿色不代表正在生产。")
                 : Text("DEFAULT_TOOLTIP", "输出端口未接线：在整个工作温区生产。输入端接线与红绿值不决定模式。");
-            if (fab.Policy.Forced) text += "\n" + Text("FORCED_TOOLTIP", "覆盖温区停机限制；过热受损后停止内置加热，完全维修后解除。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。");
+            if (fab.Policy.Forced) text += "\n" + (fab.SupportsBuiltInHeating
+                ? Text("FORCED_TOOLTIP", "覆盖温区停机限制；过热受损后停止内置加热，完全维修后解除。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。")
+                : Text("FORCED_NO_HEATING_TOOLTIP", "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。"));
             return text;
         }
 

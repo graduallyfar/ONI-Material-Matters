@@ -10,9 +10,7 @@ namespace MaterialOverhaul.Core
     /// 索引使用原版建筑 prefab id（<c>KPrefabID.PrefabTag</c>），不按配置类名匹配：
     /// 同一建筑可能在不同配置类中重复实现，类名匹配不可靠（《建筑分类与温区适用范围》§1.2）。
     ///
-    /// 首批名单取《建筑分类与温区适用范围》§5 已由代码核实的 5 个配方建筑。
-    /// 完整首批范围（A 类 24 + B 类 11 + D 类 7 = 42）尚未确认，确认后在此逐项补充，
-    /// 未确认前不扩大生效范围。
+    /// 用户确认首个正式版仅处理金属精炼器、岩石粉碎机、玻璃熔炉。
     /// </summary>
     public static class BuildingWhitelist
     {
@@ -20,9 +18,7 @@ namespace MaterialOverhaul.Core
         {
             "MetalRefinery",
             "GlassForge",
-            "Kiln",
-            "RockCrusher",
-            "RubberMaker"
+            "RockCrusher"
         };
 
         public static int Count

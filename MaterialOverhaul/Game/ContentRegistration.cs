@@ -13,7 +13,7 @@ namespace MaterialOverhaul.Game
     /// 配方标识由建筑名与材料名拼接而成，这里按「建筑 + 输入材料 + 输出材料」在配方表里解析，
     /// 解析失败、以及名单内还没有数值的配方都会留下可定位日志，不静默失效。
     ///
-    /// 侧表不参与存档，每次启动（<c>Db.Initialize</c> 之后）重建。
+    /// 侧表不参与存档，每次启动重建；配方必须在 <c>ComplexRecipeManager.PostProcess</c> 之后登记。
     /// </summary>
     public static class ContentRegistration
     {
@@ -45,7 +45,7 @@ namespace MaterialOverhaul.Game
         /// 建筑最低工作温度 L（V0.1.2 开发计划 §1.1、§2.1）：L **由建筑类型决定**，
         /// 切配方与换建材都不改变它，因此按建筑登记一次。
         ///
-        /// 本版只有金属精炼器：80 ℃（用户 2026-10-14 给定）。
+        /// 首发三栋独立下限读取 BuildingProfiles：金属与玻璃80 ℃，粉碎机−20 ℃。
         /// 未登记的建筑不启用本 Mod 温控，行为等同原版。
         /// </summary>
         public static void RegisterBuildingZones()
@@ -66,14 +66,14 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：本版只登记金属精炼器 25（FIRM）。
+        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：首发三栋要求硬度25（FIRM）。
         ///
         /// **不走调试路径**：调试样例值只在常规配置之上填补清单里未登记的建筑，
         /// 不能把样例值扩散给全部白名单，也不能覆盖这里的数值。
         /// </summary>
         public static void RegisterHardnessRequirements()
         {
-            foreach (string prefabId in HeatingScope.All)
+            foreach (string prefabId in BuildingWhitelist.All)
             {
                 byte existing;
                 if (HardnessRequirementTable.TryGet(prefabId, out existing))
@@ -81,9 +81,9 @@ namespace MaterialOverhaul.Game
                     continue;
                 }
 
-                HardnessRequirementTable.Register(prefabId, Balance.MetalRefineryRequiredHardness);
+                HardnessRequirementTable.Register(prefabId, BuildingProfiles.All[prefabId].RequiredHardness);
                 ModLog.Info("要求硬度：" + prefabId + " 要求硬度 "
-                    + Balance.MetalRefineryRequiredHardness + "（本版暂定，使用原版 Element.hardness 分级）。");
+                    + BuildingProfiles.All[prefabId].RequiredHardness + "（本版暂定，使用原版 Element.hardness 分级）。");
             }
         }
 
@@ -159,47 +159,29 @@ namespace MaterialOverhaul.Game
             }
 
             int registered = 0;
-            int unresolved = 0;
-            foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
+            HashSet<RecipeZoneSpec> matched = new HashSet<RecipeZoneSpec>();
+            foreach (ComplexRecipe recipe in manager.recipes)
             {
-                ComplexRecipe recipe = FindRecipe(manager, spec);
-                if (recipe == null)
+                if (recipe == null) continue;
+                foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
                 {
-                    unresolved++;
-                    ModLog.WarnOnce("zone|unresolved|" + spec.FabricatorId + "|" + Join(spec.Inputs),
-                        "配方温区：未能在原版配方表里找到 " + Describe(spec)
-                        + "（可能是 DLC 未启用或配方标识变化），该条目本次未生效。");
-                    continue;
-                }
-
-                TempZone existing;
-                if (RecipeZoneTable.TryGet(recipe.id, out existing))
-                {
-                    continue;
-                }
-
-                RecipeZoneTable.Register(recipe.id, spec.Zone);
-                registered++;
-                ModLog.Info("配方温区：" + recipe.id + " 最佳温区登记为 " + spec.Zone
-                    + "（" + spec.Source + "）。");
-
-                // 「建筑下限 + 配方最佳区 + 主材料上限」三者齐备才算这条配方能用：
-                // 建筑没有下限数值时整条退化为原版行为，这里提前说清是哪一半缺的。
-                if (!HasBuildingFloor(spec.FabricatorId))
-                {
-                    ModLog.WarnOnce("zone|no-floor|" + spec.FabricatorId,
-                        "配方温区：" + spec.FabricatorId + " 还没有建筑最低工作温度数值，"
-                        + "该建筑的配方暂按原版行为运行（可先补建筑下限，配方最佳区已登记）。");
+                    if (!HasFabricator(recipe, spec.FabricatorId)
+                        || !spec.MatchesRecipe(MaterialsFor(recipe.ingredients), MaterialsFor(recipe.results))) continue;
+                    matched.Add(spec);
+                    TempZone existing;
+                    if (!RecipeZoneTable.TryGet(recipe.id, out existing))
+                    {
+                        RecipeZoneTable.Register(recipe.id, spec.Zone);
+                        registered++;
+                        ModLog.Info("配方温区：" + recipe.id + " 最佳温区 " + spec.Zone + "。");
+                    }
+                    break;
                 }
             }
-
-            // 只有整份目录都解析出来才算「登记完成」；否则保留一次兜底重试的机会。
-            zonesResolved = unresolved == 0;
-
-            if (registered > 0)
-            {
-                ModLog.Info("配方温区：本次登记 " + registered + " 条，侧表共 " + RecipeZoneTable.Count + " 条。");
-            }
+            // 真实配方表已处理；DLC/版本中未出现的候选正常跳过，不在切配方时反复扫描。
+            zonesResolved = true;
+            ModLog.Info("首发配方温区：新增 " + registered + "，匹配候选 " + matched.Count
+                + "/" + RecipeZoneCatalogue.Count + "；缺失候选本次未接入（DLC、版本或内容差异）。");
 
             LogPendingRecipes(manager);
         }
@@ -238,29 +220,6 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        private static ComplexRecipe FindRecipe(ComplexRecipeManager manager, RecipeZoneSpec spec)
-        {
-            foreach (ComplexRecipe recipe in manager.recipes)
-            {
-                if (recipe == null || recipe.fabricators == null)
-                {
-                    continue;
-                }
-
-                if (!HasFabricator(recipe, spec.FabricatorId))
-                {
-                    continue;
-                }
-
-                if (spec.MatchesMaterials(MaterialIds(recipe.ingredients), MaterialIds(recipe.results)))
-                {
-                    return recipe;
-                }
-            }
-
-            return null;
-        }
-
         private static bool HasFabricator(ComplexRecipe recipe, string prefabId)
         {
             if (recipe == null || recipe.fabricators == null)
@@ -279,18 +238,22 @@ namespace MaterialOverhaul.Game
             return false;
         }
 
-        private static IList<string> MaterialIds(ComplexRecipe.RecipeElement[] elements)
+        private static IList<RecipeMaterial> MaterialsFor(ComplexRecipe.RecipeElement[] elements)
         {
-            List<string> ids = new List<string>();
-            if (elements != null)
+            List<RecipeMaterial> values = new List<RecipeMaterial>();
+            if (elements == null) return values;
+            foreach (ComplexRecipe.RecipeElement element in elements)
             {
-                foreach (ComplexRecipe.RecipeElement element in elements)
+                List<string> ids = new List<string>();
+                if (element.possibleMaterials != null && element.possibleMaterials.Length > 0)
                 {
-                    ids.Add(element.material.ToString());
+                    foreach (Tag material in element.possibleMaterials)
+                        if (material != null) ids.Add(material.ToString());
                 }
+                else if (element.material != null) ids.Add(element.material.ToString());
+                values.Add(new RecipeMaterial(ids.ToArray(), element.amount));
             }
-
-            return ids;
+            return values;
         }
 
         private static string Describe(RecipeZoneSpec spec)

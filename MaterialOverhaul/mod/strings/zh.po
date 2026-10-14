@@ -400,3 +400,23 @@ msgstr "加热功率"
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TOOLTIP"
 msgid "{0} W: shared by preheating, top-up and forced sustained heating (20-4000 W). Production power is separate; total draw is the sum. Stored per building."
 msgstr "{0} W：预热、补热与强制持续加热共用（20–4000 W）。生产用电另计，总用电为两者之和；设置随本建筑保存。"
+
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_NO_HEATING"
+msgid "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。"
+msgstr "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。"
+
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_NO_HEATING_TOOLTIP"
+msgid "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。"
+msgstr "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。"
+
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_START"
+msgid "启动温度 {0}（无内置加热）"
+msgstr "启动温度 {0}（无内置加热）"
+
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_START_CAPPED"
+msgid "启动温度 {1}（原 {0}，受建材上限限制；无内置加热）"
+msgstr "启动温度 {1}（原 {0}，受建材上限限制；无内置加热）"
+
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_NO_HEATING"
+msgid "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。"
+msgstr "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。"

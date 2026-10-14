@@ -37,6 +37,8 @@ namespace MaterialOverhaul.Heating
 
         /// <summary>本建筑的共用加热设置（W）；0 缺省时使用默认值。</summary>
         public float ConfiguredHeatingWatts;
+        public float ProductionWatts;
+        public bool DisallowBuiltInHeating;
     }
 
     /// <summary>
@@ -91,8 +93,8 @@ namespace MaterialOverhaul.Heating
             bool productionAllowedByMachine =
                 context.TemperatureAllowsProduction && context.AutomationAllowsProduction && context.HasWorker;
 
-            demand.RequestedProductionWatts = productionAllowedByMachine ? Balance.ProductionWatts : 0f;
-            HeatingIntent heating = context.OverheatDamaged ? HeatingIntent.None : context.CommandedHeating;
+            demand.RequestedProductionWatts = productionAllowedByMachine ? (context.ProductionWatts > 0f ? context.ProductionWatts : Balance.ProductionWatts) : 0f;
+            HeatingIntent heating = context.OverheatDamaged || context.DisallowBuiltInHeating ? HeatingIntent.None : context.CommandedHeating;
             demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(heating, context.ConfiguredHeatingWatts);
 
             if (!context.PowerAvailable)

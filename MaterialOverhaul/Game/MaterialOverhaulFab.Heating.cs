@@ -17,10 +17,10 @@ namespace MaterialOverhaul.Game
     /// </summary>
     public partial class MaterialOverhaulFab
     {
-        /// <summary>本建筑的功率读数是否由本 Mod 接管（只有明确纳入加热范围的建筑）。</summary>
+        /// <summary>本建筑的生产和加热功率是否由本 Mod 接管（首发三栋，包括无内置加热粉碎机）。</summary>
         public bool HasPowerOverride
         {
-            get { return SupportsBuiltInHeating; }
+            get { return BuildingWhitelist.Contains(PrefabId); }
         }
 
         /// <summary>是否存在已锁定批次。</summary>
@@ -31,7 +31,7 @@ namespace MaterialOverhaul.Game
 
         /// <summary>
         /// 是否挂上了「允许／暂停生产」自动化输入端口。
-        /// 没挂端口的建筑（本版只有金属精炼器挂了）不参与自动化判断，行为等同原版。
+        /// 首发三栋均挂端口；没有该端口的对象不参与自动化判断。
         /// </summary>
         public bool HasAutomationInput
         {
@@ -198,7 +198,10 @@ namespace MaterialOverhaul.Game
             }
 
             cachedZone = TempZoneResolver.Resolve(
-                PrefabId + "|" + recipeId, floorKelvin, cachedRecipeZone, TryGetHeatCeiling);
+                PrefabId + "|" + recipeId, floorKelvin, cachedRecipeZone, TryGetHeatCeiling,
+                NumericProfile != null ? NumericProfile.LowEfficiency : Balance.LowBoundaryEfficiency,
+                NumericProfile != null ? NumericProfile.HighEfficiency : Balance.HighBoundaryEfficiency,
+                !SupportsBuiltInHeating);
             cachedZoneConfigured = cachedZone.Configured;
         }
 
@@ -337,6 +340,8 @@ namespace MaterialOverhaul.Game
             context.HasWorker = HasWorker;
             context.CommandedHeating = commanded;
             context.ConfiguredHeatingWatts = HeatingWatts;
+            context.ProductionWatts = NumericProfile != null ? NumericProfile.ProductionWatts : 0f;
+            context.DisallowBuiltInHeating = !SupportsBuiltInHeating;
 
             powerDemand = PowerDemand.Evaluate(context);
 
@@ -480,9 +485,7 @@ namespace MaterialOverhaul.Game
         /// 按剩余所需热量限制本步注热：剩余热量 =（目标温度 − 当前温度）× 原版有效热容。
         /// 温升仍交给 SIM，这里只避免末步大幅越过目标。热容不可用时不做封顶。
         ///
-        /// V0.1.2：封顶用的是**原目标**（默认模式 L + 0.1 × 低温段，控制模式 B₁ + 0.1 × 最佳区宽度），
-        /// 不是封顶后的实际目标。这样建材上限低于原目标时仍能一路预热到 U，
-        /// 而不会在「刚越过 U」的那一步因为剩余热量归零而停止注热（实际目标由状态的启动线把关）。
+        /// v0.2.0：预热与补热共用实际目标 min(原启动目标, U)，与开工判断一致。
         /// 普通预热／补热都不允许越过建筑上限，强制持续加热不封顶。
         /// </summary>
         private float CapToTarget(HeatingIntent intent, float requestedKilojoules)
@@ -495,7 +498,7 @@ namespace MaterialOverhaul.Game
             float target;
             if (intent == HeatingIntent.Preheat)
             {
-                target = StartThreshold.Original(cachedZone, Policy);
+                target = StartThreshold.Start(cachedZone, Policy);
             }
             else
             {
@@ -514,8 +517,7 @@ namespace MaterialOverhaul.Game
                 return requestedKilojoules;
             }
 
-            float maxKilojoules = remaining * heatCapacity;
-            return requestedKilojoules > maxKilojoules ? maxKilojoules : requestedKilojoules;
+            return HeatingPower.CapKilojoules(requestedKilojoules, BodyTemperature, target, heatCapacity);
         }
 
         /// <summary>热量来源说明，供原版显示运行能量来源。数值口径见 <see cref="Balance"/>。</summary>

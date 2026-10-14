@@ -41,6 +41,14 @@ namespace MaterialOverhaul.Heating
             return Balance.KilowattsForWatts(HeatingWattsFor(intent, configuredWatts));
         }
 
+        /// <summary>普通加热末步的能量预算；温度变化仍交给 SIM。</summary>
+        public static float CapKilojoules(float requested, float temperature, float target, float heatCapacity)
+        {
+            if (temperature >= target) return 0f;
+            if (heatCapacity <= 0f || float.IsNaN(heatCapacity) || float.IsInfinity(heatCapacity)) return requested;
+            return Math.Min(requested, (target - temperature) * heatCapacity);
+        }
+
         public static float AppliedHeatingWatts(HeatingIntent intent, bool powered, float configuredWatts = Balance.DefaultHeatingWatts)
         {
             return powered ? HeatingWattsFor(intent, configuredWatts) : 0f;

@@ -5,7 +5,7 @@ namespace MaterialOverhaul.Tests
 {
     /// <summary>
     /// 耗电矩阵与电力口径（V0.0.3 开发计划 §4.1、§9.1「加热与功耗」）。
-    /// v0.1.1：原版生产功率 1200 W、三种加热共用默认 1200 W、倍率 1000。
+    /// v0.1.1：原版生产功率 1200 W、三种加热共用默认 1200 W、倍率 100。
     /// </summary>
     public static class PowerDemandTests
     {
@@ -67,7 +67,7 @@ namespace MaterialOverhaul.Tests
 
             PowerDemand preheat = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.Preheat, temperature: false));
             Check(preheat, 0f, 1200f, "单独预热");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "单独预热注热 1200 kW");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "单独预热注热 120 kW");
             TestRunner.Check(!preheat.ProductionRunning, "单独预热不算真实生产");
 
             PowerDemand producing = PowerDemand.Evaluate(Base());
@@ -76,7 +76,7 @@ namespace MaterialOverhaul.Tests
 
             PowerDemand topUp = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.TopUp));
             Check(topUp, 1200f, 1200f, "控制生产并补热");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热默认注热 1200 kW");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热默认注热 120 kW");
 
             PowerDemand redTopUp = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.TopUp, automation: false));
             Check(redTopUp, 0f, 1200f, "红信号停产仍需补热");
@@ -86,7 +86,7 @@ namespace MaterialOverhaul.Tests
 
             PowerDemand forced = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.Sustained));
             Check(forced, 1200f, 1200f, "强制生产并持续加热");
-            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热注热 1200 kW");
+            TestRunner.CheckClose(120f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热注热 120 kW");
 
             PowerDemand forcedPaused = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.Sustained, automation: false));
             Check(forcedPaused, 0f, 1200f, "强制但生产被红信号暂停");

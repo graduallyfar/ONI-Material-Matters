@@ -274,7 +274,7 @@ namespace MaterialOverhaul.Game
         /// <summary>累计磨损（磨损单位，含未成形的部分）；用于显示。</summary>
         public float WearUnits
         {
-            get { return wear.WearUnits(Balance.DamagePerWearUnit); }
+            get { return wear.WearUnits(MechanicalDamagePerWearUnit); }
         }
 
         /// <summary>当前正在生产的配方；没有生产中的批次时为 null。</summary>
@@ -308,6 +308,12 @@ namespace MaterialOverhaul.Game
             KPrefabID prefabIdComponent = GetComponent<KPrefabID>();
             PrefabId = prefabIdComponent != null ? prefabIdComponent.PrefabTag.ToString() : gameObject.name;
 
+            if (!BuildingWhitelist.Contains(PrefabId))
+            {
+                // 旧档可能残留曾纳入名单的组件；不注册电网、事件或 Mod 菜单。
+                Spawned = false;
+                return;
+            }
             CurrentEfficiency = 1f;
             CurrentState = TempState.Disabled;
 
@@ -590,7 +596,9 @@ namespace MaterialOverhaul.Game
                 : LocalizedOr(KeyForcedEnable, "Enable Forced Run");
             string forcedTooltip = forcedRun
                 ? LocalizedOr(KeyForcedTooltipDisable, "Turning it off re-evaluates production permission from the output port wiring at that moment and keeps the current batch.")
-                : LocalizedOr(KeyForcedTooltipEnable, "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required.");
+                : SupportsBuiltInHeating
+                    ? LocalizedOr(KeyForcedTooltipEnable, "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required.")
+                    : LocalizedOr(KeyPrefix + "FORCEDRUN.TOOLTIP_NO_HEATING", "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。");
 
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_power",
@@ -655,7 +663,7 @@ namespace MaterialOverhaul.Game
                 LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "{0} · 硬度 {1}/{2} 不足，按生产时间磨损（HP {3}，{4} 磨损/生产秒，{5} HP/磨损单位）"),
                 material, actual, required, hp,
                 DamageConversion.WearPerProductionSecond.ToString("F2"),
-                DamageConversion.DamagePerWearUnit.ToString("F3"));
+                MechanicalDamagePerWearUnit.ToString("F3"));
         }
     }
 }
