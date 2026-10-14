@@ -98,6 +98,9 @@ namespace MaterialOverhaul.Game
                 case RunStatusKind.Sustained:
                 case RunStatusKind.Unpowered:
                 case RunStatusKind.HighTempWaiting:
+                case RunStatusKind.WaitingHeat:
+                case RunStatusKind.WaitingCool:
+                case RunStatusKind.TemperatureLimited:
                 case RunStatusKind.AutomationPaused:
                 case RunStatusKind.ProducingLow:
                 case RunStatusKind.ProducingHigh:
@@ -143,7 +146,7 @@ namespace MaterialOverhaul.Game
                     return string.Format(text, status);
                 }
 
-                return string.Format(
+                string body = string.Format(
                     text,
                     status,
                     GameUtil.GetFormattedTemperature(fab.BodyTemperature),
@@ -151,8 +154,17 @@ namespace MaterialOverhaul.Game
                     GameUtil.GetFormattedWattage(fab.CurrentRequestedWatts),
                     GameUtil.GetFormattedWattage(fab.CurrentUsedWatts),
                     HeatingIntentText(fab.AppliedHeating),
-                    GameUtil.GetFormattedPercent(Mathf.Clamp01(fab.BatchProgress) * 100f))
-                    + "\n" + fab.HardnessText();
+                    GameUtil.GetFormattedPercent(Mathf.Clamp01(fab.BatchProgress) * 100f));
+
+                // V0.1.2 §4.3：悬停要给出本体温度、建筑范围、配方最佳区、
+                // 原／实际加热目标（仅受限时需要两者）与限制原因。
+                string zoneDetail = RunStatusText.ZoneDetailText(fab);
+                if (!string.IsNullOrEmpty(zoneDetail))
+                {
+                    body = body + "\n" + zoneDetail;
+                }
+
+                return body + "\n" + fab.HardnessText();
             }
             catch (System.Exception e)
             {

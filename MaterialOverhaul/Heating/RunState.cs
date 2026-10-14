@@ -22,6 +22,13 @@ namespace MaterialOverhaul.Heating
         /// <summary>控制模式补热是否正在进行。</summary>
         public bool TopUpActive;
 
+        /// <summary>
+        /// 本步是否判定为「最佳温区不可达」（`B₁ &gt; U`，只可能出现在控制模式）。
+        /// 用于状态栏区分「预热中」与「温度受限 · 生产暂停」；不参与回差计算，
+        /// 每步都能从温区与模式重新算出，因此不单独落盘。
+        /// </summary>
+        public bool ZoneUnreachableLatched;
+
         public static RunState Fresh
         {
             get { return default(RunState); }
@@ -29,7 +36,8 @@ namespace MaterialOverhaul.Heating
 
         public override string ToString()
         {
-            return "RunState[已开工 " + Started + "，高温等待 " + HighTempWaiting + "，补热中 " + TopUpActive + "]";
+            return "RunState[已开工 " + Started + "，高温等待 " + HighTempWaiting + "，补热中 " + TopUpActive
+                + "，最佳区不可达 " + ZoneUnreachableLatched + "]";
         }
     }
 

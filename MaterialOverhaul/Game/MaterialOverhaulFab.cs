@@ -27,6 +27,7 @@ namespace MaterialOverhaul.Game
     ///   - <c>MaterialOverhaulFab.Damage.cs</c>：磨损计时、损坏原因与维修。
     ///   - <c>MaterialOverhaulFab.Mode.cs</c>：输出接线与独立模式状态；风险状态在 MaterialRiskStatusItems。
     ///   - <c>MaterialOverhaulFab.Chores.cs</c>：操作任务创建门控与温度暂停清理。
+    ///   - <c>MaterialOverhaulFab.PowerControl.cs</c>：建筑级加热功率存档与原版滑条接口。
     /// </summary>
     [SerializationConfig(MemberSerialization.OptIn)]
     public partial class MaterialOverhaulFab : KMonoBehaviour
@@ -70,7 +71,8 @@ namespace MaterialOverhaul.Game
         private readonly WearAccumulator wear = new WearAccumulator();
 
         private string cachedRecipeId;
-        private TempZone cachedZone = TempZone.Disabled;
+        private TempZone cachedRecipeZone = TempZone.Unconfigured;
+        private ResolvedZone cachedZone = ResolvedZone.Unconfigured;
         private bool cachedZoneConfigured;
 
         private RunState runState = RunState.Fresh;
@@ -99,6 +101,11 @@ namespace MaterialOverhaul.Game
         private bool overheatApplied;
         private float overheatTemperature;
         private AttributeModifier overheatModifier;
+
+        /// <summary>上一次应用规则时的主建造材料，用于判断建材是否变化（换建材才改建筑上限）。</summary>
+        private Element materialRuleElement;
+        private float materialRuleMeltingPoint;
+        private bool materialRuleKnown;
 
         /// <summary>状态栏条目的上一次分类与是否已经写入过一次（避免每个模拟步重建状态项）。</summary>
         private RunStatusKind lastAppliedRunStatusKind = RunStatusKind.None;
@@ -159,19 +166,34 @@ namespace MaterialOverhaul.Game
             get { return new RunPolicy { ControlMode = controlMode, Forced = forcedRun }; }
         }
 
-        /// <summary>当前配方的目标温区；无配方或未匹配时为 Disabled。</summary>
-        public TempZone CurrentZone
+        /// <summary>
+        /// 当前配方的**配方最佳温区**（V0.1.2：只含 B₁、B₂，不含建筑下限与材料上限）。
+        /// 无配方或未匹配时为未配置。
+        /// </summary>
+        public TempZone RecipeZone
+        {
+            get { return cachedRecipeZone; }
+        }
+
+        /// <summary>
+        /// 当前可运算温区：建筑下限 L + 配方最佳区 + 主建造材料推出的上限 U。
+        /// 任何一项来源不可用时返回未配置，调用方按原版行为运行。
+        /// </summary>
+        public ResolvedZone CurrentZone
         {
             get { return cachedZone; }
         }
 
-        /// <summary>当前配方的温区是否已配置（未配置即按原版行为运行）。</summary>
+        /// <summary>
+        /// 当前温区是否可运算（配方最佳区 + 建筑下限 + 主材料上限三者齐备）。
+        /// false 表示按原版行为运行，但建筑级过热阈值规则仍可独立生效。
+        /// </summary>
         public bool ZoneConfigured
         {
             get { return cachedZoneConfigured; }
         }
 
-        /// <summary>温区五态（用于显示）。</summary>
+        /// <summary>温度六态（用于显示）。</summary>
         public TempState CurrentState { get; private set; }
 
         /// <summary>温度效率 η_T。</summary>
@@ -359,6 +381,37 @@ namespace MaterialOverhaul.Game
             get { return primaryElement != null ? primaryElement.Temperature : 0f; }
         }
 
+        /// <summary>
+        /// 建筑最高工作温度 U 的来源：**与过热规则同一个值**（V0.1.2 §2.1.5）。
+        ///
+        /// 这里返回规则值而不是读属性，顺序上先由 <see cref="ApplyOverheatRule"/> 记录
+        /// <c>overheatApplied</c>，因此两者必然一致；任何一步没成功就返回 false，
+        /// 让温区判断退回原版行为，**不产生一个实际并不生效的无限上限**。
+        /// </summary>
+        private bool TryGetHeatCeiling(out float ceilingKelvin)
+        {
+            ceilingKelvin = 0f;
+
+            if (!overheatApplied)
+            {
+                return false;
+            }
+
+            ceilingKelvin = overheatTemperature;
+            return !float.IsNaN(ceilingKelvin) && !float.IsInfinity(ceilingKelvin) && ceilingKelvin > 0f;
+        }
+
+        /// <summary>建成本建筑的主建造材料名；不可用时返回 "-"，只用于界面说明。</summary>
+        public string MaterialName
+        {
+            get
+            {
+                return primaryElement != null && primaryElement.Element != null
+                    ? primaryElement.Element.name
+                    : "-";
+            }
+        }
+
         /// <summary>该建筑是否启用本 Mod 的内置加热与加热用电。</summary>
         public bool SupportsBuiltInHeating
         {
@@ -369,6 +422,7 @@ namespace MaterialOverhaul.Game
 
         private void RestoreState()
         {
+            RestoreHeatingPower();
             wear.Restore(wearDamageBalance);
             MigrateLegacyWear();
 

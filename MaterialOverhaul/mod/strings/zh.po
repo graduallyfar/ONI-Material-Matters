@@ -83,23 +83,23 @@ msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
 msgid "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。"
 msgstr "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。"
 
-#. 过热温度属性的修正项说明（v0.0.2：过热阈值 = 主建造材料熔点 × 85%）
+#. 过热温度属性的修正项说明（v0.1.2：最高工作温度 = 过热阈值 = 主建造材料熔点 × 75%）
 #. STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
 msgctxt "STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"
-msgid "Material Overhaul: the overheat threshold is 85% of the primary construction material's melting point"
-msgstr "材料革新：过热阈值取主建造材料熔点的 85%"
+msgid "Material Overhaul: the maximum working temperature equals the overheat threshold, 75% of the primary construction material's melting point (computed in kelvin)"
+msgstr "材料革新：最高工作温度＝过热阈值，取主建造材料熔点的 75%（按开尔文计算）"
 
-#. 建筑信息卡描述里追加的一句话：温度工作区间（v0.0.2）
+#. 建筑信息卡描述里追加的一句话：工作温区归属（v0.1.2）
 #. STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE
 msgctxt "STRINGS.BUILDINGS.PREFABS.MATERIALOVERHAUL.TEMPZONE_NOTE"
-msgid "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。"
-msgstr "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。"
+msgid "This building runs on a temperature band: the minimum working temperature comes from the building type, and the maximum equals its overheat threshold (primary construction material melting point x 75%). Recipes only define their best range, which always runs at full efficiency. A connected output port selects control mode; an unconnected one uses the default mode."
+msgstr "本建筑按温区运行：最低工作温度由建筑类型决定，最高工作温度等于过热阈值（主建造材料熔点 × 75%）；配方只决定最佳温区，最佳温区内满效率。输出接线使用控制模式，未接线使用默认模式。"
 
-#. 配方详情「效果」里的温度行（{0} 最低可工作温度、{1} 最高可工作温度、{2} 最佳温区下限、{3} 最佳温区上限）
+#. 配方详情「效果」里的温度行（{0} 最佳温区下限、{1} 最佳温区上限）
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL"
-msgid "Working temperature: {0} ~ {1} (best range {2} ~ {3})"
-msgstr "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）"
+msgid "Best temperature range: {0} ~ {1}"
+msgstr "最佳温区：{0} ~ {1}"
 
 #. 信息卡里的过热温度行（{0} 过热阈值）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE
@@ -107,11 +107,11 @@ msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_LINE"
 msgid "过热温度：{0}"
 msgstr "过热温度：{0}"
 
-#. 过热温度行的提示（{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值、{3} 致命温度）
+#. 过热温度行的提示（{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值／最高工作温度、{3} 致命温度）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_TOOLTIP
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.OVERHEAT_TOOLTIP"
-msgid "Material Overhaul: overheat threshold = 85% of the primary construction material's ({0}) melting point {1} = {2}.\nExceeding it damages the building; the working-temperature cap only stops production and gives no heat protection.\nFatal temperature: {3}."
-msgstr "材料革新：过热阈值 = 主建造材料 {0} 的熔点 {1} × 85% = {2}。\n建筑本体超过该温度会过热受损；温区上限只停止生产，不提供耐热保护。\n致命温度：{3}。"
+msgid "Material Overhaul: maximum working temperature = overheat threshold = 75% of the primary construction material's ({0}) melting point {1} = {2}.\nAbove it the default and control modes stop production and built-in heating; only forced run may keep working past it.\nStopping on temperature gives no heat protection. Fatal temperature: {3}."
+msgstr "材料革新：最高工作温度 = 过热阈值 = 主建造材料 {0} 的熔点 {1} × 75%（按开尔文计算）= {2}。\n建筑本体超过该温度时，默认／控制模式停产并停止内置加热，只有强制运行允许越界生产。\n温区停机不提供耐热保护；致命温度：{3}。"
 
 #. 损坏原因状态项：来源未知的旧损伤（迁移）
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.UNKNOWN.NAME
@@ -252,6 +252,68 @@ msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.COOLING"
 msgid "Cooling down"
 msgstr "降温中"
 
+#. V0.1.2：需要升温但没有实际注热（不假称为预热中）
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.WAITING_HEAT
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.WAITING_HEAT"
+msgid "Waiting for heat"
+msgstr "等待升温"
+
+#. V0.1.2：最佳温区不可达且已停在受限目标
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.TEMP_LIMITED
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.TEMP_LIMITED"
+msgid "Temperature limited - production paused"
+msgstr "温度受限 · 生产暂停"
+
+#. V0.1.2：独立温区限制提示
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE"
+msgid "Best range unreachable"
+msgstr "最佳温区不可达"
+
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED"
+msgid "Best range limited"
+msgstr "最佳温区受限"
+
+#. 状态悬停的温区说明行（{0} 本体温度、{1} 建筑下限、{2} 建筑上限、{3} 主建造材料、{4} 配方最佳下限、{5} 配方最佳上限）
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_DETAIL
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_DETAIL"
+msgid "Body temperature {0}; building working range {1} ~ {2} (primary material {3}); recipe best range {4} ~ {5}"
+msgstr "本体温度 {0}；建筑工作范围 {1} ~ {2}（主建造材料 {3}）；配方最佳温区 {4} ~ {5}"
+
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_TARGET
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_TARGET"
+msgid "Heating target {0}"
+msgstr "加热目标 {0}"
+
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_TARGET_CAPPED
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_TARGET_CAPPED"
+msgid "Heating target: original {0}, actual {1} (capped by the building limit)"
+msgstr "加热目标：原目标 {0}，实际目标 {1}（受建筑上限限制）"
+
+#. V0.1.2：不可达时的完整说明（{0} 配方最佳下限、{1} 建筑上限）
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_DETAIL
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_DETAIL"
+msgid "Control mode needs the recipe best-range minimum {0}, but this building's limit is only {1}: control mode has no usable band. Heating stops at the limit and production stays paused; the order is not skipped. Use the default mode or a material with a higher melting point."
+msgstr "普通控制模式需要配方最佳下限 {0}，但本建筑上限只有 {1}：普通控制模式没有可用温区，预热到上限后停止并保持暂停，不自动跳单。改用默认模式或熔点更高的建材才能生产。"
+
+#. V0.1.2：受限时的完整说明（{0}B₁、{1}可用上限、{2}B₂、{3}L、{4}U）
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED_DETAIL
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED_DETAIL"
+msgid "Control mode can use {0} ~ {1} (capped by the building limit; the recipe best-range maximum is {2}); the default mode still produces within {3} ~ {4} at reduced low/high efficiency."
+msgstr "普通控制模式可用区间 {0} ~ {1}（受建筑上限限制，配方最佳上限 {2}）；默认模式仍在 {3} ~ {4} 内按低温／高温效率生产。"
+
+#. V0.1.2：独立温区限制状态项（不冒充损坏）
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.NAME
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.NAME"
+msgid "Temperature band limited"
+msgstr "温区受限"
+
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.TOOLTIP"
+msgid "The recipe best range does not fully fit this building's usable range; the limit applies to control-mode production. The default mode still works across the building range at low/high efficiency, and forced run may go past the building limit."
+msgstr "配方最佳温区与本建筑可用范围不完整匹配；限制针对普通控制生产。默认模式仍可在建筑工作范围内按低温／高温效率生产，强制运行可越过建筑上限。"
+
 #. 「允许／暂停生产」自动化输入端口（复用原版逻辑控制端口，由本 Mod 改写说明文本）
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"
@@ -328,3 +390,12 @@ msgstr "超过过热阈值"
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP"
 msgid "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。"
 msgstr "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。"
+
+#. 配置卡：配方下方的共用加热功率滑条
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TITLE"
+msgid "Heating Power"
+msgstr "加热功率"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TOOLTIP"
+msgid "Heating power: {0} W. Preheating, top-up heating and forced sustained heating share this setting (20–4000 W). While producing, heating power is added to production power. The setting is saved per building."
+msgstr "当前加热功率：{0} W。预热、补热与强制持续加热共用此设置（20–4000 W）。生产时加热用电额外计入，总用电为生产用电与加热用电之和。设置随本建筑保存。"

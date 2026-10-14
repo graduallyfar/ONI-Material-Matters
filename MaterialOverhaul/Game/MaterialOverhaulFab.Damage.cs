@@ -295,7 +295,7 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        /* ---- 过热阈值（主建造材料熔点 × 85%）---- */
+        /* ---- 最高工作温度 / 过热阈值（主建造材料熔点 × 75%，按 K 计算）---- */
 
         /// <summary>
         /// 取本实例按规则算出的过热阈值与显示来源：主建造材料名、材料熔点。
@@ -381,6 +381,9 @@ namespace MaterialOverhaul.Game
 
             overheatApplied = true;
             overheatTemperature = value;
+            materialRuleElement = element;
+            materialRuleMeltingPoint = element.highTemp;
+            materialRuleKnown = true;
 
             // 先写基础值，再读一次属性：这会触发原版 InitializeModifiers，
             // 之后补偿差额不会因为修饰项在别处建立而重复叠加。

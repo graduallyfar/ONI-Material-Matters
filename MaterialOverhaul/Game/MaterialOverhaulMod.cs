@@ -40,18 +40,19 @@ namespace MaterialOverhaul
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
-            ModLog.Info("v0.1.0 操作任务温度门控修订已加载：未达到温度许可时阻止创建／重建操作任务。");
+            ModLog.Info("操作任务温度门控已加载；v0.1.2 建筑下限与配方最佳区拆分、最高工作温度 = 过热阈值 = 主材料熔点 × 75%。");
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
         private static void LogBalanceSummary()
         {
-            ModLog.Info("本版数值：铝配方四边界 300/450/650/800 ℃，过热阈值 = 主建造材料熔点 × "
+            ModLog.Info("本版数值：炼铝配方最佳温区 450/650 ℃，建筑下限 "
+                + Core.Balance.MetalRefineryWorkMinCelsius.ToString("F0")
+                + " ℃（金属精炼器，建筑级），最高工作温度 = 过热阈值 = 主建造材料熔点 × "
                 + Heating.OverheatRule.MeltingPointFraction.ToString("F2")
-                + "；加热电功率 预热 " + Heating.HeatingPower.PreheatWatts.ToString("F0")
-                + " W／补热 " + Heating.HeatingPower.TopUpWatts.ToString("F0")
-                + " W／强制 " + Heating.HeatingPower.SustainedWatts.ToString("F0")
-                + " W，注热倍率 " + Heating.HeatingPower.TestHeatMultiplier.ToString("F0")
+                + "（按 K 计算）；共用加热功率滑条 " + Core.Balance.MinHeatingWatts.ToString("F0")
+                + "–" + Core.Balance.MaxHeatingWatts.ToString("F0") + " W（默认 " + Core.Balance.DefaultHeatingWatts.ToString("F0") + " W）"
+                + "，注热倍率 " + Heating.HeatingPower.TestHeatMultiplier.ToString("F0")
                 + "；要求硬度 " + Core.Balance.MetalRefineryRequiredHardness
                 + "，磨损 " + Hardness.DamageConversion.WearPerProductionSecond.ToString("F2")
                 + " 单位/生产秒，伤害 " + Hardness.DamageConversion.DamagePerWearUnit.ToString("F3")

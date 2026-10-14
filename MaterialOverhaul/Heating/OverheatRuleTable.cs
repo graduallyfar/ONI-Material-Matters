@@ -9,6 +9,9 @@ namespace MaterialOverhaul.Heating
     /// 未匹配的建筑保持原版过热阈值与豁免设定，行为等同原版
     /// （《建筑分类与温区适用范围》§1.5：多数工业建筑当前不参与过热损伤）。
     ///
+    /// V0.1.2 起这个比例同时决定**建筑最高工作温度**：上限与过热阈值是同一个数值，
+    /// 温区判断通过 <c>MaterialOverhaulFab.TryGetHeatCeiling</c> 取同一个规则值。
+    ///
     /// 侧表**不参与存档**，每次启动重建。比例换算规则见 <see cref="OverheatRule"/>。
     /// </summary>
     public static class OverheatRuleTable
@@ -20,7 +23,7 @@ namespace MaterialOverhaul.Heating
             get { return Table.Count; }
         }
 
-        /// <param name="meltingPointFraction">熔点比例，取 (0,1] 区间；默认 0.85。</param>
+        /// <param name="meltingPointFraction">熔点比例，取 (0,1] 区间；默认 0.75。</param>
         public static void Register(string buildingId, float meltingPointFraction)
         {
             if (float.IsNaN(meltingPointFraction) || float.IsInfinity(meltingPointFraction)

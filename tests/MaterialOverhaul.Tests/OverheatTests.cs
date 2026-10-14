@@ -4,9 +4,11 @@ using MaterialOverhaul.Heating;
 namespace MaterialOverhaul.Tests
 {
     /// <summary>
-    /// v0.0.2 过热阈值规则：过热阈值 = 主建造材料熔点 × 85%
-    /// （建筑细节文档 §2.1.5，V0.0.2 开发计划 §4）。
-    /// 熔点数据取自游戏元素表 Solid 元素定义（AluminumOre 1357 K 等）。
+    /// 过热阈值规则（V0.1.2 开发计划 §1.1、§2.1.5）：
+    /// **最高工作温度 = 过热阈值 = 主建造材料熔点(K) × 0.75**。
+    ///
+    /// 熔点数据取自本地游戏元素表 Solid 元素定义（SandStone 1200 K、Granite 942 K 等）。
+    /// 摄氏显示是换算后的结果，不是「摄氏熔点 × 0.75」。
     /// </summary>
     public static class OverheatTests
     {
@@ -16,7 +18,7 @@ namespace MaterialOverhaul.Tests
         {
             CelsiusConversion();
             MeltingPointRule();
-            RuleCoversWorkMax();
+            CoverageAgainstBestZone();
             RuleTableValidation();
         }
 
@@ -31,42 +33,63 @@ namespace MaterialOverhaul.Tests
 
         private static void MeltingPointRule()
         {
-            TestRunner.Section("过热阈值取熔点 85%");
+            TestRunner.Section("最高工作温度 / 过热阈值取熔点 75%（按 K 计算）");
 
             float overheat;
             TestRunner.Check(OverheatRule.TryCompute(1357f, out overheat), "铝矿熔点可用");
-            TestRunner.CheckClose(1153.45f, overheat, Tol, "1357 K × 0.85 = 1153.45 K");
+            TestRunner.CheckClose(1017.75f, overheat, Tol, "1357 K × 0.75 = 1017.75 K");
+
+            TestRunner.CheckClose(706.5f, Compute(942f), Tol, "花岗岩 942 K × 0.75 = 706.5 K（433.35 ℃）");
+            TestRunner.CheckClose(900f, Compute(1200f), Tol, "砂岩 1200 K × 0.75 = 900 K（626.85 ℃）");
 
             TestRunner.Check(!OverheatRule.TryCompute(0f, out overheat), "熔点为 0 时不计算");
             TestRunner.Check(!OverheatRule.TryCompute(-100f, out overheat), "熔点为负时不计算");
             TestRunner.Check(!OverheatRule.TryCompute(float.NaN, out overheat), "熔点为 NaN 时不计算");
             TestRunner.Check(!OverheatRule.TryCompute(float.PositiveInfinity, out overheat), "熔点为无穷时不计算");
             TestRunner.Check(!OverheatRule.TryCompute(1000f, 0f, out overheat), "比例为 0 时不计算");
-            TestRunner.CheckClose(850f, OverheatRule.TryCompute(1000f, 0.85f, out overheat) ? overheat : -1f, Tol,
+            TestRunner.CheckClose(750f, OverheatRule.TryCompute(1000f, 0.75f, out overheat) ? overheat : -1f, Tol,
                 "显式传入比例同样生效");
+            TestRunner.CheckClose(0.75f, OverheatRule.MeltingPointFraction, 0.00001f, "已确认系数为 0.75");
         }
 
-        private static void RuleCoversWorkMax()
+        private static float Compute(float meltingPoint)
         {
-            TestRunner.Section("材料熔点与铝矿配方最高可工作温度的关系");
-            float workMax = Temperatures.FromCelsius(800f);   // 1073.15 K
-
-            // 原版建筑可用的矿物材料（Solid 元素定义）与它们能否覆盖铝矿配方的 800 ℃。
-            CheckCoverage("SandStone", 1200f, workMax, false);
-            CheckCoverage("Granite", 942f, workMax, false);
-            CheckCoverage("IgneousRock", 1683f, workMax, true);
-            CheckCoverage("Obsidian", 3000f, workMax, true);
-            CheckCoverage("Ceramic", 2123f, workMax, true);
-
-            TestRunner.Check(OverheatRule.CoversWorkMax(0f, workMax) == false, "阈值不可用时视为不覆盖");
+            float value;
+            OverheatRule.TryCompute(meltingPoint, out value);
+            return value;
         }
 
-        private static void CheckCoverage(string materialId, float meltingPoint, float workMax, bool expected)
+        /// <summary>
+        /// 材料上限与炼铝最佳温区（450–650 ℃ = 723.15–923.15 K）的关系。
+        /// V0.1.2 起「包不住最佳区」不是配置错误，而是玩法分支：
+        /// B₂ &gt; U 是最佳温区受限，B₁ &gt; U 是最佳温区不可达。
+        /// </summary>
+        private static void CoverageAgainstBestZone()
         {
-            float overheat;
-            OverheatRule.TryCompute(meltingPoint, out overheat);
-            TestRunner.CheckEqual(expected, OverheatRule.CoversWorkMax(overheat, workMax),
-                materialId + " 过热阈值 " + overheat.ToString("F2") + " K 对铝矿配方 800 ℃ 的覆盖结论");
+            TestRunner.Section("建筑上限与炼铝最佳区的关系（V0.1.2 §2.1.5）");
+            float bestMin = Temperatures.FromCelsius(450f);
+            float bestMax = Temperatures.FromCelsius(650f);
+
+            // 原版建筑可用的矿物材料（Solid 元素定义）与它们对 450–650 ℃ 的覆盖情况。
+            CheckCoverage("Granite", 942f, bestMin, bestMax, false, false);
+            CheckCoverage("SandStone", 1200f, bestMin, bestMax, true, false);
+            CheckCoverage("IgneousRock", 1683f, bestMin, bestMax, true, true);
+            CheckCoverage("Obsidian", 3000f, bestMin, bestMax, true, true);
+            CheckCoverage("Ceramic", 2123f, bestMin, bestMax, true, true);
+
+            TestRunner.Check(OverheatRule.CoversBestMax(0f, bestMax) == false, "阈值不可用时视为不覆盖");
+        }
+
+        private static void CheckCoverage(
+            string materialId, float meltingPoint, float bestMin, float bestMax,
+            bool reachable, bool coversWhole)
+        {
+            float overheat = Compute(meltingPoint);
+
+            TestRunner.CheckEqual(coversWhole, OverheatRule.CoversBestMax(overheat, bestMax),
+                materialId + " 上限 " + overheat.ToString("F2") + " K 是否覆盖整个最佳区");
+            TestRunner.CheckEqual(reachable, overheat >= bestMin,
+                materialId + " 上限是否不低于最佳下限（控制模式可用性）");
         }
 
         private static void RuleTableValidation()
@@ -76,7 +99,7 @@ namespace MaterialOverhaul.Tests
             OverheatRuleTable.Register("MetalRefinery", OverheatRule.MeltingPointFraction);
             float fraction;
             TestRunner.Check(OverheatRuleTable.TryGet("MetalRefinery", out fraction), "已登记建筑可查到比例");
-            TestRunner.CheckClose(0.85f, fraction, Tol, "比例为 0.85");
+            TestRunner.CheckClose(0.75f, fraction, Tol, "比例为 0.75");
             TestRunner.Check(!OverheatRuleTable.TryGet("GlassForge", out fraction), "未登记建筑查不到（保持原版阈值）");
 
             ModLog.Clear();
@@ -90,7 +113,7 @@ namespace MaterialOverhaul.Tests
             ModLog.Clear();
             OverheatRuleTable.Register("MetalRefinery", 0.5f);
             TestRunner.CheckEqual(1, ModLog.CountOf("ERROR"), "重复登记记录错误日志");
-            TestRunner.Check(OverheatRuleTable.TryGet("MetalRefinery", out fraction) && fraction > 0.8f,
+            TestRunner.Check(OverheatRuleTable.TryGet("MetalRefinery", out fraction) && fraction > 0.7f,
                 "重复登记保留先登记的值");
 
             ModLog.Clear();

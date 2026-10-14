@@ -160,21 +160,87 @@ namespace MaterialOverhaul.Game
             }
 
             cachedRecipeId = recipeId;
-            cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
+            cachedRecipeZone = RecipeZoneTable.GetOrUnconfigured(recipeId);
 
-            if (!cachedZoneConfigured && !ContentRegistration.ZonesResolved)
+            if (!cachedRecipeZone.Configured && !ContentRegistration.ZonesResolved)
             {
                 // 兜底：配方温区还没在「配方表可用」的时机登记过（加载顺序变化或钩子未命中）时，
                 // 第一次有建筑要用配方时再补一次，避免整套温区静默失效。
                 ContentRegistration.Apply();
-                cachedZoneConfigured = RecipeZoneTable.TryGet(cachedRecipeId, out cachedZone);
+                cachedRecipeZone = RecipeZoneTable.GetOrUnconfigured(recipeId);
             }
 
-            if (!cachedZoneConfigured)
+            ResolveCachedZone(recipeId);
+        }
+
+        /// <summary>
+        /// 把「建筑下限 L + 配方最佳区 + 主材料上限 U」合成可运算温区（V0.1.2 §2.1）。
+        ///
+        /// 三步来源各自独立：切配方只换配方最佳区，换建材只换 U，两者都不会改动对方的数值；
+        /// 任何一步缺失都退化为未配置（原版行为），并留下可定位日志（在判断层打印）。
+        /// </summary>
+        private void ResolveCachedZone(string recipeId)
+        {
+            float floorKelvin;
+            if (!BuildingZoneTable.TryGet(PrefabId, out floorKelvin))
             {
-                cachedZone = TempZone.Disabled;
-                ModLog.WarnOnce("zone|missing|" + cachedRecipeId,
-                    "配方温区：未匹配到配方 '" + cachedRecipeId + "'（建筑 " + PrefabId + "），该配方退化为原版行为。");
+                cachedZone = ResolvedZone.Unconfigured;
+                cachedZoneConfigured = false;
+
+                if (cachedRecipeZone.Configured)
+                {
+                    ModLog.WarnOnce("zone|no-floor|" + PrefabId,
+                        PrefabId + "：配方 '" + recipeId + "' 已登记最佳温区，但本建筑没有最低工作温度数值，"
+                        + "该建筑按原版行为运行。");
+                }
+
+                return;
+            }
+
+            cachedZone = TempZoneResolver.Resolve(
+                PrefabId + "|" + recipeId, floorKelvin, cachedRecipeZone, TryGetHeatCeiling);
+            cachedZoneConfigured = cachedZone.Configured;
+        }
+
+        /// <summary>
+        /// 主建造材料变化后重算建筑上限（V0.1.2 §2.1、§2.5 的建材口径）。
+        /// 只在主材料元素或熔点真的变了时才动过热阈值与温区，避免每步重建。
+        ///
+        /// 换建材只改变上限 U，**不改变配方最佳区**：`cachedRecipeZone` 保持不动，
+        /// 重算后再按新模式重判启动资格与目标线。
+        /// </summary>
+        private void RefreshZoneForMaterial()
+        {
+            if (!Spawned || primaryElement == null || primaryElement.Element == null)
+            {
+                return;
+            }
+
+            Element element = primaryElement.Element;
+            if (!materialRuleKnown || element != materialRuleElement)
+            {
+                ApplyOverheatRule();
+
+                // ApplyOverheatRule 只处理规则值本身；这里负责把温区与目标线一起更新。
+                // 即使规则应用失败（熔点不可用）也要记下材料，避免每步重复尝试。
+                materialRuleElement = element;
+                materialRuleMeltingPoint = element.highTemp;
+                materialRuleKnown = true;
+
+                if (cachedRecipeZone.Configured)
+                {
+                    ResolveCachedZone(cachedRecipeId);
+                    runState = RunController.OnPolicyChanged(BodyTemperature, cachedZone, Policy, runState);
+                    SyncRunStateFields();
+                }
+
+                return;
+            }
+
+            if (materialRuleMeltingPoint != element.highTemp)
+            {
+                ApplyOverheatRule();
+                materialRuleMeltingPoint = element.highTemp;
             }
         }
 
@@ -191,6 +257,7 @@ namespace MaterialOverhaul.Game
 
             EnsureOrdersImported();
             RefreshModeFromOutputConnection();
+            RefreshZoneForMaterial();
             UpdateModeStatusItem();
             if (!modeConnectionReady)
             {
@@ -217,7 +284,8 @@ namespace MaterialOverhaul.Game
             if (working == null)
             {
                 cachedRecipeId = null;
-                cachedZone = TempZone.Disabled;
+                cachedRecipeZone = TempZone.Unconfigured;
+                cachedZone = ResolvedZone.Unconfigured;
                 cachedZoneConfigured = false;
                 CurrentState = TempState.Disabled;
                 CurrentEfficiency = 1f;
@@ -271,6 +339,7 @@ namespace MaterialOverhaul.Game
             context.AutomationAllowsProduction = AutomationAllowsProduction;
             context.HasWorker = HasWorker;
             context.CommandedHeating = commanded;
+            context.ConfiguredHeatingWatts = HeatingWatts;
 
             powerDemand = PowerDemand.Evaluate(context);
 
@@ -376,7 +445,8 @@ namespace MaterialOverhaul.Game
         /// </summary>
         private void InjectHeat(HeatingIntent intent, float dt)
         {
-            float kilowatts = HeatingPower.KilowattsFor(intent);
+            // 使用本步实际计入消费的功率，避免设置变化时电网与注热取不同值。
+            float kilowatts = Balance.KilowattsForWatts(powerDemand.UsedHeatingWatts);
             if (kilowatts == 0f)
             {
                 return;
@@ -412,6 +482,11 @@ namespace MaterialOverhaul.Game
         /// <summary>
         /// 按剩余所需热量限制本步注热：剩余热量 =（目标温度 − 当前温度）× 原版有效热容。
         /// 温升仍交给 SIM，这里只避免末步大幅越过目标。热容不可用时不做封顶。
+        ///
+        /// V0.1.2：封顶用的是**原目标**（默认模式 L + 0.1 × 低温段，控制模式 B₁ + 0.1 × 最佳区宽度），
+        /// 不是封顶后的实际目标。这样建材上限低于原目标时仍能一路预热到 U，
+        /// 而不会在「刚越过 U」的那一步因为剩余热量归零而停止注热（实际目标由状态的启动线把关）。
+        /// 普通预热／补热都不允许越过建筑上限，强制持续加热不封顶。
         /// </summary>
         private float CapToTarget(HeatingIntent intent, float requestedKilojoules)
         {
@@ -423,7 +498,7 @@ namespace MaterialOverhaul.Game
             float target;
             if (intent == HeatingIntent.Preheat)
             {
-                target = HeatingPlanner.PreheatTarget(cachedZone, Policy);
+                target = StartThreshold.Original(cachedZone, Policy);
             }
             else
             {
@@ -479,9 +554,15 @@ namespace MaterialOverhaul.Game
         /* ---- 温区输出信号 ---- */
 
         /// <summary>
-        /// 温区输出信号：有已锁定配方且本体处于其最佳温区为绿，其余为红。
+        /// 温区输出信号：有已锁定配方且本体处于其**配方最佳温区**为绿，其余为红。
         /// 没有配方时输出不活动的红信号，不设置第三种空信号；绿色只代表温度条件满足，不代表正在生产。
         /// 红色输入、等操作工、断电或损坏都不会把已经符合温区条件的输出强制变红。
+        ///
+        /// V0.1.2：信号继续只报告配方最佳区，**不用可用交集代替它**——建材上限低于最佳上限时，
+        /// 建筑在交集内生产，但信号仍按配方最佳区判断，玩家才能看出是被建材限制。
+        /// 强制运行越过建筑上限但在最佳区内时，输出保持绿色。
+        /// 温区整体未配置（没有建筑下限或熔点不可用）时不发绿：这表示本建筑没有温区约束，
+        /// 而不是「温度不达标」。
         /// </summary>
         private void UpdateTemperatureZoneSignal()
         {
@@ -504,7 +585,7 @@ namespace MaterialOverhaul.Game
 
             if (!runDecision.ZoneConfigured)
             {
-                ModLog.Info(PrefabId + "：" + recipe.id + " 未配置温区，温度 "
+                ModLog.Info(PrefabId + "：" + recipe.id + " 未启用温区（缺少建筑下限或主材料上限），温度 "
                     + Temperatures.ToCelsius(BodyTemperature).ToString("F1") + " ℃，按原版行为运行。");
                 return;
             }
@@ -513,7 +594,27 @@ namespace MaterialOverhaul.Game
                 + "，本体温度 " + Temperatures.ToCelsius(BodyTemperature).ToString("F1") + " ℃，效率 "
                 + runDecision.Efficiency.ToString("F3")
                 + "，允许生产 " + runDecision.AllowsProduction
-                + "，加热 " + runDecision.Heating + "。");
+                + "，加热 " + runDecision.Heating + "。" + ZoneSummaryForLog());
+        }
+
+        /// <summary>状态变化时把当前温区口径写进日志，便于用户按实际数值核对（含建材上限）。</summary>
+        private string ZoneSummaryForLog()
+        {
+            if (!cachedZone.Configured)
+            {
+                return string.Empty;
+            }
+
+            return " [建筑下限 " + Celsius(cachedZone.Min) + "，配方最佳 " + Celsius(cachedZone.BestMin)
+                + "~" + Celsius(cachedZone.BestMax) + "，建筑上限 " + Celsius(cachedZone.Max)
+                + "（" + MaterialName + "）"
+                + (cachedZone.ControlRangeUnreachable ? "，最佳温区不可达"
+                    : cachedZone.ControlRangeLimited ? "，最佳温区受限" : string.Empty) + "]";
+        }
+
+        private static string Celsius(float kelvin)
+        {
+            return Temperatures.ToCelsius(kelvin).ToString("F1") + " ℃";
         }
     }
 }

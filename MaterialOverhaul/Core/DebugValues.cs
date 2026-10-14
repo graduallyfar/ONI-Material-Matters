@@ -26,10 +26,22 @@ namespace MaterialOverhaul.Core
             get { return enabled; }
         }
 
-        /// <summary>样例温区：5 ℃ / 35 ℃ / 55 ℃ / 75 ℃，仅用于观察五态与效率。</summary>
+        /// <summary>
+        /// 样例温区（V0.1.2：只填**配方最佳温区**）＝ 35 ℃ ~ 55 ℃，仅用于观察六态与效率。
+        /// 建筑下限仍需另有数值；没有建筑下限的建筑不会因为这条样例而启用温控。
+        /// </summary>
         public static TempZone SampleZone
         {
-            get { return new TempZone(278.15f, 308.15f, 328.15f, 348.15f); }
+            get { return TempZone.Celsius(35f, 55f); }
+        }
+
+        /// <summary>
+        /// 样例建筑最低工作温度＝5 ℃。只填补给「还没有建筑下限数值」的温区白名单建筑，
+        /// 不覆盖金属精炼器已确认的 80 ℃。
+        /// </summary>
+        public static float SampleWorkMinKelvin
+        {
+            get { return Temperatures.FromCelsius(5f); }
         }
 
         /// <summary>样例要求硬度：对应原版分级 FIRM = 25。</summary>

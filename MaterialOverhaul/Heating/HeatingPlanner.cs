@@ -4,51 +4,68 @@ using MaterialOverhaul.Zones;
 namespace MaterialOverhaul.Heating
 {
     /// <summary>
-    /// 预热与补热的意图判定。纯逻辑，不依赖游戏对象。
+    /// 预热与补热的意图判定（V0.1.2 开发计划 §2.3、§2.4）。纯逻辑，不依赖游戏对象。
     ///
-    /// 已确认规则（建筑细节文档 §2.1.1、§2.1.2、§2.1.4、§2.2.1）：
-    ///   - 默认模式只在「尚未开工且低于启动线」时预热；开工后在整个可工作温区内生产，不再补热。
-    ///   - 控制模式预热到最佳温区启动线；已在生产且低于补热启动线时边生产边补热。
-    ///   - **补热停止线高于补热启动线**，两者都在最佳温区内部，避免在同一温度点反复启停；
-    ///     补热一旦开始就要加热到停止线才关闭，因此判定需要传入当前补热状态。
-    ///   - 超过高温暂停线时停止内置加热，等待降温；不提供耐热保护。
-    ///   - 强制运行开启后持续加热，不因达到最佳温区或越界而停止。
+    /// 全部目标线都经过 <see cref="StartThreshold"/> 的建筑上限封顶：
+    ///   - 预热目标 = 实际启动目标 S = min(原启动目标, U)；
+    ///   - 补热停止线 = S（原实现取同一值，本版只增加封顶）；
+    ///   - 补热启动线 = max(控制模式生产下限 B₁, 停止线 − 回差)。
     ///
-    /// 完整的运行状态机（启动资格、高温等待、回差）在 <see cref="RunController"/>；
-    /// 本类只回答「该注入哪一档热量」，供状态机与显示共用。
+    /// **回差的取法是本版暂定值**（V0.1.2 §7 第 3 项）：仍用固定开尔文数而不是比例，
+    /// 但不允许启动线跌到 B₁ 以下，也不允许出现「预热目标高于停止线」的倒置目标。
+    /// 单点交集（`B₁ = U`）时回差为 0，不给玩家一个达不到的保温目标。
+    ///
+    /// 完整运行状态机（启动资格、高温等待、回差状态）在 <see cref="RunController"/>；
+    /// 本类只回答「该注入哪一档热量」。
     /// </summary>
     public static class HeatingPlanner
     {
         /// <summary>补热回差（K）。本版暂定值，见 <see cref="Balance.TopUpHysteresisKelvin"/>。</summary>
         public const float HysteresisKelvin = Balance.TopUpHysteresisKelvin;
 
-        /// <summary>补热启动线：低于此线开始补热。位于最佳温区内部、低于停止线。</summary>
-        public static float TopUpLine(TempZone zone, RunPolicy policy)
+        /// <summary>补热停止线：达到此线关闭补热。等于（已封顶的）启动目标。</summary>
+        public static float TopUpStopLine(ResolvedZone zone, RunPolicy policy)
         {
-            return TopUpStopLine(zone, policy) - Hysteresis(zone);
-        }
-
-        /// <summary>补热停止线：达到此线关闭补热。控制模式下取预热停止线。</summary>
-        public static float TopUpStopLine(TempZone zone, RunPolicy policy)
-        {
-            return PreheatTarget(zone, policy);
-        }
-
-        /// <summary>预热目标线：默认模式取最低工作启动阈值，控制模式取最佳工作启动阈值。</summary>
-        public static float PreheatTarget(TempZone zone, RunPolicy policy)
-        {
-            return StartThreshold.LowStart(zone, policy);
+            return StartThreshold.Start(zone, policy);
         }
 
         /// <summary>
-        /// 当前温区下的补热回差。
-        ///
-        /// 已确认的只是结构（停止线高于启动线、两者都在最佳温区内部）；回差数值属本版暂定。
-        /// 这里用固定开尔文数而不是比例，是为了让「460 开始 / 470 停止」在配置里直接可读；
-        /// 同时不允许回差大到把启动线推到最佳温区之外。
+        /// 预热目标线：与补热停止线同值。
+        /// 保留这个方法名是为了让「预热目标」与「补热目标」在调用处仍然读得出来，
+        /// 两者共用同一个封顶后的实际目标，不允许各自取一套线。
         /// </summary>
-        public static float Hysteresis(TempZone zone)
+        public static float PreheatTarget(ResolvedZone zone, RunPolicy policy)
         {
+            return StartThreshold.Start(zone, policy);
+        }
+
+        /// <summary>补热启动线：低于此线开始补热。</summary>
+        public static float TopUpLine(ResolvedZone zone, RunPolicy policy)
+        {
+            if (!zone.Configured)
+            {
+                return 0f;
+            }
+
+            float line = TopUpStopLine(zone, policy) - Hysteresis(zone);
+
+            // 控制模式的补热只服务于最佳区生产：不把启动线压到生产下限以下。
+            if (policy.ControlMode && line < zone.BestMin)
+            {
+                line = zone.BestMin;
+            }
+
+            return line;
+        }
+
+        /// <summary>当前温区下的补热回差：固定开尔文数，但不允许超过最佳温区宽度。</summary>
+        public static float Hysteresis(ResolvedZone zone)
+        {
+            if (!zone.Configured)
+            {
+                return 0f;
+            }
+
             float width = zone.BestMax - zone.BestMin;
             if (width <= 0f)
             {
@@ -59,20 +76,20 @@ namespace MaterialOverhaul.Heating
         }
 
         /// <summary>未跟踪补热状态时的简化入口：按「尚未补热」判断，只会启动补热、不会维持。</summary>
-        public static HeatingIntent Decide(float bodyTemp, TempZone zone, RunPolicy policy, bool productionRunning)
+        public static HeatingIntent Decide(float bodyTemp, ResolvedZone zone, RunPolicy policy, bool productionRunning)
         {
             return Decide(bodyTemp, zone, policy, productionRunning, false);
         }
 
         /// <summary>
         /// 给出加热意图。调用方负责再叠加批次、供电、手动禁用与损坏条件
-        /// （见 <see cref="HeatingConditions.CanHeat"/>）。
+        /// （见 <see cref="HeatingConditions.CanRequestHeat"/>）。
         /// </summary>
         /// <param name="productionRunning">当前是否正在推进生产（已锁定批次且已开工）。</param>
         /// <param name="topUpActive">当前是否正在补热；为 true 时按停止线判断是否关闭，实现回差。</param>
-        public static HeatingIntent Decide(float bodyTemp, TempZone zone, RunPolicy policy, bool productionRunning, bool topUpActive)
+        public static HeatingIntent Decide(float bodyTemp, ResolvedZone zone, RunPolicy policy, bool productionRunning, bool topUpActive)
         {
-            if (zone.IsDisabled)
+            if (!zone.Configured)
             {
                 return HeatingIntent.None;
             }
@@ -82,7 +99,7 @@ namespace MaterialOverhaul.Heating
                 return HeatingIntent.Sustained;
             }
 
-            if (bodyTemp > StartThreshold.HighPauseLine(zone, policy))
+            if (bodyTemp > StartThreshold.PauseLine(zone, policy))
             {
                 // 高温保护：停止生产和内置加热，等待降温。
                 return HeatingIntent.None;

@@ -7,16 +7,17 @@ using MaterialOverhaul.Zones;
 namespace MaterialOverhaul.Game
 {
     /// <summary>
-    /// 调试样例值的写入器（V0.0.3 开发计划 §8「实现规则」）。
+    /// 调试样例值的写入器（V0.0.3 开发计划 §8、V0.1.2 开发计划 §5）。
     ///
-    /// **本版常规配置已经自带数值，调试标记不再是任何机制生效的前提。** 标记文件只做两件事：
-    ///   1. 给还没登记温区的白名单配方补一份样例温区，便于观察五态与效率；
-    ///   2. 给还没登记要求硬度的白名单建筑补样例硬度，便于观察磨损与损坏。
+    /// **本版常规配置已经自带数值，调试标记不再是任何机制生效的前提。** 标记文件只做三件事：
+    ///   1. 给还没登记温区的白名单配方补一份样例**配方最佳温区**，便于观察六态与效率；
+    ///   2. 给还没登记下限的白名单建筑补一份样例**建筑最低工作温度**；
+    ///   3. 给还没登记要求硬度的白名单建筑补样例硬度，便于观察磨损与损坏。
     ///
     /// 它**不会覆盖**：
-    ///   - 已确认的铝配方温区（300/450/650/800 ℃）；
+    ///   - 已确认的炼铝配方最佳温区（450–650 ℃）与金属精炼器建筑下限（80 ℃）；
     ///   - 金属精炼器的要求硬度 25；
-    ///   - 本版的加热功率与磨损／伤害转换系数。
+    ///   - 本版的加热功率、建筑上限比例与磨损／伤害转换系数。
     ///
     /// 启动日志会明确列出调试扩展的实际生效范围，避免把调试扩展当成默认范围。
     /// </summary>
@@ -47,15 +48,37 @@ namespace MaterialOverhaul.Game
             applied = true;
 
             List<string> zoneRecipes = RegisterSampleZones();
+            List<string> zoneBuildings = RegisterSampleBuildingFloors();
             List<string> hardnessBuildings = RegisterSampleHardness();
 
             ModLog.Warn("调试数值已启用（**不是正式平衡数值**）："
-                + "样例温区写入 " + zoneRecipes.Count + " 条配方"
+                + "样例配方最佳温区写入 " + zoneRecipes.Count + " 条配方"
                 + (zoneRecipes.Count > 0 ? "（" + string.Join("、", zoneRecipes.ToArray()) + "）" : string.Empty)
+                + "；样例建筑下限写入 " + zoneBuildings.Count + " 栋建筑"
+                + (zoneBuildings.Count > 0 ? "（" + string.Join("、", zoneBuildings.ToArray()) + "）" : string.Empty)
                 + "；样例要求硬度写入 " + hardnessBuildings.Count + " 栋建筑"
                 + (hardnessBuildings.Count > 0 ? "（" + string.Join("、", hardnessBuildings.ToArray()) + "）" : string.Empty)
-                + "。常规数值（铝配方温区、金属精炼器硬度、加热功率、磨损与伤害转换）不受调试标记影响。"
+                + "。常规数值（炼铝最佳温区、金属精炼器建筑下限、硬度、加热功率、磨损与伤害转换）不受调试标记影响。"
                 + "删掉 " + DebugValues.MarkerFileName + " 即只保留常规数值。");
+        }
+
+        /// <summary>给还没有最低工作温度的白名单建筑补样例下限；返回被写入的建筑。</summary>
+        private static List<string> RegisterSampleBuildingFloors()
+        {
+            List<string> written = new List<string>();
+            foreach (string prefabId in BuildingWhitelist.All)
+            {
+                float existing;
+                if (BuildingZoneTable.TryGet(prefabId, out existing))
+                {
+                    continue;
+                }
+
+                BuildingZoneTable.Register(prefabId, DebugValues.SampleWorkMinKelvin);
+                written.Add(prefabId);
+            }
+
+            return written;
         }
 
         /// <summary>给还没有温区数值的白名单配方补样例温区；返回被写入的配方标识。</summary>

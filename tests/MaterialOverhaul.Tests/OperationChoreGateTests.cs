@@ -10,9 +10,10 @@ namespace MaterialOverhaul.Tests
         private static float C(float celsius) { return Temperatures.FromCelsius(celsius); }
 
         // 游戏状态读取替身使用真实温控判断层给出许可，实际任务门控／清理源码参与编译。
+        // V0.1.2 温区：建筑下限 80 ℃、默认原启动目标 117 ℃、配方最佳温区 450–650 ℃。
         private static ProductionDecision Evaluate(float temp, RunPolicy policy, RunState state)
         {
-            RunDecision decision = RunController.Update(C(temp), RunPolicyAndHeatingTests.Aluminum, policy, state);
+            RunDecision decision = RunController.Update(C(temp), RunPolicyAndHeatingTests.AluminumZone, policy, state);
             return new ProductionDecision
             {
                 State = decision.State, Efficiency = decision.Efficiency,
@@ -63,7 +64,7 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(0.42f, machine.OrderProgress, 0.0001f, "清理残留任务不取消批次");
             TestRunner.CheckEqual(1, ModLog.CountOf("INFO"), "清理残留任务不重复刷暂停日志");
 
-            mod.Evaluation = recipe => Evaluate(315f, RunPolicy.DefaultMode, RunState.Fresh);
+            mod.Evaluation = recipe => Evaluate(117f, RunPolicy.DefaultMode, RunState.Fresh);
             machine.UpdateChore();
             TestRunner.CheckEqual(1, machine.Created, "达到默认启动线后沿用原版创建任务");
             machine.UpdateChore();
@@ -75,9 +76,9 @@ namespace MaterialOverhaul.Tests
             TestRunner.Section("创建入口沿用启动线、高温回差与强制运行");
             ComplexFabricator machine = new ComplexFabricator { CurrentWorkingOrder = new ComplexRecipe { id = "Aluminum" } };
             MaterialOverhaulFab mod = new MaterialOverhaulFab(machine,
-                recipe => Evaluate(300f, RunPolicy.DefaultMode, RunState.Fresh));
+                recipe => Evaluate(100f, RunPolicy.DefaultMode, RunState.Fresh));
             machine.UpdateChore();
-            TestRunner.Check(machine.CurrentChore == null, "冷机在 300 ℃ 工作下限仍需等 315 ℃");
+            TestRunner.Check(machine.CurrentChore == null, "冷机在 100 ℃（未到 117 ℃ 启动目标）不能派工");
             mod.Evaluation = recipe => Evaluate(350f, RunPolicy.ControlModePolicy, RunState.Fresh);
             machine.UpdateChore();
             TestRunner.Check(machine.CurrentChore == null, "控制模式 350 ℃ 不能创建操作任务");
@@ -90,16 +91,16 @@ namespace MaterialOverhaul.Tests
             mod.Evaluation = recipe => Evaluate(700f, RunPolicy.ControlModePolicy, new RunState { Started = true });
             machine.UpdateChore();
             TestRunner.Check(machine.CurrentChore == null, "控制模式 700 ℃ 撤销操作任务并等待降温");
-            mod.Evaluation = recipe => Evaluate(790f, RunPolicy.DefaultMode, new RunState { Started = true, HighTempWaiting = true });
+            mod.Evaluation = recipe => Evaluate(980f, RunPolicy.DefaultMode, new RunState { Started = true, HighTempWaiting = true });
             machine.UpdateChore();
-            TestRunner.Check(machine.CurrentChore == null, "默认模式高温回差内不提前派工");
-            mod.Evaluation = recipe => Evaluate(785f, RunPolicy.DefaultMode, new RunState { Started = true, HighTempWaiting = true });
+            TestRunner.Check(machine.CurrentChore == null, "默认模式高温回差内不提前派工（980 ℃ 高于 974.1 ℃ 恢复线）");
+            mod.Evaluation = recipe => Evaluate(974f, RunPolicy.DefaultMode, new RunState { Started = true, HighTempWaiting = true });
             machine.UpdateChore();
             TestRunner.Check(machine.CurrentChore != null, "回落到默认恢复线后可派工");
-            mod.Evaluation = recipe => Evaluate(900f, RunPolicy.DefaultMode, new RunState { Started = true });
+            mod.Evaluation = recipe => Evaluate(1000f, RunPolicy.DefaultMode, new RunState { Started = true });
             machine.UpdateChore();
-            TestRunner.Check(machine.CurrentChore == null, "默认模式超过 800 ℃ 工作上限也不派工");
-            mod.Evaluation = recipe => Evaluate(900f, RunPolicy.ControlModePolicy.WithForced(true), RunState.Fresh);
+            TestRunner.Check(machine.CurrentChore == null, "默认模式超过 989.1 ℃ 建筑上限也不派工");
+            mod.Evaluation = recipe => Evaluate(1000f, RunPolicy.ControlModePolicy.WithForced(true), RunState.Fresh);
             machine.UpdateChore();
             TestRunner.Check(machine.CurrentChore != null, "强制运行仍允许越界操作");
             machine.Operational = false;

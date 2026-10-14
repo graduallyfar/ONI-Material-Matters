@@ -8,6 +8,8 @@ namespace MaterialOverhaul.Zones
     /// 配方标识由建筑名与材料名拼接而成（<c>ComplexRecipeManager.MakeRecipeID</c>），
     /// 直接写字符串容易因为标识格式或材料名变化而静默失配。接入层按本描述在原版配方表里解析出标识，
     /// 解析失败会记录可定位日志（V0.0.1 开发计划 §4.2、§9）。
+    ///
+    /// V0.1.2 起 `Zone` 只携带**配方最佳温区**两个边界；建筑下限与材料上限不在这里。
     /// </summary>
     public sealed class RecipeZoneSpec
     {
@@ -20,7 +22,7 @@ namespace MaterialOverhaul.Zones
         /// <summary>输出材料标识（元素 tag）。匹配与顺序无关。</summary>
         public string[] Outputs;
 
-        /// <summary>四个温度边界，单位开尔文。</summary>
+        /// <summary>配方最佳温区两个边界，单位开尔文。</summary>
         public TempZone Zone;
 
         /// <summary>数值来源说明，只用于日志与文档对照，不参与运算。</summary>
@@ -59,12 +61,15 @@ namespace MaterialOverhaul.Zones
     }
 
     /// <summary>
-    /// 已确认的配方温区数值。**只放用户已经定下的数值**，未定配方不在这里占位：
+    /// 已确认的配方最佳温区数值。**只放用户已经定下的数值**，未定配方不在这里占位：
     /// 未登记的配方保持原版行为，并由接入层记录一条待定日志（避免「名单内配方静默落空」）。
     ///
-    /// 已确认条目：
-    ///   - 金属精炼器 铝矿 → 铝：300 / 450 / 650 / 800 ℃，
-    ///     依次为最低可工作温度、最佳温区下限、最佳温区上限、最高可工作温度。
+    /// 已确认条目（建筑下限见 <see cref="BuildingZoneTable"/>，建筑上限由主建造材料推出）：
+    ///   - 金属精炼器 铝矿 → 铝：最佳温区 450–650 ℃。
+    ///
+    /// 旧版「300／450／650／800 ℃ 四边界」中的 300 ℃ 已改由建筑下限承担（本版 80 ℃），
+    /// 800 ℃ 不再是配方属性：它由主建造材料熔点 × 0.75 决定，因此同一配方可以用不同建材跑出
+    /// 不同的最高工作温度（建筑细节文档 §2.1.5）。
     /// </summary>
     public static class RecipeZoneCatalogue
     {
@@ -89,20 +94,10 @@ namespace MaterialOverhaul.Zones
                     FabricatorId = "MetalRefinery",
                     Inputs = new[] { "AluminumOre" },
                     Outputs = new[] { "Aluminum" },
-                    Zone = Celsius(300f, 450f, 650f, 800f),
-                    Source = "用户给定：铝矿生成铝 300/450/650/800 ℃"
+                    Zone = TempZone.Celsius(450f, 650f),
+                    Source = "用户给定：铝矿生成铝最佳温区 450–650 ℃（V0.1.2 起建筑下限与材料上限独立）"
                 }
             };
-        }
-
-        /// <summary>按摄氏度书写四个边界，统一在这里换算为开尔文。</summary>
-        private static TempZone Celsius(float workMin, float bestMin, float bestMax, float workMax)
-        {
-            return new TempZone(
-                Temperatures.FromCelsius(workMin),
-                Temperatures.FromCelsius(bestMin),
-                Temperatures.FromCelsius(bestMax),
-                Temperatures.FromCelsius(workMax));
         }
     }
 }

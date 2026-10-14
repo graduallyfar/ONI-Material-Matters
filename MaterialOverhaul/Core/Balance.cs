@@ -10,9 +10,11 @@ namespace MaterialOverhaul.Core
     ///   - **s**：时间。
     ///
     /// 数值性质分三档，改动时必须同时更新这里的注释与文档：
-    ///   - **已确认**：用户定下的规则（铝配方四边界、过热系数 0.85、补热 200 W、启动线公式）。
+    ///   - **已确认**：用户定下的规则（炼铝最佳温区 450–650 ℃、金属精炼器建筑下限 80 ℃、
+    ///     过热系数 0.75 按 K 计算、加热共用 20–4000 W 滑条、启动线公式比例 0.1）。
     ///   - **本版暂定**：为让机制可运行、可验收而给出的工作值，不代表最终平衡（倍率 1000、
-    ///     加热电功率、要求硬度、磨损速率、伤害转换、无限额度默认值与上限、恢复线回差）。
+    ///     加热默认值、要求硬度、磨损速率、伤害转换、无限额度默认值与上限、
+    ///     效率两侧底值 0.30／0.80、补热与高温恢复回差、上限不高于下限时的退回口径）。
     ///   - **实验参数**：只影响观察方式、不改变规则（降温趋势显示阈值）。
     /// </summary>
     public static class Balance
@@ -22,14 +24,14 @@ namespace MaterialOverhaul.Core
         /// <summary>原版金属精炼器额定生产用电（W）。原版建筑定义值，用于耗电矩阵与显示。</summary>
         public const float ProductionWatts = 1200f;
 
-        /// <summary>预热电功率（W）。本版暂定。</summary>
-        public const float PreheatWatts = 1200f;
+        /// <summary>预热、补热与强制持续加热共用滑条的下限（W）。v0.1.1 已确认。</summary>
+        public const float MinHeatingWatts = 20f;
 
-        /// <summary>正常生产中补热的**额外**电功率（W）。已确认：与生产额定用电相加。</summary>
-        public const float TopUpWatts = 200f;
+        /// <summary>共用加热滑条的上限（W），不包含原版生产用电。v0.1.1 已确认。</summary>
+        public const float MaxHeatingWatts = 4000f;
 
-        /// <summary>强制运行的持续加热电功率（W）。本版暂定。</summary>
-        public const float SustainedWatts = 1200f;
+        /// <summary>新建筑与旧存档的共用加热功率默认值（W），沿用原预热暂定值。</summary>
+        public const float DefaultHeatingWatts = 1200f;
 
         /// <summary>
         /// 「用电（W）→ 注热（kW）」测试倍率。本版暂定，沿用 v0.0.2 最后的测试口径。
@@ -38,37 +40,50 @@ namespace MaterialOverhaul.Core
         /// </summary>
         public const float HeatMultiplier = 1000f;
 
-        /// <summary>预热注热功率（kW）= 1200 W × 倍率。</summary>
-        public const float PreheatKilowatts = PreheatWatts / 1000f * HeatMultiplier;
-
-        /// <summary>补热注热功率（kW）= 200 W × 倍率。</summary>
-        public const float TopUpKilowatts = TopUpWatts / 1000f * HeatMultiplier;
-
-        /// <summary>强制运行持续加热注热功率（kW）= 1200 W × 倍率。</summary>
-        public const float SustainedKilowatts = SustainedWatts / 1000f * HeatMultiplier;
-
         // ---- 温度效率边界（§2.1、§2.2）----
 
-        /// <summary>最低可工作温度处的效率 η_T（≈0.30）。沿用暂定值。</summary>
+        /// <summary>
+        /// 低温侧边界效率 η_T（≈0.30）：在**建筑最低工作温度 L** 处取值，
+        /// 到配方最佳下限 B₁ 连续升到 100%。
+        ///
+        /// 本版暂定值，沿用旧实现的 0.30；V0.1.2 只改了段宽（旧实现用 L→B₁ 的配方低温段），
+        /// 没有改边界值。效率曲线与强制越界效率仍属 V0.1.2 开发计划 §7 第 2 项待定项。
+        /// </summary>
         public const float LowBoundaryEfficiency = 0.3f;
 
-        /// <summary>最高可工作温度处的效率 η_T（≈0.80）。沿用暂定值。</summary>
+        /// <summary>
+        /// 高温侧边界效率 η_T（≈0.80）：在**建筑最高工作温度 U** 处取值，
+        /// 从配方最佳上限 B₂ 起连续下降。本版暂定值，沿用旧实现的 0.80。
+        /// </summary>
         public const float HighBoundaryEfficiency = 0.8f;
 
         // ---- 启动、补热与恢复回差（§2.1、§3.2）----
 
-        /// <summary>启动线公式的十分之一系数。已确认公式：WorkMin + 0.1 × 低温段宽度。</summary>
+        /// <summary>
+        /// 建筑最低工作温度 L 的登记值：金属精炼器 80 ℃（用户 2026-10-14 给定）。
+        ///
+        /// V0.1.2 起 L **由建筑类型决定**，不随配方或建材改变；本版只登记这一栋。
+        /// 登记动作在 <c>ContentRegistration.RegisterBuildingZones</c>，这里只放数值。
+        /// </summary>
+        public const float MetalRefineryWorkMinCelsius = 80f;
+
+        /// <summary>启动线公式的十分之一系数。已确认公式：原目标 = 下限 + 0.1 × 区间宽度。</summary>
         public const float StartFraction = 0.1f;
 
         /// <summary>
-        /// 控制模式补热回差（K）：T &lt; 460 ℃ 开始补热，T ≥ 470 ℃ 停止。
-        /// 本版暂定，等于最佳温区宽度 200 K 的 5%（对应铝配方）。
+        /// 控制模式补热回差（K）。本版暂定，等于最佳温区宽度 200 K 的 5%（对应铝配方）。
+        ///
+        /// V0.1.2 起它只作为上界：实际回差还要满足「补热启动线不低于 B₁」与
+        /// 「不出现高于停止线的启动线」，取法见 V0.1.2 开发计划 §7 第 3 项。
         /// </summary>
         public const float TopUpHysteresisKelvin = 10f;
 
         /// <summary>
-        /// 默认模式高温暂停后的恢复回差（K）：T &gt; 800 ℃ 暂停，回落到 T ≤ 785 ℃ 才重新检查。
-        /// 本版暂定，取值等于 0.1 × 低温段宽度（铝配方 15 K）。
+        /// 默认模式高温暂停后的恢复回差（K）：暂停线为建筑上限 U，回落到 U − 回差 才重新检查。
+        /// 本版暂定，沿用旧实现的 15 K（旧口径为 0.1 × 铝配方低温段宽度）。
+        ///
+        /// 实际恢复线还会被钳制在 `[生产下限, 实际启动目标]` 内，因此窄交集与低熔点建材下
+        /// 不会出现倒置的恢复线。
         /// </summary>
         public const float DefaultHighRecoveryKelvin = 15f;
 

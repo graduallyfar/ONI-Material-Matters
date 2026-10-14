@@ -79,7 +79,8 @@ namespace MaterialOverhaul.Game
         private bool productionPausedByTemperature;
         public bool Spawned = true;
         public bool Active;
-        public string PrefabId { get { return "MetalRefinery"; } }
+        public string PrefabId { get; set; } = "MetalRefinery";
+        public bool SupportsBuiltInHeating { get { return HeatingScope.IsEnabled(PrefabId); } }
         public ComplexRecipe CurrentWorkingRecipe { get { return fabricator.CurrentWorkingOrder; } }
         public Func<ComplexRecipe, ProductionDecision> Evaluation;
         public bool Paused { get { return productionPausedByTemperature; } }

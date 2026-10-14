@@ -49,14 +49,18 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
-    /// 配方详情面板的温度行。
+    /// 配方详情面板的温度行（V0.1.2 §2.3.5）。
     ///
     /// 侧屏「配方详情」里的**效果**列表由 <c>SelectedRecipeQueueScreen.RefreshResultDescriptors</c>
     /// 取 `target.AdditionalEffectsForRecipe(配方)` 逐条生成，所以这里给配方追加一条说明：
     ///
-    /// <code>工作温区：300 °C ~ 800 °C（最佳温区 450 °C ~ 650 °C）</code>
+    /// <code>最佳温区：450 °C ~ 650 °C</code>
     ///
-    /// 只对**已有温区数值**的配方生效；`AdditionalEffectsForRecipe` 每次调用都新建列表，
+    /// **只显示配方自己的最佳温区。** V0.1.2 起建筑最低工作温度属于建筑类型、最高工作温度由
+    /// 主建造材料决定，两者都不再是配方属性；继续把旧「工作温区：300 °C ~ 800 °C」写在这里
+    /// 会让玩家以为换个建材也还是这个范围。
+    ///
+    /// 只对**已有最佳温区数值**的配方生效；`AdditionalEffectsForRecipe` 每次调用都新建列表，
     /// 因此每次刷新只追加一条，不会重复叠加。温度用 <c>GameUtil.GetFormattedTemperature</c>，
     /// 跟随玩家的温度单位设置。
     /// </summary>
@@ -75,7 +79,7 @@ namespace MaterialOverhaul.Patches
                 }
 
                 TempZone zone;
-                if (!RecipeZoneTable.TryGet(recipe.id, out zone) || zone.IsDisabled)
+                if (!RecipeZoneTable.TryGet(recipe.id, out zone) || !zone.Configured)
                 {
                     return;
                 }
@@ -88,8 +92,6 @@ namespace MaterialOverhaul.Patches
 
                 string text = string.Format(
                     template,
-                    GameUtil.GetFormattedTemperature(zone.WorkMin),
-                    GameUtil.GetFormattedTemperature(zone.WorkMax),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.BestMax));
 

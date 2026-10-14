@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MaterialOverhaul.Core;
 using MaterialOverhaul.Heating;
 using MaterialOverhaul.Zones;
 
@@ -15,6 +16,7 @@ namespace MaterialOverhaul.Tests
         public static void Run()
         {
             AluminumRecipeZone();
+            AluminumBuildingZone();
             AllEntriesAreUsable();
             MaterialMatching();
         }
@@ -30,19 +32,48 @@ namespace MaterialOverhaul.Tests
             }
 
             TestRunner.CheckEqual("Aluminum", spec.Outputs[0], "产物为铝");
-            TestRunner.CheckClose(573.15f, spec.Zone.WorkMin, Tol, "最低可工作温度 300 ℃");
-            TestRunner.CheckClose(723.15f, spec.Zone.BestMin, Tol, "最佳温区下限 450 ℃");
-            TestRunner.CheckClose(923.15f, spec.Zone.BestMax, Tol, "最佳温区上限 650 ℃");
-            TestRunner.CheckClose(1073.15f, spec.Zone.WorkMax, Tol, "最高可工作温度 800 ℃");
-            TestRunner.Check(spec.Zone.IsOrdered, "四边界升序且有限");
-            TestRunner.Check(!spec.Zone.IsDisabled, "不是退化温区");
+            TestRunner.CheckClose(723.15f, spec.Zone.BestMin, Tol, "配方最佳温区下限 450 ℃");
+            TestRunner.CheckClose(923.15f, spec.Zone.BestMax, Tol, "配方最佳温区上限 650 ℃");
+            TestRunner.Check(spec.Zone.Configured && spec.Zone.IsOrdered, "最佳温区已配置且升序、有限");
             TestRunner.Check(!string.IsNullOrEmpty(spec.Source), "记录数值来源");
 
-            // 铝矿 1357 K × 0.85 = 1153.45 K，高于 800 ℃ 的最高可工作温度：
-            // 用铝矿本身作为建造材料时，过热阈值足以覆盖该配方的整个工作温区。
+            // 建筑下限由建筑类型决定，不再是配方属性。
+            float floor;
+            TestRunner.Check(BuildingZoneCatalogue.TryGetFloorKelvin("MetalRefinery", out floor),
+                "建筑下限目录里有金属精炼器");
+            TestRunner.CheckClose(Temperatures.FromCelsius(80f), floor, Tol, "金属精炼器建筑下限 80 ℃");
+
+            // 登记到侧表后应能被查询（游戏侧再由 ContentRegistration 调用同一条）。
+            BuildingZoneTable.Register("MetalRefinery", floor);
+            float registered;
+            TestRunner.Check(BuildingZoneTable.TryGet("MetalRefinery", out registered), "登记后侧表可查到建筑下限");
+            TestRunner.CheckClose(floor, registered, Tol, "侧表数值与目录一致");
+
+            // 建筑材料上限：火成岩 1683 K × 0.75 = 1262.25 K，覆盖整个最佳区。
             float overheat;
-            OverheatRule.TryCompute(1357f, out overheat);
-            TestRunner.Check(overheat > spec.Zone.WorkMax, "铝矿熔点推出的过热阈值高于该配方最高可工作温度");
+            OverheatRule.TryCompute(1683f, out overheat);
+            TestRunner.Check(overheat > spec.Zone.BestMax, "火成岩熔点推出的建筑上限覆盖该配方最佳区");
+
+            // 花岗岩 942 K × 0.75 = 706.5 K = 433.35 ℃，低于最佳下限：控制模式不可达。
+            float granite;
+            OverheatRule.TryCompute(942f, out granite);
+            TestRunner.Check(granite < spec.Zone.BestMin, "花岗岩上限低于最佳下限（最佳温区不可达）");
+        }
+
+        private static void AluminumBuildingZone()
+        {
+            TestRunner.Section("建筑下限与配方最佳区互相独立");
+            RecipeZoneSpec spec = Find("MetalRefinery", "AluminumOre");
+            float floor;
+            BuildingZoneCatalogue.TryGetFloorKelvin("MetalRefinery", out floor);
+
+            // 同一栋建筑的 L 不随配方改变：换配方只换最佳区。
+            TestRunner.Check(floor > 0f, "建筑下限是建筑级数值");
+            TestRunner.Check(spec.Zone.BestMin > floor, "配方最佳下限不低于建筑下限");
+
+            // 目录里不应再有四边界：配方只携带两个边界。
+            TestRunner.CheckClose(723.15f, spec.Zone.BestMin, 0.01f, "配方条目只提供最佳下限");
+            TestRunner.CheckClose(923.15f, spec.Zone.BestMax, 0.01f, "配方条目只提供最佳上限");
         }
 
         private static void AllEntriesAreUsable()
@@ -55,8 +86,8 @@ namespace MaterialOverhaul.Tests
                 TestRunner.Check(!string.IsNullOrEmpty(spec.FabricatorId), "条目有建筑标识");
                 TestRunner.Check(spec.Inputs != null && spec.Inputs.Length > 0, "条目有输入材料");
                 TestRunner.Check(spec.Outputs != null && spec.Outputs.Length > 0, "条目有输出材料");
-                TestRunner.Check(spec.Zone.IsOrdered && !spec.Zone.IsDisabled,
-                    spec.FabricatorId + " 的温区数值合法");
+                TestRunner.Check(spec.Zone.IsOrdered && spec.Zone.Configured,
+                    spec.FabricatorId + " 的最佳温区数值合法");
             }
         }
 

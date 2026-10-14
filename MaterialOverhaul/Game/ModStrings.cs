@@ -42,10 +42,16 @@ namespace MaterialOverhaul.Game
                 {
 
                     /// <summary>
-                    /// 配方详情「效果」里的温度行。{0} 最低可工作温度、{1} 最高可工作温度、
-                    /// {2} 最佳温区下限、{3} 最佳温区上限。
+                    /// 配方详情「效果」里的温度行（V0.1.2：只显示**配方最佳温区**，不再是四边界）。
+                    /// {0} 最佳温区下限、{1} 最佳温区上限。
                     /// </summary>
-                    public static LocString RECIPE_TEMP_RANGE_DETAIL = "工作温区：{0} ~ {1}（最佳温区 {2} ~ {3}）";
+                    public static LocString RECIPE_TEMP_RANGE_DETAIL = "最佳温区：{0} ~ {1}";
+
+                    public static class HEATING_POWER
+                    {
+                        public static LocString TITLE = "加热功率";
+                        public static LocString TOOLTIP = "当前加热功率：{0} W。预热、补热与强制持续加热共用此设置（20–4000 W）。生产时加热用电额外计入，总用电为生产用电与加热用电之和。设置随本建筑保存。";
+                    }
 
                 }
             }
@@ -59,9 +65,10 @@ namespace MaterialOverhaul.Game
                     public static LocString OVERHEAT_LINE = "过热温度：{0}";
 
                     /// <summary>
-                    /// 过热温度行的提示：{0} 主建造材料名、{1} 材料熔点、{2} 过热阈值、{3} 致命温度。
+                    /// 过热温度行的提示（V0.1.2：75% 按 K 计算，且该值同时是建筑最高工作温度）。
+                    /// {0} 主建造材料名、{1} 材料熔点、{2} 过热阈值／最高工作温度、{3} 致命温度。
                     /// </summary>
-                    public static LocString OVERHEAT_TOOLTIP = "材料革新：过热阈值 = 主建造材料 {0} 的熔点 {1} × 85% = {2}。\n建筑本体超过该温度会过热受损；温区上限只停止生产，不提供耐热保护。\n致命温度：{3}。";
+                    public static LocString OVERHEAT_TOOLTIP = "材料革新：最高工作温度 = 过热阈值 = 主建造材料 {0} 的熔点 {1} × 75%（按开尔文计算）= {2}。\n建筑本体超过该温度时，默认／控制模式停产并停止内置加热，只有强制运行允许越界生产。\n温区停机不提供耐热保护；致命温度：{3}。";
 
                     public static LocString HEAT_PREHEAT = "预热中";
 
@@ -113,6 +120,36 @@ namespace MaterialOverhaul.Game
                         public static LocString PRODUCING_HIGH = "高温低效生产";
 
                         public static LocString COOLING = "降温中";
+
+                        /// <summary>需要升温但没有实际注热：不假称为预热中（V0.1.2 §4.2）。</summary>
+                        public static LocString WAITING_HEAT = "等待升温";
+
+                        /// <summary>最佳温区不可达且已停在受限目标：温度受限 · 生产暂停。</summary>
+                        public static LocString TEMP_LIMITED = "温度受限 · 生产暂停";
+
+                        /// <summary>独立温区限制提示：最佳温区整体高于建筑上限（V0.1.2 §4.1 第 3 条）。</summary>
+                        public static LocString ZONE_UNREACHABLE = "最佳温区不可达";
+
+                        /// <summary>独立温区限制提示：最佳区高侧被建筑上限截断，但仍有交集。</summary>
+                        public static LocString ZONE_LIMITED = "最佳温区受限";
+
+                        /// <summary>
+                        /// 状态悬停的温区说明行。{0} 本体温度、{1} 建筑下限、{2} 建筑上限、
+                        /// {3} 主建造材料、{4} 配方最佳下限、{5} 配方最佳上限。
+                        /// </summary>
+                        public static LocString ZONE_DETAIL = "本体温度 {0}；建筑工作范围 {1} ~ {2}（主建造材料 {3}）；配方最佳温区 {4} ~ {5}";
+
+                        /// <summary>加热目标未受限时的一行：{0} 实际目标。</summary>
+                        public static LocString ZONE_TARGET = "加热目标 {0}";
+
+                        /// <summary>加热目标被建筑上限封顶时：{0} 原目标、{1} 实际目标。</summary>
+                        public static LocString ZONE_TARGET_CAPPED = "加热目标：原目标 {0}，实际目标 {1}（受建筑上限限制）";
+
+                        /// <summary>不可达时的完整说明：{0} 配方最佳下限、{1} 建筑上限。</summary>
+                        public static LocString ZONE_UNREACHABLE_DETAIL = "普通控制模式需要配方最佳下限 {0}，但本建筑上限只有 {1}：普通控制模式没有可用温区，预热到上限后停止并保持暂停，不自动跳单。改用默认模式或熔点更高的建材才能生产。";
+
+                        /// <summary>受限时的完整说明：{0}B₁、{1}可用上限、{2}B₂、{3}L、{4}U。</summary>
+                        public static LocString ZONE_LIMITED_DETAIL = "普通控制模式可用区间 {0} ~ {1}（受建筑上限限制，配方最佳上限 {2}）；默认模式仍在 {3} ~ {4} 内按低温／高温效率生产。";
                     }
                 }
             }
@@ -138,7 +175,7 @@ namespace MaterialOverhaul.Game
                     /// 建筑信息卡描述里追加的一句话：告诉玩家本建筑需要处在配方的工作温区内。
                     /// 由 <c>BuildingDef.Desc</c> 的后置补丁追加到原版描述之后，只对已有温区数值的建筑生效。
                     /// </summary>
-                    public static LocString TEMPZONE_NOTE = "本建筑按配方温区运行，最佳温区内满效率；具体工作温区见配方详情。输出接线使用控制模式，未接线使用默认模式。";
+                    public static LocString TEMPZONE_NOTE = "本建筑按温区运行：最低工作温度由建筑类型决定，最高工作温度等于过热阈值（主建造材料熔点 × 75%）；配方只决定最佳温区，最佳温区内满效率。输出接线使用控制模式，未接线使用默认模式。";
                 }
             }
         }
@@ -172,6 +209,16 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString NAME = "超过过热阈值";
                         public static LocString TOOLTIP = "建筑本体已超过实际过热阈值，存在过热受损风险。温区停机不提供耐热保护。";
+                    }
+
+                    /// <summary>
+                    /// 独立温区限制提示（V0.1.2 §4.1 第 3 条）：只说明普通控制生产被建材上限限制，
+                    /// 不冒充损坏，也不把默认模式的低效生产写成停产。
+                    /// </summary>
+                    public static class ZONELIMIT
+                    {
+                        public static LocString NAME = "温区受限";
+                        public static LocString TOOLTIP = "配方最佳温区与本建筑可用范围不完整匹配；限制针对普通控制生产。默认模式仍可在建筑工作范围内按低温／高温效率生产，强制运行可越过建筑上限。";
                     }
 
                     public static class MECHANICAL
@@ -241,14 +288,14 @@ namespace MaterialOverhaul.Game
             }
 
             // STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
-            // 过热温度属性修正项的说明文本（v0.0.2：过热阈值 = 主建造材料熔点 × 85%）。
+            // 过热温度属性修正项的说明文本（v0.1.2：最高工作温度 = 过热阈值 = 主建造材料熔点 × 75%）。
             public static class ATTRIBUTES
             {
                 public static class MATERIALOVERHAUL
                 {
                     public static class OVERHEAT
                     {
-                        public static LocString DESCRIPTION = "材料革新：过热阈值取主建造材料熔点的 85%";
+                        public static LocString DESCRIPTION = "材料革新：最高工作温度＝过热阈值，取主建造材料熔点的 75%（按开尔文计算）";
                     }
                 }
             }

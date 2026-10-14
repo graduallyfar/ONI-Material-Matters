@@ -32,12 +32,37 @@ namespace MaterialOverhaul.Game
             get { return zonesResolved; }
         }
 
-        /// <summary>登记过热规则、配方温区与要求硬度。可重复调用：已登记的条目不重复写入。</summary>
+        /// <summary>登记过热规则、建筑最低工作温度、配方最佳温区与要求硬度。可重复调用：已登记的条目不重复写入。</summary>
         public static void Apply()
         {
             RegisterOverheatRules();
+            RegisterBuildingZones();
             RegisterHardnessRequirements();
             RegisterRecipeZones();
+        }
+
+        /// <summary>
+        /// 建筑最低工作温度 L（V0.1.2 开发计划 §1.1、§2.1）：L **由建筑类型决定**，
+        /// 切配方与换建材都不改变它，因此按建筑登记一次。
+        ///
+        /// 本版只有金属精炼器：80 ℃（用户 2026-10-14 给定）。
+        /// 未登记的建筑不启用本 Mod 温控，行为等同原版。
+        /// </summary>
+        public static void RegisterBuildingZones()
+        {
+            foreach (KeyValuePair<string, float> entry in BuildingZoneCatalogue.All)
+            {
+                float existing;
+                if (BuildingZoneTable.TryGet(entry.Key, out existing))
+                {
+                    continue;
+                }
+
+                BuildingZoneTable.Register(entry.Key, entry.Value);
+                ModLog.Info("建筑温区：" + entry.Key + " 最低工作温度 " + entry.Value.ToString("F2")
+                    + " K（" + Temperatures.ToCelsius(entry.Value).ToString("F1")
+                    + " ℃），由建筑类型决定，不随配方或建材改变。");
+            }
         }
 
         /// <summary>
@@ -60,6 +85,13 @@ namespace MaterialOverhaul.Game
                 ModLog.Info("要求硬度：" + prefabId + " 要求硬度 "
                     + Balance.MetalRefineryRequiredHardness + "（本版暂定，使用原版 Element.hardness 分级）。");
             }
+        }
+
+        /// <summary>该建筑是否已经有了最低工作温度数值（建筑级，与配方无关）。</summary>
+        public static bool HasBuildingFloor(string prefabId)
+        {
+            float floor;
+            return BuildingZoneTable.TryGet(prefabId, out floor);
         }
 
         /// <summary>
@@ -85,8 +117,8 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 纳入温区数值的建筑同时启用「过热阈值 = 主建造材料熔点 × 85%」的规则。
-        /// 没有确认温区数值的建筑暂不启用，避免在没有温度需求的前提下改动原版过热阈值。
+        /// 纳入温区数值的建筑同时启用「最高工作温度 = 过热阈值 = 主建造材料熔点 × 0.75」的规则
+        /// （V0.1.2 §2.1.5）。没有确认温区数值的建筑暂不启用，避免在没有温度需求的前提下改动原版过热阈值。
         /// </summary>
         public static void RegisterOverheatRules()
         {
@@ -113,7 +145,7 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        /// <summary>按目录条目解析原版配方标识并登记四边界。</summary>
+        /// <summary>按目录条目解析原版配方标识并登记最佳温区。</summary>
         public static void RegisterRecipeZones()
         {
             ComplexRecipeManager manager = ComplexRecipeManager.Get();
@@ -148,8 +180,17 @@ namespace MaterialOverhaul.Game
 
                 RecipeZoneTable.Register(recipe.id, spec.Zone);
                 registered++;
-                ModLog.Info("配方温区：" + recipe.id + " 登记为 " + spec.Zone
+                ModLog.Info("配方温区：" + recipe.id + " 最佳温区登记为 " + spec.Zone
                     + "（" + spec.Source + "）。");
+
+                // 「建筑下限 + 配方最佳区 + 主材料上限」三者齐备才算这条配方能用：
+                // 建筑没有下限数值时整条退化为原版行为，这里提前说清是哪一半缺的。
+                if (!HasBuildingFloor(spec.FabricatorId))
+                {
+                    ModLog.WarnOnce("zone|no-floor|" + spec.FabricatorId,
+                        "配方温区：" + spec.FabricatorId + " 还没有建筑最低工作温度数值，"
+                        + "该建筑的配方暂按原版行为运行（可先补建筑下限，配方最佳区已登记）。");
+                }
             }
 
             // 只有整份目录都解析出来才算「登记完成」；否则保留一次兜底重试的机会。
@@ -192,8 +233,8 @@ namespace MaterialOverhaul.Game
                 }
 
                 ModLog.WarnOnce("zone|pending|" + prefabId,
-                    prefabId + "：配方温区已配置 " + configured + "/" + total
-                    + " 条，其余配方暂按原版行为运行（四边界数值待定）。");
+                    prefabId + "：配方最佳温区已配置 " + configured + "/" + total
+                    + " 条，其余配方暂按原版行为运行（最佳温区数值待定）。");
             }
         }
 

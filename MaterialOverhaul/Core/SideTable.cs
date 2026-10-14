@@ -27,6 +27,12 @@ namespace MaterialOverhaul.Core
             get { return kind; }
         }
 
+        /// <summary>当前登记的全部索引；只用于日志与接入层校验，不参与判断。</summary>
+        public IEnumerable<string> Keys
+        {
+            get { return entries.Keys; }
+        }
+
         /// <summary>登记一条。重复登记同一索引视为配置错误：保留先登记的值并记录日志。</summary>
         public void Set(string id, TValue value)
         {
