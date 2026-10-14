@@ -39,7 +39,8 @@ namespace MaterialOverhaul.Game
 
         private static StatusItem Create(string id, string suffix, NotificationType notification)
         {
-            return new StatusItem(id, "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL." + suffix,
+            string prefix = "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL." + suffix;
+            return new StatusItem(id, Strings.Get(prefix + ".NAME"), Strings.Get(prefix + ".TOOLTIP"),
                 "status_item_exclamation", StatusItem.IconType.Custom, notification,
                 false, OverlayModes.None.ID);
         }

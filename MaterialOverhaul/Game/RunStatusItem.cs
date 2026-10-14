@@ -75,7 +75,8 @@ namespace MaterialOverhaul.Game
                 StatusItem.IconType.Custom,
                 NotificationType.Neutral,
                 allow_multiples: false,
-                OverlayModes.None.ID);
+                OverlayModes.None.ID,
+                showWorldIcon: false);
 
             Item.resolveStringCallback = (text, data) => Resolve(text, data, false);
             Item.resolveTooltipCallback = (text, data) => Resolve(text, data, true);

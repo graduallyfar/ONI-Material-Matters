@@ -41,6 +41,7 @@ namespace MaterialOverhaul
             LogBalanceSummary();
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
             ModLog.Info("v0.2.0 首发三建筑已接入：全量配方温区、独立效率与磨损、交集回差、注热倍率100；粉碎机无内置加热。");
+            ModLog.Info("v0.2.1 界面修订：风险／损坏文本使用完整键读取；模式与运行项仅显示状态栏，不绘制无制作队列的世界图标。");
         }
 
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>

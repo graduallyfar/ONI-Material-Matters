@@ -48,7 +48,12 @@ public sealed class BuildingHP
     public bool NeedsRepairs { get { return HitPoints < 100; } }
 }
 
-public sealed class Overheatable { public MaterialOverhaulFab Mod; }
+public sealed class Overheatable
+{
+    public MaterialOverhaulFab Mod;
+    public float OverheatTemperature;
+    public T GetComponent<T>() where T : class { return Mod as T; }
+}
 
 namespace MaterialOverhaul.Game
 {

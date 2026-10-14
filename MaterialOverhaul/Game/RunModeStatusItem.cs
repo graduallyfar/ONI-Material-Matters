@@ -16,7 +16,7 @@ namespace MaterialOverhaul.Game
             Category = new StatusItemCategory("MaterialOverhaulRunModeCategory", db.StatusItemCategories, "Material Overhaul mode");
             db.StatusItemCategories.Add(Category);
             Item = new StatusItem("MaterialOverhaulRunMode", "{0}", "{0}", "status_item_fabricator_select",
-                StatusItem.IconType.Custom, NotificationType.Neutral, false, OverlayModes.None.ID);
+                StatusItem.IconType.Custom, NotificationType.Neutral, false, OverlayModes.None.ID, showWorldIcon: false);
             Item.resolveStringCallback = (text, data) => Name(data as MaterialOverhaulFab);
             Item.resolveTooltipCallback = (text, data) => Tooltip(data as MaterialOverhaulFab);
             db.BuildingStatusItems.Add(Item);

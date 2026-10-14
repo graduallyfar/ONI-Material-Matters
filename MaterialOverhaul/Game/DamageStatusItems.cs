@@ -13,7 +13,7 @@ namespace MaterialOverhaul.Game
     /// 正是本机制的目的（不能只保留最后一次伤害提示）；运行状态不写进 Main，
     /// 避免把原版断电、缺料等关键状态遮掉。
     ///
-    /// 状态项文本沿用原版惯例：<c>prefix + ".NAME"</c> 与 <c>prefix + ".TOOLTIP"</c>。
+    /// 用完整键读取 NAME／TOOLTIP，再调用显式文本构造重载；完整键不能传给会再次拼接的 prefix 重载。
     /// </summary>
     public static class DamageStatusItems
     {
@@ -96,7 +96,8 @@ namespace MaterialOverhaul.Game
         {
             StatusItem item = new StatusItem(
                 id,
-                prefix,
+                Strings.Get(prefix + ".NAME"),
+                Strings.Get(prefix + ".TOOLTIP"),
                 Icon,
                 StatusItem.IconType.Custom,
                 NotificationType.BadMinor,

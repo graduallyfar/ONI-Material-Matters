@@ -22,5 +22,13 @@ public interface ISingleSliderControl
 
 public static class Strings
 {
-    public static string Get(string key) { return "当前加热功率：{0} W"; }
+    public static readonly System.Collections.Generic.Dictionary<string, string> Values = new System.Collections.Generic.Dictionary<string, string>();
+    public static string Get(string key)
+    {
+        string value;
+        if (Values.TryGetValue(key, out value)) return value;
+        // 旧滑条测试不运行本地化登记；其它未知键必须如实暴露，不能用固定文本掩盖查找错误。
+        return key == "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TOOLTIP"
+            ? "当前加热功率：{0} W" : "MISSING." + key;
+    }
 }
