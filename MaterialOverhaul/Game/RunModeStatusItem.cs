@@ -26,19 +26,19 @@ namespace MaterialOverhaul.Game
         public static string Name(MaterialOverhaulFab fab)
         {
             if (fab == null || !fab.ModeConnectionReady)
-                return Text("PENDING", "运行模式：等待自动化网络就绪");
-            string name = fab.Policy.ControlMode ? Text("CONTROL", "运行模式：控制模式") : Text("DEFAULT", "运行模式：默认模式");
+                return Text("PENDING", "等待自动化就绪");
+            string name = fab.Policy.ControlMode ? Text("CONTROL", "控制模式") : Text("DEFAULT", "默认模式");
             return fab.Policy.Forced ? name + " · " + Text("FORCED", "强制运行已开启") : name;
         }
 
         private static string Tooltip(MaterialOverhaulFab fab)
         {
             if (fab == null || !fab.ModeConnectionReady)
-                return Text("PENDING_TOOLTIP", "自动化网络尚未重建，保留存档模式与温控回差，暂不生产或加热。");
+                return Text("PENDING_TOOLTIP", "自动化网络未就绪：保留存档模式与温控回差，暂不生产或加热。");
             string text = fab.Policy.ControlMode
-                ? Text("CONTROL_TOOLTIP", "温区输出端口已接线，只在最佳温区内生产，仍受启动与恢复条件约束。")
-                : Text("DEFAULT_TOOLTIP", "温区输出端口未接线，在整个可工作温区内生产，仍受启动与恢复条件约束。");
-            if (fab.Policy.Forced) text += "\n" + Text("FORCED_TOOLTIP", "强制运行覆盖温区停机限制并持续加热；关闭后按当时的输出接线重判。材料、供电、自动化许可、操作和建筑完好条件仍有效。");
+                ? Text("CONTROL_TOOLTIP", "输出端口已接线：只在最佳温区内生产。红绿值不决定模式，绿色不代表正在生产。")
+                : Text("DEFAULT_TOOLTIP", "输出端口未接线：在整个工作温区生产。输入端接线与红绿值不决定模式。");
+            if (fab.Policy.Forced) text += "\n" + Text("FORCED_TOOLTIP", "覆盖温区停机限制；过热受损后停止内置加热，完全维修后解除。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。");
             return text;
         }
 

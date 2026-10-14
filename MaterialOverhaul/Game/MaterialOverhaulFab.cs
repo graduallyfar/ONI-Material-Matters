@@ -589,8 +589,8 @@ namespace MaterialOverhaul.Game
                 ? LocalizedOr(KeyForcedDisable, "Disable Forced Run")
                 : LocalizedOr(KeyForcedEnable, "Enable Forced Run");
             string forcedTooltip = forcedRun
-                ? LocalizedOr(KeyForcedTooltipDisable, "Forced run is on. Turning it off re-evaluates production permission under the selected mode.")
-                : LocalizedOr(KeyForcedTooltipEnable, "Forced run: keep producing outside the working temperature range and keep heating.");
+                ? LocalizedOr(KeyForcedTooltipDisable, "Turning it off re-evaluates production permission from the output port wiring at that moment and keeps the current batch.")
+                : LocalizedOr(KeyForcedTooltipEnable, "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required.");
 
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_power",
@@ -636,7 +636,7 @@ namespace MaterialOverhaul.Game
             if (!hasRequirement)
             {
                 return string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE", "主建造材料 {0}，生命值 {1}；该建筑未登记要求硬度，不产生机械磨损。"),
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_NONE", "{0} · 无硬度要求，不磨损（HP {1}）"),
                     material, hp);
             }
 
@@ -647,12 +647,12 @@ namespace MaterialOverhaul.Game
             if (!HasHardnessDeficit())
             {
                 return string.Format(
-                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_OK", "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度合格，机械磨损为零。"),
+                    LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_OK", "{0} · 硬度 {1}/{2} · 无机械磨损（HP {3}）"),
                     material, actual, required, hp);
             }
 
             return string.Format(
-                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "主建造材料 {0}，硬度 {1}/{2}，生命值 {3}；硬度不足，按实际生产时间磨损（{4} 磨损单位/生产秒，{5} HP/磨损单位）。"),
+                LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "{0} · 硬度 {1}/{2} 不足，按生产时间磨损（HP {3}，{4} 磨损/生产秒，{5} HP/磨损单位）"),
                 material, actual, required, hp,
                 DamageConversion.WearPerProductionSecond.ToString("F2"),
                 DamageConversion.DamagePerWearUnit.ToString("F3"));

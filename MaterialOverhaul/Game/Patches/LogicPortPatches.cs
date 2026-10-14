@@ -59,8 +59,8 @@ namespace MaterialOverhaul.Patches
                 }
 
                 string description = PortText(KeyDescription, "温区信号");
-                string active = PortText(KeyActive, "已锁定配方，且本体温度位于最佳温区。接线使用控制模式，绿色不代表正在生产。");
-                string inactive = PortText(KeyInactive, "未锁定配方，或本体温度不在最佳温区。未接线使用默认模式。");
+                string active = PortText(KeyActive, "已锁定配方且温度在最佳温区；接线即控制模式，绿色不代表正在生产。");
+                string inactive = PortText(KeyInactive, "未锁定配方或温度不在最佳温区；未接线即默认模式。");
 
                 bool found = Rewrite(__instance.outputPortInfo, TemperatureZoneSignal.PortId, description, active, inactive);
 
@@ -73,8 +73,8 @@ namespace MaterialOverhaul.Patches
                         __instance.inputPortInfo,
                         AutomationControlScope.PortId,
                         PortText(KeyControlDescription, "允许／暂停生产"),
-                        PortText(KeyControlActive, "允许生产；未接线默认放行，仍受其它开工条件约束。"),
-                        PortText(KeyControlInactive, "暂停生产，不影响配方准备、预热与补热。"));
+                        PortText(KeyControlActive, "绿色：允许生产（仍需材料、供电与开工条件）；未接线默认放行"),
+                        PortText(KeyControlInactive, "红色：暂停生产；不影响配方准备、预热与补热"));
                 }
 
                 if (found)

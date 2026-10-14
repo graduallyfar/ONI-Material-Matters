@@ -521,7 +521,7 @@ namespace MaterialOverhaul.Game
         /// <summary>热量来源说明，供原版显示运行能量来源。数值口径见 <see cref="Balance"/>。</summary>
         private string HeatSourceDescription
         {
-            get { return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SOURCE", "材料革新：内置加热"); }
+            get { return LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HEAT_SOURCE", "内置加热"); }
         }
 
         /* ---- 降温趋势（只影响显示）---- */

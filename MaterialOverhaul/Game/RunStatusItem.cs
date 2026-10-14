@@ -52,10 +52,10 @@ namespace MaterialOverhaul.Game
 
             registered = true;
 
-            nameFormat = MaterialOverhaulFab.LocalizedOr(NameKey, "Material Overhaul: {0}");
+            nameFormat = MaterialOverhaulFab.LocalizedOr(NameKey, "{0}");
             tooltipFormat = MaterialOverhaulFab.LocalizedOr(
                 TooltipKey,
-                "Material Overhaul status: {0}\nBody temperature {1}, temperature efficiency {2}\nRequested power {3}, power used {4}, heat injected {5}\nCurrent batch progress {6}");
+                "Temperature {1} · efficiency {2} · batch {6}\nPower {4} (requested {3}) · heat injected {5}");
 
             Db db = Db.Get();
             if (db == null)

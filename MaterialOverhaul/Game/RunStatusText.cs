@@ -137,7 +137,7 @@ namespace MaterialOverhaul.Game
                     return Localized("SUSTAINED", "持续加热");
 
                 case RunStatusKind.AutomationPaused:
-                    return Localized("AUTOMATION_PAUSED", "生产已被自动化暂停");
+                    return Localized("AUTOMATION_PAUSED", "自动化暂停生产");
 
                 case RunStatusKind.WaitingWorker:
                     return Localized("WAITING_WORKER", "等待操作");
@@ -230,7 +230,7 @@ namespace MaterialOverhaul.Game
             ResolvedZone zone = fab.CurrentZone;
             string text = string.Format(
                 Localized("ZONE_DETAIL",
-                    "本体温度 {0}；建筑工作范围 {1} ~ {2}（主建造材料 {3}）；配方最佳温区 {4} ~ {5}"),
+                    "温度 {0} · 工作范围 {1} ~ {2}（{3}）· 最佳温区 {4} ~ {5}"),
                 GameUtil.GetFormattedTemperature(fab.BodyTemperature),
                 GameUtil.GetFormattedTemperature(zone.Min),
                 GameUtil.GetFormattedTemperature(zone.Max),
@@ -244,7 +244,7 @@ namespace MaterialOverhaul.Game
             if (actual < original - 0.01f)
             {
                 text = text + "\n" + string.Format(
-                    Localized("ZONE_TARGET_CAPPED", "加热目标：原目标 {0}，实际目标 {1}（受建筑上限限制）"),
+                    Localized("ZONE_TARGET_CAPPED", "加热目标 {1}（原 {0}，受建材上限限制）"),
                     GameUtil.GetFormattedTemperature(original),
                     GameUtil.GetFormattedTemperature(actual));
             }
@@ -259,7 +259,7 @@ namespace MaterialOverhaul.Game
             {
                 text = text + "\n" + string.Format(
                     Localized("ZONE_UNREACHABLE_DETAIL",
-                        "普通控制模式需要配方最佳下限 {0}，但本建筑上限只有 {1}：普通控制模式没有可用温区，预热到上限后停止并保持暂停，不自动跳单。改用默认模式或熔点更高的建材才能生产。"),
+                        "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，预热到上限后暂停，不自动跳单。改用默认模式或熔点更高的建材。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.Max));
             }
@@ -267,7 +267,7 @@ namespace MaterialOverhaul.Game
             {
                 text = text + "\n" + string.Format(
                     Localized("ZONE_LIMITED_DETAIL",
-                        "普通控制模式可用区间 {0} ~ {1}（受建筑上限限制，配方最佳上限 {2}）；默认模式仍在 {3} ~ {4} 内按低温／高温效率生产。"),
+                        "控制模式可用 {0} ~ {1}（受建材上限限制，最佳上限 {2}）；默认模式仍在 {3} ~ {4} 内按效率生产。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.ControlMax),
                     GameUtil.GetFormattedTemperature(zone.BestMax),
