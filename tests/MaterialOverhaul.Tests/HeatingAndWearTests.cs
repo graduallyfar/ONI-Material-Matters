@@ -18,10 +18,16 @@ namespace MaterialOverhaul.Tests
 
         private static void StartThresholds()
         {
-            TestRunner.Section("启动阈值");
-            TempZone zone = new TempZone(278.15f, 308.15f, 328.15f, 348.15f);
-            TestRunner.CheckClose(281.15f, StartThreshold.Default(zone), Tol, "默认模式 = WorkMin + 10% 的低温段宽度");
-            TestRunner.CheckClose(310.15f, StartThreshold.Control(zone), Tol, "控制模式 = BestMin + 10% 的最佳温区宽度");
+            TestRunner.Section("启动阈值（V0.1.2：原目标公式不变，来源改为建筑下限）");
+            ResolvedZone zone = RunPolicyAndHeatingTests.Resolve(5f, 35f, 55f, 75f);
+            TestRunner.CheckClose(278.15f + 0.1f * 30f, StartThreshold.OriginalDefault(zone), Tol,
+                "默认原目标 = L + 10% 的低温段宽度");
+            TestRunner.CheckClose(308.15f + 0.1f * 20f, StartThreshold.OriginalControl(zone), Tol,
+                "控制原目标 = B₁ + 10% 的最佳温区宽度");
+            TestRunner.CheckClose(281.15f, StartThreshold.Start(zone, RunPolicy.DefaultMode), Tol,
+                "上限高于原目标时不封顶");
+            TestRunner.CheckClose(310.15f, StartThreshold.Start(zone, RunPolicy.ControlModePolicy), Tol,
+                "控制模式实际目标等于原目标");
         }
 
         private static void HeatingGate()
@@ -60,23 +66,14 @@ namespace MaterialOverhaul.Tests
 
         private static void HeatingPowerMapping()
         {
-            TestRunner.Section("加热功率映射（v0.0.2 测试值：用电 → 注热 1:1000）");
+            TestRunner.Section("加热功率映射（v0.1.1 共用滑条，暂定倍率 1000）");
             TestRunner.CheckClose(1000f, HeatingPower.TestHeatMultiplier, Tol, "测试倍率为 1000");
             TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "预热 1200 W 用电 × 1000 = 1200 kW");
-            TestRunner.CheckClose(200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热 200 W 用电 × 1000 = 200 kW");
+            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热沿用共用滑条默认 1200 W");
             TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.Sustained), Tol, "持续加热沿用预热值");
             TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.None), Tol, "None 意图不注热");
-            TestRunner.Check(HeatingPower.IsConfigured, "默认已配置测试值");
-
-            HeatingPower.PreheatKilowatts = 12f;
-            HeatingPower.TopUpKilowatts = 0f;
-            TestRunner.CheckClose(12f, HeatingPower.KilowattsFor(HeatingIntent.Preheat), Tol, "改写后取新值");
-            TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "改写为 0 的项不注热");
-
-            // 复位为测试值，避免影响其他用例。
-            HeatingPower.PreheatKilowatts = 1.2f * HeatingPower.TestHeatMultiplier;
-            HeatingPower.TopUpKilowatts = 0.2f * HeatingPower.TestHeatMultiplier;
-            HeatingPower.SustainedKilowatts = 1.2f * HeatingPower.TestHeatMultiplier;
+            TestRunner.CheckClose(20f, HeatingPower.KilowattsFor(HeatingIntent.Preheat, 20f), Tol, "最低功率对应注热");
+            TestRunner.CheckClose(4000f, HeatingPower.KilowattsFor(HeatingIntent.TopUp, 4000f), Tol, "最高功率对应补热注热");
         }
 
         private static void Wear()

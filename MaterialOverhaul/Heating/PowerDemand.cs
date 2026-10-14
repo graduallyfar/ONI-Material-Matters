@@ -31,6 +31,9 @@ namespace MaterialOverhaul.Heating
 
         /// <summary>本步提出的加热意图（尚未扣除供电条件）。</summary>
         public HeatingIntent CommandedHeating;
+
+        /// <summary>本建筑的共用加热设置（W）；0 缺省时使用默认值。</summary>
+        public float ConfiguredHeatingWatts;
     }
 
     /// <summary>
@@ -86,7 +89,7 @@ namespace MaterialOverhaul.Heating
                 context.TemperatureAllowsProduction && context.AutomationAllowsProduction && context.HasWorker;
 
             demand.RequestedProductionWatts = productionAllowedByMachine ? Balance.ProductionWatts : 0f;
-            demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(context.CommandedHeating);
+            demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(context.CommandedHeating, context.ConfiguredHeatingWatts);
 
             if (!context.PowerAvailable)
             {

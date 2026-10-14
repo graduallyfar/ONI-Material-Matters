@@ -5,7 +5,7 @@ namespace MaterialOverhaul.Tests
 {
     /// <summary>
     /// 耗电矩阵与电力口径（V0.0.3 开发计划 §4.1、§9.1「加热与功耗」）。
-    /// 前提：原版生产功率 1200 W、加热 1200／200／1200 W、倍率 1000。
+    /// v0.1.1：原版生产功率 1200 W、三种加热共用默认 1200 W、倍率 1000。
     /// </summary>
     public static class PowerDemandTests
     {
@@ -75,14 +75,14 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(0f, HeatingPower.KilowattsFor(HeatingIntent.None), Tol, "生产无加热不注热");
 
             PowerDemand topUp = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.TopUp));
-            Check(topUp, 1200f, 200f, "控制生产并补热");
-            TestRunner.CheckClose(200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热注热 200 kW");
+            Check(topUp, 1200f, 1200f, "控制生产并补热");
+            TestRunner.CheckClose(1200f, HeatingPower.KilowattsFor(HeatingIntent.TopUp), Tol, "补热默认注热 1200 kW");
 
             PowerDemand redTopUp = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.TopUp, automation: false));
-            Check(redTopUp, 0f, 200f, "红信号停产仍需补热");
+            Check(redTopUp, 0f, 1200f, "红信号停产仍需补热");
 
             PowerDemand waitingTopUp = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.TopUp, worker: false));
-            Check(waitingTopUp, 0f, 200f, "等操作工仍需补热");
+            Check(waitingTopUp, 0f, 1200f, "等操作工仍需补热");
 
             PowerDemand forced = PowerDemand.Evaluate(With(Base(), heating: HeatingIntent.Sustained));
             Check(forced, 1200f, 1200f, "强制生产并持续加热");
@@ -104,13 +104,13 @@ namespace MaterialOverhaul.Tests
             TestRunner.Section("断电时保留需求");
             PowerDemandContext context = With(Base(), heating: HeatingIntent.TopUp, powered: false);
             PowerDemand demand = PowerDemand.Evaluate(context);
-            TestRunner.CheckClose(1400f, demand.RequestedTotalWatts, Tol, "断电时仍请求 1400 W");
+            TestRunner.CheckClose(2400f, demand.RequestedTotalWatts, Tol, "断电时仍请求 2400 W");
             TestRunner.CheckClose(0f, demand.UsedTotalWatts, Tol, "断电时不消费、不注热");
             TestRunner.CheckEqual(HeatingIntent.None, demand.AppliedHeating, "断电时不注入热量");
 
             context.PowerAvailable = true;
             PowerDemand restored = PowerDemand.Evaluate(context);
-            TestRunner.CheckClose(1400f, restored.UsedTotalWatts, Tol, "恢复供电后立即按需求消费");
+            TestRunner.CheckClose(2400f, restored.UsedTotalWatts, Tol, "恢复供电后立即按需求消费");
             TestRunner.CheckEqual(HeatingIntent.TopUp, restored.AppliedHeating, "恢复供电后立即注热");
         }
 

@@ -21,6 +21,7 @@ namespace MaterialOverhaul.Tests
             Run("输出接线模式与读档回差（v0.1.0）", OutputConnectionModeTests.Run);
             Run("操作任务温度门控（实际补丁源码＋游戏替身）", OperationChoreGateTests.Run);
             Run("耗电矩阵（v0.0.3）", PowerDemandTests.Run);
+            Run("共用加热功率滑条（v0.1.1，实际接口源码＋游戏替身）", HeatingPowerControlTests.Run);
             Run("Heating / Hardness", HeatingAndWearTests.Run);
             Run("损坏原因与维修", DamageCauseTests.Run);
 
