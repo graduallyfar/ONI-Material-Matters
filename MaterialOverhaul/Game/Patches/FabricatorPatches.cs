@@ -135,6 +135,17 @@ namespace MaterialOverhaul.Patches
         {
             try
             {
+                if (__instance is OreScrubber.Work)
+                {
+                    MaterialOverhaulFab scrubber=PatchHelpers.FabOf(__instance);
+                    if (scrubber != null && scrubber.Spawned)
+                    {
+                        scrubber.PrepareIndustrialStep();
+                        __result *= scrubber.IndustrialTemperatureAllowed ? scrubber.IndustrialEfficiency : 0f;
+                        scrubber.NoteEfficiencyMultiplier(__result);
+                    }
+                    return;
+                }
                 ComplexFabricatorWorkable workable = __instance as ComplexFabricatorWorkable;
                 if (workable == null)
                 {

@@ -427,3 +427,43 @@ msgstr "内置加热已停止，完全修复后才能恢复。"
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP"
 msgid "Working range for buildings with vanilla overheat immunity"
 msgstr "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度按主材料熔点的75%及材料百分比修正计算。\n保留原版过热豁免，越过工作上限不会造成过热伤害；材料相变仍按原版处理。\n没有内置加热，各配方的最佳温度见配方详情。"
+
+#. 非批次工业建筑：工艺最佳温区（建筑效果区）
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST"
+msgid "Process temperature: {0} - {1}"
+msgstr "最佳<link=\"HEAT\">温度</link>：{0} - {1}"
+
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST_TOOLTIP
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST_TOOLTIP"
+msgid "Inside this range the temperature efficiency is 100%. Temperature efficiency scales the throughput per second; vanilla conditions still apply."
+msgstr "建筑本体处于此范围时温度效率为100%。\n温度效率影响每秒处理量，实际运行仍需满足原版条件。"
+
+#. 非批次工业建筑：状态栏温度／效率／功率
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.INDUSTRIAL_STATUS
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.INDUSTRIAL_STATUS"
+msgid "Building temperature: {0}\nTemperature efficiency: {1}\nPower: {2} (demand: {3})"
+msgstr "建筑温度：{0}\n温度效率：{1}\n耗电：{2}（需求：{3}）"
+
+#. 发电机：额定值与温度修正后的当前发电量分栏显示
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.GENERATION_STATUS
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.GENERATION_STATUS"
+msgid "Rated generation: {0} · Current generation: {1}"
+msgstr "额定发电：{0} · 当前发电：{1}"
+
+#. 保留原版过热豁免建筑的工作范围说明
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP"
+msgid "The main construction material sets the working ceiling; vanilla overheat immunity is kept, so no overheat damage. Built-in heating still obeys the working range, power and run conditions. Materials can still change phase."
+msgstr "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。\n内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。"
+
+#. 非批次工业建筑的温区输出端口说明
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE"
+msgid "Green when a conversion, generation or scrubbing task has its inputs ready and the building is inside its best range. Wiring this output selects control mode; the signal only reports temperature, not that it is producing."
+msgstr "存在原料齐备的加工、发电或清洗任务，且建筑温度处于其最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后使用控制模式；信号只表示温度，不保证正在生产。"
+
+#. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE
+msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE"
+msgid "Red when there is no runnable process, fuel or scrubbing task, or the temperature is outside the best range. Control mode is off while this output stays unwired."
+msgstr "没有可执行工艺、燃料或清洗任务，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时使用默认模式。"

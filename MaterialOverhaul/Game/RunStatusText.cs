@@ -41,6 +41,7 @@ namespace MaterialOverhaul.Game
 
             if (!fab.HasLockedBatch)
             {
+                if (fab.IsNonBatch) return RunStatusKind.WaitingMaterials;
                 return fab.Orders.Count == 0 ? RunStatusKind.NoTask : RunStatusKind.WaitingMaterials;
             }
 

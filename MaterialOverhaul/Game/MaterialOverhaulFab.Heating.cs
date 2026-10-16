@@ -26,12 +26,12 @@ namespace MaterialOverhaul.Game
         /// <summary>是否存在已锁定批次。</summary>
         public bool HasLockedBatch
         {
-            get { return fabricator != null && fabricator.CurrentWorkingOrder != null; }
+            get { return IsNonBatch ? IndustrialHasInputs : fabricator != null && fabricator.CurrentWorkingOrder != null; }
         }
 
         /// <summary>
         /// 是否挂上了「允许／暂停生产」自动化输入端口。
-        /// 六栋均有端口；没有该端口的对象不参与自动化判断。
+        /// 接入的 29 栋均有端口；没有该端口的对象不参与自动化判断。
         /// </summary>
         public bool HasAutomationInput
         {
@@ -103,6 +103,7 @@ namespace MaterialOverhaul.Game
         {
             get
             {
+                if (IsNonBatch) return !IsPowered || IndustrialProductionActive;
                 if (fabricator == null || !fabricator.duplicantOperated)
                 {
                     return true;
@@ -285,6 +286,7 @@ namespace MaterialOverhaul.Game
 
         private void UpdateRunState()
         {
+            if (IsNonBatch) { UpdateIndustrialRunState(); return; }
             ComplexRecipe working = CurrentWorkingRecipe;
             if (working == null)
             {
@@ -345,6 +347,7 @@ namespace MaterialOverhaul.Game
             context.NoPowerRequired = NumericProfile != null && NumericProfile.ProductionWatts == 0f;
 
             powerDemand = PowerDemand.Evaluate(context);
+            if (IsNonBatch) powerDemand.ProductionRunning = IndustrialProductionActive;
 
             if (HasPowerOverride)
             {

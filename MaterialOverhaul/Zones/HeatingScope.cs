@@ -17,7 +17,8 @@ namespace MaterialOverhaul.Zones
             "MetalRefinery",
             "GlassForge",
             "SupermaterialRefinery",
-            "ChemicalRefinery"
+            "ChemicalRefinery",
+            "DiamondPress", "RubberMaker", "OilRefinery", "Polymerizer", "EthanolDistillery"
         };
 
         /// <summary>该建筑是否启用本 Mod 的内置加热与加热用电。</summary>

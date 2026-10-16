@@ -29,6 +29,7 @@ namespace MaterialOverhaul.Tests
             Run("v0.2.1 状态文本和世界图标（实际注册／显示源码＋游戏替身）", StatusItemRegressionTests.Run);
             Run("v0.2.2 材料百分比与深渊晶石分类（实际源码＋游戏替身）", MaterialRegistrationTests.Run);
             Run("第二批：分子熔炉、化学精炼厂、窑炉", SecondWaveBuildingTests.Run);
+            Run("第三批：23栋工业建筑与端口／文本／连续计时", ThirdWaveBuildingTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

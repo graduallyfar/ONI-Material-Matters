@@ -19,6 +19,8 @@ namespace MaterialOverhaul.Game
 {
     public partial class MaterialOverhaulFab
     {
+        public bool IsNonBatch { get { return NumericProfile != null && NumericProfile.Kind != MaterialOverhaul.Core.ProductionKind.Batch; } }
+        public string IndustrialStatusTooltip() { return "工业状态"; }
         public float DisplayWorkingCeiling;
         private bool TryGetHeatCeiling(out float value)
         { value = DisplayWorkingCeiling; return value > 0f; }

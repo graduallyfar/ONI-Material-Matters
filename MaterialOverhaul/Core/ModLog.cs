@@ -40,6 +40,21 @@ namespace MaterialOverhaul.Core
             return true;
         }
 
+        /// <summary>
+        /// 同一条标识只报告一次（Info 级）。
+        /// 用于「接线是否真的生效」这类只需要确认一次的事实，避免每个模拟步刷屏。
+        /// </summary>
+        public static bool InfoOnce(string key, string message)
+        {
+            if (!Reported.Add(key))
+            {
+                return false;
+            }
+
+            Info(message + "（本条只报告一次）");
+            return true;
+        }
+
         /// <summary>动态对象清理或读档时重置去重状态，避免长期累积。</summary>
         public static void ResetOnce()
         {

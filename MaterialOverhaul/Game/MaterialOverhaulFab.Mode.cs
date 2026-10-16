@@ -66,6 +66,11 @@ namespace MaterialOverhaul.Game
             }
             else if (first)
             {
+                if (IsNonBatch)
+                {
+                    runState = RunController.OnLoaded(BodyTemperature,cachedZone,Policy,runState);
+                    SyncRunStateFields();
+                }
                 // 原版读档时 workingOrderIdx 尚未恢复；用保存的锁定订单解析同批温区。
                 string recipeId = CurrentWorkingRecipe?.id ?? orders.LockedBatch?.RecipeId;
                 if (recipeId != null)

@@ -156,6 +156,9 @@ namespace MaterialOverhaul.Patches
 
             string tooltipTemplate = Strings.Get(immune
                 ? "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP" : KeyTempZoneTooltip);
+            if (immune && BuildingProfiles.TryGet(prefabId,out BuildingProfile profile) && profile.BuiltInHeating)
+                tooltipTemplate = MaterialOverhaulFab.LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP",
+                    "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。");
             string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
 
             descriptors.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));

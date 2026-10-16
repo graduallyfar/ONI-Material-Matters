@@ -11,6 +11,7 @@ public sealed class TestAttribute { public string Id = "OverheatTemperature"; }
 public enum SimHashes { Katairite, GoldAmalgam, Ceramic, Granite, Lead, SandStone }
 public static class GameTags
 {
+    public static Tag[] BasicRefinedMetals = {new Tag("Iron"),new Tag("Copper"),new Tag("Aluminum"),new Tag("Cobalt"),new Tag("Nickel")};
     public static readonly Tag BuildableRaw = new Tag("BuildableRaw");
     public static readonly Tag Metal = new Tag("Metal");
 }

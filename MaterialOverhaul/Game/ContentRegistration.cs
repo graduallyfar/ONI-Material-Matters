@@ -45,7 +45,7 @@ namespace MaterialOverhaul.Game
         /// 建筑最低工作温度 L（V0.1.2 开发计划 §1.1、§2.1）：L **由建筑类型决定**，
         /// 切配方与换建材都不改变它，因此按建筑登记一次。
         ///
-        /// 六栋独立下限读取 BuildingProfiles；首发三栋参数不变。
+        /// 29 栋独立下限读取 BuildingProfiles；原六栋参数不变。
         /// 未登记的建筑不启用本 Mod 温控，行为等同原版。
         /// </summary>
         public static void RegisterBuildingZones()
@@ -66,7 +66,7 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：本版六栋要求硬度25（FIRM），新增数值为工作初值。
+        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：本版 29 栋统一要求硬度25（FIRM），新增数值为工作初值。
         ///
         /// **不走调试路径**：调试样例值只在常规配置之上填补清单里未登记的建筑，
         /// 不能把样例值扩散给全部白名单，也不能覆盖这里的数值。
@@ -100,6 +100,8 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public static bool HasConfirmedZone(string prefabId)
         {
+            BuildingProfile profile;
+            if (BuildingProfiles.TryGet(prefabId, out profile) && profile.Kind != ProductionKind.Batch) return true;
             if (string.IsNullOrEmpty(prefabId))
             {
                 return false;
@@ -130,6 +132,9 @@ namespace MaterialOverhaul.Game
                     fabricators.Add(spec.FabricatorId);
                 }
             }
+
+            foreach (var entry in BuildingProfiles.All)
+                if (entry.Value.Kind != ProductionKind.Batch) fabricators.Add(entry.Key);
 
             foreach (string prefabId in fabricators)
             {
@@ -162,6 +167,16 @@ namespace MaterialOverhaul.Game
             }
 
             int registered = 0;
+            // 原版按启用元素建立该材料数组；不能把它误当成名叫BasicRefinedMetals的元素。
+            foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
+                if (spec.InputAlternatives != null)
+                    foreach (RecipeMaterial material in spec.InputAlternatives)
+                        if (material.RuntimeSet == "BasicRefinedMetals")
+                        {
+                            var ids = new List<string>();
+                            foreach (Tag tag in GameTags.BasicRefinedMetals) ids.Add(tag.ToString());
+                            material.Materials = ids.ToArray();
+                        }
             HashSet<RecipeZoneSpec> matched = new HashSet<RecipeZoneSpec>();
             foreach (ComplexRecipe recipe in manager.recipes)
             {
@@ -169,6 +184,7 @@ namespace MaterialOverhaul.Game
                 foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
                 {
                     if (!HasFabricator(recipe, spec.FabricatorId)
+                        || spec.ConsumedParticles.HasValue && recipe.consumedHEP != spec.ConsumedParticles.Value
                         || !spec.MatchesRecipe(MaterialsFor(recipe.ingredients), MaterialsFor(recipe.results))) continue;
                     matched.Add(spec);
                     TempZone existing;

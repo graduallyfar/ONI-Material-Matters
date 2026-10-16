@@ -10,7 +10,8 @@ namespace MaterialOverhaul.Core
     /// 索引使用原版建筑 prefab id（<c>KPrefabID.PrefabTag</c>），不按配置类名匹配：
     /// 同一建筑可能在不同配置类中重复实现，类名匹配不可靠（《建筑分类与温区适用范围》§1.2）。
     ///
-    /// 首发三栋后，用户授权第二批加入分子熔炉、化学精炼厂和窑炉；其余候选不接入。
+    /// 已接入共 29 栋：首发三栋、第二批分子熔炉／化学精炼厂／窑炉，以及用户授权的第三批 23 栋工业建筑。
+    /// 食品、纺织、制药、堆肥与工业制造三栋（工作台、焊接台、太空服锻造台）仍不接入。
     /// </summary>
     public static class BuildingWhitelist
     {
@@ -21,7 +22,11 @@ namespace MaterialOverhaul.Core
             "RockCrusher",
             "SupermaterialRefinery",
             "ChemicalRefinery",
-            "Kiln"
+            "Kiln",
+            "Chlorinator", "DiamondPress", "UraniumCentrifuge", "RubberMaker", "FabricatedWoodMaker", "SludgePress",
+            "MissileFabricator", "OilRefinery", "Polymerizer", "EthanolDistillery", "FertilizerMaker", "AlgaeDistillery",
+            "OxyliteRefinery", "WaterPurifier", "Desalinator", "Generator", "PeatGenerator", "HydrogenGenerator",
+            "MethaneGenerator", "PetroleumGenerator", "WoodGasGenerator", "OilWellCap", "OreScrubber"
         };
 
         public static int Count

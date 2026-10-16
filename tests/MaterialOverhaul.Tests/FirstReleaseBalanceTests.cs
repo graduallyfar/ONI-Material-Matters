@@ -34,8 +34,13 @@ namespace MaterialOverhaul.Tests
         private static void ProfilesAndCurves()
         {
             TestRunner.Section("独立建筑参数与效率端点");
-            TestRunner.CheckEqual(6, BuildingProfiles.All.Count, "首发三栋加第二批三栋");
-            TestRunner.Check(BuildingWhitelist.Contains("Kiln") && !BuildingWhitelist.Contains("RubberMaker"), "仅加入本轮三栋，不扩散到其余候选");
+            // 第三批开发后白名单共 29 栋；数量本身不是结论，随后逐栋核对参数（见 ThirdWaveBuildingTests）。
+            TestRunner.CheckEqual(29, BuildingProfiles.All.Count, "首发三栋加第二批三栋加第三批23栋");
+            TestRunner.CheckEqual(29, BuildingWhitelist.Count, "白名单与参数表同步");
+            TestRunner.Check(BuildingWhitelist.Contains("Kiln") && BuildingWhitelist.Contains("RubberMaker"), "第二批与第三批建筑均已纳入名单");
+            TestRunner.Check(!BuildingWhitelist.Contains("CraftingTable") && !BuildingWhitelist.Contains("SuitFabricator")
+                && !BuildingWhitelist.Contains("CookingStation") && !BuildingWhitelist.Contains("Compost"),
+                "工业制造三栋与生活类建筑不扩散");
             string[] buildings = { "MetalRefinery", "RockCrusher", "GlassForge" };
             float[] floors = { 80f, -20f, 80f };
             float[] lows = { .30f, .80f, .25f };
@@ -151,14 +156,16 @@ namespace MaterialOverhaul.Tests
             ComplexRecipeManager.Instance.recipes.Clear();
             ContentRegistration.Apply();
             TestRunner.Check(!ContentRegistration.ZonesResolved, "空配方表不误报登记完成");
-            TestRunner.CheckEqual(51, RecipeZoneCatalogue.Count, "首发40条加第二批11条");
+            TestRunner.CheckEqual(60, RecipeZoneCatalogue.Count, "首发40条、第二批11条、第三批9条");
             TestRunner.CheckEqual(13, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "MetalRefinery"), "精炼13条");
             TestRunner.CheckEqual(26, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "RockCrusher"), "粉碎26条");
             TestRunner.CheckEqual(1, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "GlassForge"), "玻璃1条");
             foreach (RecipeZoneSpec spec in RecipeZoneCatalogue.All)
             {
                 string id = "first-release-" + ComplexRecipeManager.Instance.recipes.Count;
-                ComplexRecipe recipe = new ComplexRecipe { id = id, fabricators = new List<Tag> { new Tag(spec.FabricatorId) },
+                ComplexRecipe recipe = new ComplexRecipe { id = id,
+                    consumedHEP = spec.ConsumedParticles.HasValue ? spec.ConsumedParticles.Value : 0,
+                    fabricators = new List<Tag> { new Tag(spec.FabricatorId) },
                     ingredients = spec.Inputs.Select((s, i) => Element(s, spec.InputAmounts[i])).ToArray(),
                     results = spec.Outputs.Select((s, i) => Element(s, spec.OutputAmounts[i])).ToArray() };
                 if (spec.InputOptions != null) { recipe.ingredients[0].material = null; recipe.ingredients[0].possibleMaterials = spec.InputOptions.Select(s => new Tag(s)).ToArray(); }
@@ -174,7 +181,7 @@ namespace MaterialOverhaul.Tests
             ComplexRecipeManager.Instance.recipes.Add(altered);
             ContentRegistration.RegisterRecipeZones();
             TestRunner.Check(ContentRegistration.ZonesResolved, "真实表处理完成");
-            foreach (ComplexRecipe recipe in ComplexRecipeManager.Instance.recipes.Take(51))
+            foreach (ComplexRecipe recipe in ComplexRecipeManager.Instance.recipes.Take(60))
                 TestRunner.Check(RecipeZoneTable.GetOrUnconfigured(recipe.id).Configured, recipe.id + " 按完整材料和质量登记");
             TestRunner.Check(!RecipeZoneTable.GetOrUnconfigured(altered.id).Configured, "不同产量的其他Mod配方保持原版");
             ContentRegistration.RegisterRecipeZones();

@@ -15,6 +15,7 @@ namespace HarmonyLib
 
 public sealed class ComplexRecipe
 {
+    public int consumedHEP;
     public string id;
     public System.Collections.Generic.List<Tag> fabricators;
     public RecipeElement[] ingredients;

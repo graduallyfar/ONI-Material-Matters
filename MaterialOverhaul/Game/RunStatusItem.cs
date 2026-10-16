@@ -142,6 +142,7 @@ namespace MaterialOverhaul.Game
             try
             {
                 string status = RunStatusText.Compose(fab);
+                if (tooltip && fab.IsNonBatch) return fab.IndustrialStatusTooltip();
                 if (!tooltip)
                 {
                     return string.Format(text, status);

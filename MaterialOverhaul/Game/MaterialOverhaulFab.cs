@@ -332,6 +332,7 @@ namespace MaterialOverhaul.Game
 
             // 过热阈值按主建造材料熔点设定；Overheatable.OnSpawn 之后还会再调用一次，两处都是幂等的。
             ApplyOverheatRule();
+            InitializeIndustrial();
 
             // 「允许／暂停生产」输入端口是否真的挂上了：决定是否启用自动化红信号相关逻辑。
             hasAutomationInput = HasInputPort(AutomationControlScope.PortId);
@@ -355,6 +356,7 @@ namespace MaterialOverhaul.Game
             Unsubscribe(RefreshUserMenuHash, OnRefreshUserMenu);
             Unsubscribe(StorageChangeHash, OnStorageChanged);
             PowerRegistry.Unregister(energyConsumer);
+            CleanupIndustrial();
             base.OnCleanUp();
         }
 
@@ -547,7 +549,12 @@ namespace MaterialOverhaul.Game
         {
             ComplexRecipe working = CurrentWorkingRecipe;
             string recipeId = working != null ? working.id : orders.LockedBatch?.RecipeId;
-            if (recipeId != null)
+            if (IsNonBatch)
+            {
+                runState = RunController.OnPolicyChanged(BodyTemperature,cachedZone,Policy,runState);
+                SyncRunStateFields();
+            }
+            else if (recipeId != null)
             {
                 UpdateCachedZone(recipeId);
                 if (cachedZoneConfigured)
@@ -566,6 +573,7 @@ namespace MaterialOverhaul.Game
             }
             UpdateModeStatusItem();
             UpdateRunStatusItem();
+            if (IsNonBatch) PrepareIndustrialStep();
 
             if (fabricator != null)
             {
@@ -586,7 +594,7 @@ namespace MaterialOverhaul.Game
         /// </summary>
         private void OnRefreshUserMenu(object data)
         {
-            if (fabricator == null || global::Game.Instance == null)
+            if (!Spawned || global::Game.Instance == null)
             {
                 return;
             }

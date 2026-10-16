@@ -61,6 +61,11 @@ namespace MaterialOverhaul.Patches
                 string description = PortText(KeyDescription, "最佳温度信号");
                 string active = PortText(KeyActive, "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后，建筑使用控制模式。信号只表示温度，不表示建筑正在生产。");
                 string inactive = PortText(KeyInactive, "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。");
+                if (BuildingProfiles.TryGet(prefabId.PrefabTag.ToString(),out BuildingProfile profile) && profile.Kind != ProductionKind.Batch)
+                {
+                    active=PortText("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE",active);
+                    inactive=PortText("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE",inactive);
+                }
 
                 bool found = Rewrite(__instance.outputPortInfo, TemperatureZoneSignal.PortId, description, active, inactive);
 

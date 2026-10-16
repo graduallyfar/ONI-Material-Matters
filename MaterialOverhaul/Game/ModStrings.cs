@@ -68,6 +68,11 @@ namespace MaterialOverhaul.Game
                     /// {0} 建筑最低工作温度、{1} 建筑最高工作温度（＝过热阈值）。
                     /// </summary>
                     public static LocString TEMPZONE_LINE = "工作<link=\"HEAT\">温度</link>：{0} - {1}";
+                    public static LocString PROCESS_BEST = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
+                    public static LocString PROCESS_BEST_TOOLTIP = "建筑本体处于此范围时温度效率为100%。\n温度效率影响每秒处理量，实际运行仍需满足原版条件。";
+                    public static LocString INDUSTRIAL_STATUS = "建筑温度：{0}\n温度效率：{1}\n耗电：{2}（需求：{3}）";
+                    public static LocString GENERATION_STATUS = "额定发电：{0} · 当前发电：{1}";
+                    public static LocString IMMUNE_HEATING_TOOLTIP = "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。\n内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。";
 
                     /// <summary>
                     /// 工作温区行的提示。只说明规则来源与模式选择；过热阈值的推导明细由原版
@@ -270,6 +275,8 @@ namespace MaterialOverhaul.Game
                         public static LocString DESCRIPTION = "最佳温度信号";
                         public static LocString ACTIVE = "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后，建筑使用控制模式。信号只表示温度，不表示建筑正在生产。";
                         public static LocString INACTIVE = "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。";
+                        public static LocString INDUSTRIAL_ACTIVE = "存在原料齐备的加工、发电或清洗任务，且建筑温度处于其最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后使用控制模式；信号只表示温度，不保证正在生产。";
+                        public static LocString INDUSTRIAL_INACTIVE = "没有可执行工艺、燃料或清洗任务，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时使用默认模式。";
                     }
 
                     /// <summary>

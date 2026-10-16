@@ -14,7 +14,8 @@ namespace MaterialOverhaul.Zones
     /// </summary>
     public sealed class RecipeMaterial
     {
-        public readonly string[] Materials;
+        public string[] Materials;
+        public string RuntimeSet;
         public readonly float Amount;
         public readonly float[] Amounts;
         public RecipeMaterial(string material, float amount) : this(new[] { material }, amount) { }
@@ -39,6 +40,7 @@ namespace MaterialOverhaul.Zones
 
         /// <summary>数值来源说明，只用于日志与文档对照，不参与运算。</summary>
         public string Source;
+        public int? ConsumedParticles;
         public float[] InputAmounts;
         public float[] OutputAmounts;
         // 只用于原版单输入的制砂候选集合，不能把 null material 当成实际元素。
@@ -152,7 +154,8 @@ namespace MaterialOverhaul.Zones
     /// 用户授权接入的首发配方最佳温区初值，平衡仍待游戏验收；未设计配方不占位：
     /// 未登记的配方保持原版行为，并由接入层记录一条待定日志（避免「名单内配方静默落空」）。
     ///
-    /// 首发40个候选保留，第二批新增分子5、化学4、窑炉2，共51个。按完整材料与质量在真实配方表中匹配，DLC缺失跳过。
+    /// 首发40个候选保留，第二批新增分子5、化学4、窑炉2，第三批新增9个（漂白石、钻石、铀浓缩、橡胶、
+    /// 胶合板各1，泥浆分离2，爆破弹2），共60个。按完整材料与质量在真实配方表中匹配，DLC缺失跳过。
     /// 建筑下限见 <see cref="BuildingZoneTable"/>，上限由主建造材料推出；铝450–650 ℃沿用已确认值。
     ///
     /// 旧版「300／450／650／800 ℃ 四边界」中的 300 ℃ 已改由建筑下限承担（本版 80 ℃），
@@ -233,7 +236,29 @@ namespace MaterialOverhaul.Zones
             entries.Add(sand);
             entries.Add(Entry("GlassForge", new[] { "Sand" }, new[] { 100f }, new[] { "MoltenGlass" }, new[] { 25f }, 900f, 1200f));
             AppendSecondWave(entries);
+            AppendIndustrialWave(entries);
             return entries.ToArray();
+        }
+
+        private static void AppendIndustrialWave(List<RecipeZoneSpec> entries)
+        {
+            int first = entries.Count;
+            entries.Add(Entry("Chlorinator",new[]{"Salt","Gold"},new[]{30f,.5f},new[]{"BleachStone","Sand"},new[]{10f,19.999998f},20f,60f));
+            var diamond = Entry("DiamondPress",new[]{"RefinedCarbon"},new[]{100f},new[]{"Diamond"},new[]{100f},400f,700f);
+            diamond.ConsumedParticles = 1000;
+            entries.Add(diamond);
+            entries.Add(Entry("UraniumCentrifuge",new[]{"UraniumOre"},new[]{10f},new[]{"EnrichedUranium","MoltenUranium"},new[]{2f,8f},40f,100f));
+            entries.Add(Entry("RubberMaker",new[]{"Latex"},new[]{100f},new[]{"Rubber"},new[]{100f},120f,180f));
+            entries.Add(Entry("FabricatedWoodMaker",new[]{"PlantFiber","NaturalResin"},new[]{90f,10f},new[]{"FabricatedWood"},new[]{100f},40f,90f));
+            entries.Add(Entry("SludgePress",new[]{"Mud"},new[]{150f},new[]{"Dirt","Water"},new[]{60f,90f},10f,50f));
+            entries.Add(Entry("SludgePress",new[]{"ToxicMud"},new[]{150f},new[]{"ToxicSand","DirtyWater"},new[]{60f,90f},10f,50f));
+            var basic = Entry("MissileFabricator",new[]{"Iron","Petroleum"},new[]{25f,50f},new[]{"MissileBasic"},new[]{5f},15f,50f);
+            basic.InputAlternatives = new[]{ new RecipeMaterial("Iron",25f){RuntimeSet="BasicRefinedMetals"},new RecipeMaterial(new[]{"Petroleum","RefinedLipid"},50f) };
+            entries.Add(basic);
+            var longer = Entry("MissileFabricator",new[]{"Iron","Fertilizer","Petroleum"},new[]{50f,100f,200f},new[]{"MissileLongRange"},new[]{1f},15f,50f);
+            longer.InputAlternatives = new[]{ new RecipeMaterial("Iron",50f){RuntimeSet="BasicRefinedMetals"},new RecipeMaterial(new[]{"Fertilizer","Peat"},100f),new RecipeMaterial(new[]{"Petroleum","RefinedLipid"},200f) };
+            entries.Add(longer);
+            for (int i=first;i<entries.Count;i++) entries[i].Source="新增工业23建筑数值方案（用户授权接入，游戏平衡待验收）";
         }
 
         private static void AppendSecondWave(List<RecipeZoneSpec> entries)

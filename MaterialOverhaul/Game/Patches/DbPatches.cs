@@ -93,7 +93,7 @@ namespace MaterialOverhaul.Patches
 
         /// <summary>
         /// 「允许／暂停生产」自动化**输入**端口的位置来自 <see cref="AutomationControlScope"/>：
-        /// 本版覆盖接入的六栋，已有原版输入直接复用。
+        /// 本版覆盖接入的 29 栋，已有原版逻辑控制输入的建筑直接复用其位置。
         /// </summary>
         private static void Prefix(object[] __args)
         {

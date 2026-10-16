@@ -38,6 +38,17 @@ namespace MaterialOverhaul.Core
             return true;
         }
 
+        public static bool InfoOnce(string key, string message)
+        {
+            if (!reportedOnce.Add(key))
+            {
+                return false;
+            }
+
+            Info(message + "（本条只报告一次）");
+            return true;
+        }
+
         public static void ResetOnce()
         {
             reportedOnce.Clear();
