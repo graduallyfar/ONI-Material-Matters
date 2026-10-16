@@ -30,10 +30,22 @@ namespace MaterialOverhaul.Game
             int count = 0;
             foreach (Element element in ElementLoader.elements)
             {
+                if (element.id == SimHashes.Katairite)
+                {
+                    // 深渊晶石不提供过热加成，材料面板也不留下无意义的 0% 条目。
+                    count += element.attributeModifiers.RemoveAll(m => m.AttributeId == id);
+                    continue;
+                }
                 foreach (AttributeModifier modifier in element.attributeModifiers)
                 {
-                    if (modifier.AttributeId != id || modifier.IsMultiplier || modifier.UIOnly) continue;
-                    float value = modifier.Value * Balance.MaterialOverheatFractionPerKelvin;
+                    if (modifier.AttributeId != id || modifier.UIOnly) continue;
+                    if (float.IsNaN(modifier.Value) || float.IsInfinity(modifier.Value))
+                    {
+                        ModLog.WarnOnce("material|bad-bonus|" + element.id, element.id + " 的过热修正不可用，保留原值。");
+                        continue;
+                    }
+                    float value = modifier.Value > 0f ? Balance.MaterialOverheatBonus
+                        : modifier.IsMultiplier ? modifier.Value : modifier.Value * Balance.MaterialOverheatPenaltyPerKelvin;
                     if (float.IsNaN(value) || float.IsInfinity(value) || value <= -1f)
                     {
                         ModLog.WarnOnce("material|bad-bonus|" + element.id,
@@ -41,7 +53,9 @@ namespace MaterialOverhaul.Game
                         continue;
                     }
 
-                    // 原地修改，保留已引用此修饰项的原版对象；倍率项在重复调用时直接跳过。
+                    if (modifier.IsMultiplier && modifier.Value == value) continue;
+
+                    // 原地修改，保留已引用此修饰项的原版对象；已符合规则的倍率项重复调用时跳过。
                     var name = modifier.NameCB;
                     var description = modifier.DescriptionCB;
                     var timeSlice = modifier.OverrideTimeSlice;
@@ -52,7 +66,24 @@ namespace MaterialOverhaul.Game
                     count++;
                 }
             }
-            ModLog.Info("材料过热修正已转为百分比，共 " + count + " 项；每 25 K 对应 2.5%。");
+            ModLog.Info("材料过热修正已更新，共 " + count + " 项；正向统一+60%，深渊晶石无加成，负向修正不变。");
+        }
+
+        /// <summary>只扩展建筑的建材槽位，不把精炼金属改成矿石元素，避免影响工业配方。</summary>
+        public static void AllowRefinedMetalConstruction(BuildingDef def)
+        {
+            if (def == null || def.MaterialCategory == null) return;
+            string[] categories = null;
+            for (int i = 0; i < def.MaterialCategory.Length; i++)
+            {
+                string category = def.MaterialCategory[i];
+                if (string.IsNullOrEmpty(category)) continue;
+                string[] options = category.Split('&');
+                if (Array.IndexOf(options, "Metal") < 0 || Array.IndexOf(options, "RefinedMetal") >= 0) continue;
+                if (categories == null) categories = (string[])def.MaterialCategory.Clone();
+                categories[i] = category + "&RefinedMetal";
+            }
+            if (categories != null) def.MaterialCategory = categories;
         }
 
         public static float OverheatMultiplier(Element element)

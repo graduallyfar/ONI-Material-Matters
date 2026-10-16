@@ -19,8 +19,11 @@ namespace MaterialOverhaul.Core
     /// </summary>
     public static class Balance
     {
-        /// <summary>材料原有每 25 K 修正改为 2.5%，即每 K 对应 0.1%。本轮授权选定的初值。</summary>
-        public const float MaterialOverheatFractionPerKelvin = 0.001f;
+        /// <summary>用户确认：原有正向过热修正统一为 +60%；深渊晶石不提供加成。</summary>
+        public const float MaterialOverheatBonus = 0.60f;
+
+        /// <summary>负向修正保留此前每 K 对应 0.1% 的取法。</summary>
+        public const float MaterialOverheatPenaltyPerKelvin = 0.001f;
 
         // ---- 电力与注热（§2.1、§4.1）----
 

@@ -5,6 +5,17 @@ using MaterialOverhaul.Game;
 
 namespace MaterialOverhaul.Patches
 {
+    // 配置类已完成建材定义，施工／预览预制件尚未生成；所有接受 Metal 的槽位加入 RefinedMetal。
+    [HarmonyPatch(typeof(BuildingLoader), "CreateBuildingComplete")]
+    internal static class Patch_BuildingLoader_AllowRefinedMetal
+    {
+        private static void Prefix(BuildingDef def)
+        {
+            try { MaterialRegistration.AllowRefinedMetalConstruction(def); }
+            catch (Exception e) { ModLog.Error("精炼金属建材扩展失败：" + e); }
+        }
+    }
+
     // 元素加载后、矿石预制件生成前加入标签，让材料选择、取料和旧档实例共用原版分类。
     [HarmonyPatch(typeof(ElementLoader), "Load")]
     internal static class Patch_ElementLoader_Load

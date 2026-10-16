@@ -27,6 +27,8 @@ public static class ElementLoader
     public static Element FindElementByHash(SimHashes id) { return elements.Find(e => e.id == id); }
 }
 public sealed class LegacyModMain { }
+public sealed class BuildingLoader { }
+public sealed class BuildingDef { public string[] MaterialCategory; }
 
 namespace Klei.AI
 {
