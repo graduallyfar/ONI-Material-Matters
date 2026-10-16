@@ -11,10 +11,11 @@ desktop.ini
 
 # ---- Obsidian：个人界面状态（每台机器不同，不属于项目内容）----
 # 注意：其余 .obsidian 配置（app.json / core-plugins.json 等）仍然纳入版本管理。
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/workspaces.json
-.obsidian/cache
+# 前缀 **/ 让规则同时覆盖嵌套的库目录（文档统一放在 docs\，库根为 docs\.obsidian\）。
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/workspaces.json
+**/.obsidian/cache
 
 # ---- C# / .NET 构建产物 ----
 [Bb]in/
