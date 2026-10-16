@@ -39,6 +39,7 @@ namespace MaterialOverhaul
                 + "，要求硬度条目 " + HardnessRequirementTable.Count
                 + "，内置加热范围 " + JoinScope() + "。");
             LogBalanceSummary();
+            ModLog.Info("v0.2.2 材料修订：过热伤害沿用原版；材料修正每25 K转为2.5%；深渊晶石加入矿物原料，不加入金属矿石。");
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
             ModLog.Info("v0.2.0 首发三建筑已接入：全量配方温区、独立效率与磨损、交集回差、注热倍率100；粉碎机无内置加热。");
             ModLog.Info("v0.2.1 界面修订：风险／损坏文本使用完整键读取；模式与运行项仅显示状态栏，不绘制无制作队列的世界图标。");
@@ -56,7 +57,7 @@ namespace MaterialOverhaul
                 + Core.Balance.MetalRefineryWorkMinCelsius.ToString("F0")
                 + " ℃（金属精炼器，建筑级），最高工作温度 = 过热阈值 = 主建造材料熔点 × "
                 + Heating.OverheatRule.MeltingPointFraction.ToString("F2")
-                + "（按 K 计算）；共用加热功率滑条 " + Core.Balance.MinHeatingWatts.ToString("F0")
+                + " × 主材料过热倍率（按 K 计算）；共用加热功率滑条 " + Core.Balance.MinHeatingWatts.ToString("F0")
                 + "–" + Core.Balance.MaxHeatingWatts.ToString("F0") + " W（默认 " + Core.Balance.DefaultHeatingWatts.ToString("F0") + " W）"
                 + "，注热倍率 " + Heating.HeatingPower.TestHeatMultiplier.ToString("F0")
                 + "；要求硬度 " + Core.Balance.MetalRefineryRequiredHardness

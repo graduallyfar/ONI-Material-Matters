@@ -287,14 +287,14 @@ namespace MaterialOverhaul.Game
             }
 
             // STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
-            // 过热温度属性修正项的说明文本（v0.1.2：最高工作温度 = 过热阈值 = 主建造材料熔点 × 75%）。
+            // 基础上限来源；v0.2.2 起最终值另计主材料百分比。
             public static class ATTRIBUTES
             {
                 public static class MATERIALOVERHAUL
                 {
                     public static class OVERHEAT
                     {
-                        public static LocString DESCRIPTION = "建造材料熔点的75%（按绝对温度计算）";
+                        public static LocString DESCRIPTION = "基础工作上限：建造材料熔点的75%（按绝对温度计算，另计材料百分比修正）";
                     }
                 }
             }

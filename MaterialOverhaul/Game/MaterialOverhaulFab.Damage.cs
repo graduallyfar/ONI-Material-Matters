@@ -259,7 +259,7 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        /* ---- 最高工作温度 / 过热阈值（主建造材料熔点 × 75%，按 K 计算）---- */
+        /* ---- 最高工作温度 / 过热阈值（熔点 × 75% × 主材料倍率，按 K 计算）---- */
 
         /// <summary>
         /// 取本实例按规则算出的过热阈值与显示来源：主建造材料名、材料熔点。
@@ -290,7 +290,8 @@ namespace MaterialOverhaul.Game
                 return false;
             }
 
-            if (!OverheatRule.TryCompute(element.highTemp, fraction, out overheatKelvin))
+            if (!OverheatRule.TryCompute(element.highTemp, fraction,
+                MaterialRegistration.OverheatMultiplier(element), out overheatKelvin))
             {
                 return false;
             }
@@ -301,7 +302,7 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 按「主建造材料熔点 × 规则比例」改写本建筑的过热阈值。
+        /// 按「主建造材料熔点 × 规则比例 × 主材料过热倍率」改写本建筑的过热阈值。
         ///
         /// 阈值由**建造材料**而不是配方决定：同一栋建筑换成熔点更高的材料就能在更高温度下工作，
         /// 这是材料选择的一部分代价。做法是保留原版 <c>Overheatable</c> 的行为，
@@ -338,20 +339,15 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f)
+            if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f
+                && Mathf.Abs(value - overheatable.OverheatTemperature) < 0.01f)
             {
                 return;
             }
 
-            overheatApplied = true;
-            overheatTemperature = value;
-            materialRuleElement = element;
-            materialRuleMeltingPoint = element.highTemp;
-            materialRuleKnown = true;
-
             // 先写基础值，再读一次属性：这会触发原版 InitializeModifiers，
             // 之后补偿差额不会因为修饰项在别处建立而重复叠加。
-            overheatable.baseOverheatTemp = value;
+            overheatable.baseOverheatTemp = value / MaterialRegistration.OverheatMultiplier(element);
             float current = overheatable.OverheatTemperature;
 
             if (overheatable.GetAttributes() == null || Db.Get() == null)
@@ -376,9 +372,18 @@ namespace MaterialOverhaul.Game
                 instance.Add(overheatModifier);
             }
 
-            // 把原版基础值与建造材料自带的过热修正一起补偿掉，使属性总值恰好等于规则值。
-            float fixedPart = instance.GetTotalValue() - overheatModifier.Value;
-            overheatModifier.SetValue(value - fixedPart);
+            if (!MaterialRegistration.SetOverheatTarget(instance, overheatModifier, value))
+            {
+                overheatApplied = false;
+                ModLog.WarnOnce("overheat|bad-multiplier|" + PrefabId, PrefabId + "：过热属性倍率不可用，无法应用材料阈值。");
+                return;
+            }
+
+            overheatApplied = true;
+            overheatTemperature = value;
+            materialRuleElement = element;
+            materialRuleMeltingPoint = element.highTemp;
+            materialRuleKnown = true;
 
             MarkStructureTemperatureDirty();
 
@@ -389,7 +394,8 @@ namespace MaterialOverhaul.Game
             }
 
             ModLog.Info(PrefabId + "：主建造材料 " + materialName + " 熔点 " + meltingPoint.ToString("F1")
-                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + appliedFraction.ToString("F2") + "）。");
+                + " K，过热阈值设为 " + value.ToString("F1") + " K（熔点 × " + appliedFraction.ToString("F2")
+                + " × 材料倍率 " + MaterialRegistration.OverheatMultiplier(element).ToString("F3") + "）。");
         }
 
         /// <summary>

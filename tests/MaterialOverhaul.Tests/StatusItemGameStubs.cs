@@ -58,6 +58,7 @@ public sealed class StatusCategories : List<StatusItemCategory>
 }
 public sealed class Db
 {
+    public readonly TestBuildingAttributes BuildingAttributes = new TestBuildingAttributes();
     private static readonly Db Instance = new Db();
     public readonly StatusCategories StatusItemCategories = new StatusCategories();
     public readonly List<StatusItem> BuildingStatusItems = new List<StatusItem>();

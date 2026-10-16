@@ -27,6 +27,7 @@ namespace MaterialOverhaul.Tests
             Run("v0.1.3 数量点击与过热停热（实际源码＋游戏替身）", BugFixRegressionTests.Run);
             Run("v0.2.0 首发三建筑完整数值与配方登记", FirstReleaseBalanceTests.Run);
             Run("v0.2.1 状态文本和世界图标（实际注册／显示源码＋游戏替身）", StatusItemRegressionTests.Run);
+            Run("v0.2.2 材料百分比与深渊晶石分类（实际源码＋游戏替身）", MaterialRegistrationTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

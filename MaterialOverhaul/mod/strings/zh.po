@@ -83,11 +83,11 @@ msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
 msgid "No locked recipe, or temperature outside the best range; unconnected wiring selects the default mode."
 msgstr "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。"
 
-#. 过热温度属性的修正项说明（v0.1.2：最高工作温度 = 过热阈值 = 主建造材料熔点 × 75%）
+#. 基础上限来源；v0.2.2 起最终值另计主材料百分比
 #. STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
 msgctxt "STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"
-msgid "Maximum working temperature = overheat threshold = 75% of the primary construction material's melting point (in kelvin)"
-msgstr "建造材料熔点的75%（按绝对温度计算）"
+msgid "Base working ceiling: 75% of the primary material melting point in kelvin, before the material percentage modifier"
+msgstr "基础工作上限：建造材料熔点的75%（按绝对温度计算，另计材料百分比修正）"
 
 #. 配方详情「效果」里的温度行（{0} 最佳温区下限、{1} 最佳温区上限）
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL
@@ -104,7 +104,7 @@ msgstr "工作<link=\"HEAT\">温度</link>：{0} - {1}"
 #. 工作温区行的提示（只讲规则来源与模式选择；过热阈值明细由原版过热行的属性明细承担）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP"
-msgid "The minimum working temperature comes from the building type; the maximum equals the overheat threshold (75% of the primary construction material's melting point). A wired output port selects control mode, otherwise the default mode applies; recipe best ranges appear in the recipe details."
+msgid "The minimum working temperature comes from the building type; the maximum equals the overheat threshold (75% of the primary material melting point, with its percentage modifier). A wired output port selects control mode, otherwise the default mode applies; recipe best ranges appear in the recipe details."
 msgstr "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度等于建造材料决定的过热温度。\n各配方的最佳温度见配方详情。"
 
 #. 损坏原因状态项：来源未知的旧损伤（迁移）

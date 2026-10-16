@@ -19,6 +19,9 @@ namespace MaterialOverhaul.Core
     /// </summary>
     public static class Balance
     {
+        /// <summary>材料原有每 25 K 修正改为 2.5%，即每 K 对应 0.1%。本轮授权选定的初值。</summary>
+        public const float MaterialOverheatFractionPerKelvin = 0.001f;
+
         // ---- 电力与注热（§2.1、§4.1）----
 
         /// <summary>原版金属精炼器额定生产用电（W）。原版建筑定义值，用于耗电矩阵与显示。</summary>
