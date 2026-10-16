@@ -85,19 +85,15 @@ namespace MaterialOverhaul.Patches
         ///   - MetalRefinery 3×4：液体输入 (-1,1)、液体输出 (1,0)，都在左下侧
         ///   - GlassForge    5×4：液体输出 (1,3)，在顶排中段
         ///   - RockCrusher   4×4：无其它端口
-        /// 右上角与上述位置均不重叠，也避开建筑底部的接口与操作位。
+        ///   - SupermaterialRefinery 4×5：输出 (2,4)，新增输入 (0,4)
+        ///   - ChemicalRefinery 4×3：输出 (2,2)，避开液体输出 (2,1)，复用输入 (0,0)
+        ///   - Kiln 2×2：输出 (1,1)，复用原版输入 (0,1)
+        /// 位置集中在 AutomationControlScope，与其它接口不重叠，且均在建筑占格内。
         /// </summary>
-        private static readonly System.Collections.Generic.Dictionary<string, CellOffset> OutputPortOffsets =
-            new System.Collections.Generic.Dictionary<string, CellOffset>
-            {
-                { "MetalRefinery", new CellOffset(1, 3) },
-                { "GlassForge", new CellOffset(2, 3) },
-                { "RockCrusher", new CellOffset(2, 3) }
-            };
 
         /// <summary>
         /// 「允许／暂停生产」自动化**输入**端口的位置来自 <see cref="AutomationControlScope"/>：
-        /// 本版给首发三栋添加，三栋以外保持原有接口。
+        /// 本版覆盖接入的六栋，已有原版输入直接复用。
         /// </summary>
         private static void Prefix(object[] __args)
         {
@@ -174,7 +170,7 @@ namespace MaterialOverhaul.Patches
 
         private static void AddTemperatureZonePort(BuildingDef def)
         {
-            if (!OutputPortOffsets.TryGetValue(def.PrefabID, out CellOffset offset))
+            if (!AutomationControlScope.TryGetOutputOffset(def.PrefabID, out CellOffset offset))
             {
                 // 名单内但还没有确定端口位置的建筑：不加端口，并留下可定位记录（不静默）。
                 ModLog.WarnOnce("port|missing|" + def.PrefabID,

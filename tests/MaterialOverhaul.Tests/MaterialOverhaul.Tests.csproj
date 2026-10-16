@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <Compile Include="*.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\AutomationControlScope.cs" Link="Linked\Game\AutomationControlScope.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\MaterialOverhaulFab.Descriptors.cs" Link="Linked\Game\MaterialOverhaulFab.Descriptors.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\MaterialRegistration.cs" Link="Linked\Game\MaterialRegistration.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\MaterialPatches.cs" Link="Linked\Game\MaterialPatches.cs" />
     <!-- 状态项直接编译实际注册／显示源码，替身保留原版两种构造重载的不同语义。 -->

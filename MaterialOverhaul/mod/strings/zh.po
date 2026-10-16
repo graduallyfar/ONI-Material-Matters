@@ -21,7 +21,7 @@ msgstr "禁用强制运行"
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE"
 msgid "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required."
-msgstr "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。"
+msgstr "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。"
 
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE"
@@ -318,7 +318,7 @@ msgstr "生产控制"
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"
 msgid "Green: production allowed (materials, power and start conditions still required); unconnected defaults to allowed"
-msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足材料、电力和操作条件。未连接自动化线时允许生产。"
+msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足这个建筑的其他运行条件。未连接自动化线时允许生产。"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"
@@ -397,7 +397,7 @@ msgstr "内置加热耗电：<b>{0} W</b>\n用于预热、维持温度和强制�
 
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_NO_HEATING"
 msgid "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。"
-msgstr "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。"
+msgstr "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。"
 
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_NO_HEATING_TOOLTIP"
 msgid "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。"
@@ -422,3 +422,8 @@ msgstr "建筑温度处于这个范围时，配方的温度效率为100%。\n实
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.HEATING_STOPPED_TOOLTIP"
 msgid "内置加热已停止，完全修复后才能恢复。"
 msgstr "内置加热已停止，完全修复后才能恢复。"
+
+#. 原版免疫过热建筑的工作范围说明
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP"
+msgid "Working range for buildings with vanilla overheat immunity"
+msgstr "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度按主材料熔点的75%及材料百分比修正计算。\n保留原版过热豁免，越过工作上限不会造成过热伤害；材料相变仍按原版处理。\n没有内置加热，各配方的最佳温度见配方详情。"

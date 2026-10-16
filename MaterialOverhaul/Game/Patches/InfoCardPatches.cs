@@ -117,43 +117,48 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                // 只对已登记最低工作温度的建筑显示；其它建筑完全保持原版效果列表。
-                float floorKelvin;
-                if (!BuildingZoneTable.TryGet(fab.PrefabId, out floorKelvin))
-                {
-                    return;
-                }
-
-                // 上限取当前过热阈值：V0.1.2 起它就是建筑最高工作温度，与上方原版过热行同源。
-                float ceilingKelvin = __instance.OverheatTemperature;
-                if (!(ceilingKelvin > floorKelvin + 0.01f))
-                {
-                    ModLog.WarnOnce("zone|display-invalid|" + fab.PrefabId,
-                        fab.PrefabId + "：下限 " + floorKelvin.ToString("F1") + " K 不低于上限 "
-                        + ceilingKelvin.ToString("F1") + " K，信息卡不显示工作温区行。");
-                    return;
-                }
-
-                string lineTemplate = Strings.Get(KeyTempZoneLine);
-                if (string.IsNullOrEmpty(lineTemplate))
-                {
-                    return;
-                }
-
-                string line = string.Format(
-                    lineTemplate,
-                    GameUtil.GetFormattedTemperature(floorKelvin),
-                    GameUtil.GetFormattedTemperature(ceilingKelvin));
-
-                string tooltipTemplate = Strings.Get(KeyTempZoneTooltip);
-                string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
-
-                __result.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));
+                AppendWorkTemperature(fab.PrefabId, __instance.OverheatTemperature, __result, false);
             }
             catch (Exception e)
             {
                 ModLog.Error("信息卡工作温区行补丁异常：" + e);
             }
+        }
+
+        internal static void AppendWorkTemperature(string prefabId, float ceilingKelvin, List<Descriptor> descriptors, bool immune)
+        {
+            // 只对已登记最低工作温度的建筑显示；其它建筑完全保持原版效果列表。
+            float floorKelvin;
+            if (!BuildingZoneTable.TryGet(prefabId, out floorKelvin))
+            {
+                return;
+            }
+
+            // 普通建筑取过热属性，原版免疫过热的窑炉取独立工作上限。
+            if (!(ceilingKelvin > floorKelvin + 0.01f))
+            {
+                ModLog.WarnOnce("zone|display-invalid|" + prefabId,
+                    prefabId + "：下限 " + floorKelvin.ToString("F1") + " K 不低于上限 "
+                    + ceilingKelvin.ToString("F1") + " K，信息卡不显示工作温区行。");
+                return;
+            }
+
+            string lineTemplate = Strings.Get(KeyTempZoneLine);
+            if (string.IsNullOrEmpty(lineTemplate))
+            {
+                return;
+            }
+
+            string line = string.Format(
+                lineTemplate,
+                GameUtil.GetFormattedTemperature(floorKelvin),
+                GameUtil.GetFormattedTemperature(ceilingKelvin));
+
+            string tooltipTemplate = Strings.Get(immune
+                ? "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP" : KeyTempZoneTooltip);
+            string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
+
+            descriptors.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));
         }
     }
 }

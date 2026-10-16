@@ -597,8 +597,8 @@ namespace MaterialOverhaul.Game
             string forcedTooltip = forcedRun
                 ? LocalizedOr(KeyForcedTooltipDisable, "恢复这个建筑的温度限制。\n当前生产进度会保留。")
                 : SupportsBuiltInHeating
-                    ? LocalizedOr(KeyForcedTooltipEnable, "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。")
-                    : LocalizedOr(KeyPrefix + "FORCEDRUN.TOOLTIP_NO_HEATING", "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。");
+                    ? LocalizedOr(KeyForcedTooltipEnable, "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。")
+                    : LocalizedOr(KeyPrefix + "FORCEDRUN.TOOLTIP_NO_HEATING", "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。");
 
             global::Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
                 iconName: "action_power",

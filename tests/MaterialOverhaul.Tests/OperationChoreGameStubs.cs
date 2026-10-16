@@ -23,6 +23,7 @@ public sealed class ComplexRecipe
     {
         public Tag material;
         public Tag[] possibleMaterials;
+        public float[] possibleMaterialAmounts;
         public float amount;
     }
 }

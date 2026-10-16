@@ -17,7 +17,7 @@ namespace MaterialOverhaul.Game
     /// </summary>
     public partial class MaterialOverhaulFab
     {
-        /// <summary>本建筑的生产和加热功率是否由本 Mod 接管（首发三栋，包括无内置加热粉碎机）。</summary>
+        /// <summary>本建筑的生产和加热功率是否由本 Mod 接管（接入名单；窑炉无电，消费者注册正常跳过）。</summary>
         public bool HasPowerOverride
         {
             get { return BuildingWhitelist.Contains(PrefabId); }
@@ -31,7 +31,7 @@ namespace MaterialOverhaul.Game
 
         /// <summary>
         /// 是否挂上了「允许／暂停生产」自动化输入端口。
-        /// 首发三栋均挂端口；没有该端口的对象不参与自动化判断。
+        /// 六栋均有端口；没有该端口的对象不参与自动化判断。
         /// </summary>
         public bool HasAutomationInput
         {
@@ -342,6 +342,7 @@ namespace MaterialOverhaul.Game
             context.ConfiguredHeatingWatts = HeatingWatts;
             context.ProductionWatts = NumericProfile != null ? NumericProfile.ProductionWatts : 0f;
             context.DisallowBuiltInHeating = !SupportsBuiltInHeating;
+            context.NoPowerRequired = NumericProfile != null && NumericProfile.ProductionWatts == 0f;
 
             powerDemand = PowerDemand.Evaluate(context);
 

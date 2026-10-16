@@ -312,7 +312,7 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public void ApplyOverheatRule()
         {
-            if (overheatable == null || primaryElement == null)
+            if (primaryElement == null)
             {
                 return;
             }
@@ -338,6 +338,18 @@ namespace MaterialOverhaul.Game
 
                 return;
             }
+
+            if (NumericProfile != null && NumericProfile.PreserveOverheatImmunity)
+            {
+                // 窑炉只使用材料工作上限；不添加 Overheatable、不注册伤害阈值。
+                overheatApplied = true;
+                overheatTemperature = value;
+                materialRuleElement = element;
+                materialRuleMeltingPoint = element.highTemp;
+                materialRuleKnown = true;
+                return;
+            }
+            if (overheatable == null) return;
 
             if (overheatApplied && Mathf.Abs(value - overheatTemperature) < 0.01f
                 && Mathf.Abs(value - overheatable.OverheatTemperature) < 0.01f)

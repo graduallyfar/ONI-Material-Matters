@@ -45,7 +45,7 @@ namespace MaterialOverhaul.Game
         /// 建筑最低工作温度 L（V0.1.2 开发计划 §1.1、§2.1）：L **由建筑类型决定**，
         /// 切配方与换建材都不改变它，因此按建筑登记一次。
         ///
-        /// 首发三栋独立下限读取 BuildingProfiles：金属与玻璃80 ℃，粉碎机−20 ℃。
+        /// 六栋独立下限读取 BuildingProfiles；首发三栋参数不变。
         /// 未登记的建筑不启用本 Mod 温控，行为等同原版。
         /// </summary>
         public static void RegisterBuildingZones()
@@ -66,7 +66,7 @@ namespace MaterialOverhaul.Game
         }
 
         /// <summary>
-        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：首发三栋要求硬度25（FIRM）。
+        /// 要求硬度常规配置（V0.0.3 开发计划 §2.1、§6.1）：本版六栋要求硬度25（FIRM），新增数值为工作初值。
         ///
         /// **不走调试路径**：调试样例值只在常规配置之上填补清单里未登记的建筑，
         /// 不能把样例值扩散给全部白名单，也不能覆盖这里的数值。
@@ -140,8 +140,11 @@ namespace MaterialOverhaul.Game
                 }
 
                 OverheatRuleTable.Register(prefabId, OverheatRule.MeltingPointFraction);
-                ModLog.Info("过热规则：" + prefabId + " 的过热阈值取主建造材料熔点的 "
-                    + OverheatRule.MeltingPointFraction.ToString("F2") + "。");
+                BuildingProfile profile;
+                bool immune = BuildingProfiles.TryGet(prefabId, out profile) && profile.PreserveOverheatImmunity;
+                ModLog.Info("材料工作上限：" + prefabId + " 使用主材料熔点 × "
+                    + OverheatRule.MeltingPointFraction.ToString("F2") + " × 材料倍率"
+                    + (immune ? "；保留原版过热豁免，不设置过热伤害阈值。" : "，同时作为过热阈值。"));
             }
         }
 
@@ -180,7 +183,7 @@ namespace MaterialOverhaul.Game
             }
             // 真实配方表已处理；DLC/版本中未出现的候选正常跳过，不在切配方时反复扫描。
             zonesResolved = true;
-            ModLog.Info("首发配方温区：新增 " + registered + "，匹配候选 " + matched.Count
+            ModLog.Info("配方温区：新增 " + registered + "，匹配候选 " + matched.Count
                 + "/" + RecipeZoneCatalogue.Count + "；缺失候选本次未接入（DLC、版本或内容差异）。");
 
             LogPendingRecipes(manager);
@@ -251,7 +254,9 @@ namespace MaterialOverhaul.Game
                         if (material != null) ids.Add(material.ToString());
                 }
                 else if (element.material != null) ids.Add(element.material.ToString());
-                values.Add(new RecipeMaterial(ids.ToArray(), element.amount));
+                values.Add(element.possibleMaterialAmounts != null
+                    ? new RecipeMaterial(ids.ToArray(), element.possibleMaterialAmounts)
+                    : new RecipeMaterial(ids.ToArray(), element.amount));
             }
             return values;
         }

@@ -39,6 +39,7 @@ namespace MaterialOverhaul.Heating
         public float ConfiguredHeatingWatts;
         public float ProductionWatts;
         public bool DisallowBuiltInHeating;
+        public bool NoPowerRequired;
     }
 
     /// <summary>
@@ -93,11 +94,13 @@ namespace MaterialOverhaul.Heating
             bool productionAllowedByMachine =
                 context.TemperatureAllowsProduction && context.AutomationAllowsProduction && context.HasWorker;
 
-            demand.RequestedProductionWatts = productionAllowedByMachine ? (context.ProductionWatts > 0f ? context.ProductionWatts : Balance.ProductionWatts) : 0f;
-            HeatingIntent heating = context.OverheatDamaged || context.DisallowBuiltInHeating ? HeatingIntent.None : context.CommandedHeating;
+            demand.RequestedProductionWatts = productionAllowedByMachine && !context.NoPowerRequired
+                ? (context.ProductionWatts > 0f ? context.ProductionWatts : Balance.ProductionWatts) : 0f;
+            HeatingIntent heating = context.OverheatDamaged || context.DisallowBuiltInHeating || context.NoPowerRequired
+                ? HeatingIntent.None : context.CommandedHeating;
             demand.RequestedHeatingWatts = HeatingPower.HeatingWattsFor(heating, context.ConfiguredHeatingWatts);
 
-            if (!context.PowerAvailable)
+            if (!context.PowerAvailable && !context.NoPowerRequired)
             {
                 // 需求保留、消费为 0：不能为了不耗电先把需求清零。
                 return demand;
@@ -106,7 +109,7 @@ namespace MaterialOverhaul.Heating
             demand.UsedProductionWatts = demand.RequestedProductionWatts;
             demand.UsedHeatingWatts = demand.RequestedHeatingWatts;
             demand.AppliedHeating = heating;
-            demand.ProductionRunning = demand.UsedProductionWatts > 0f;
+            demand.ProductionRunning = productionAllowedByMachine;
             return demand;
         }
     }

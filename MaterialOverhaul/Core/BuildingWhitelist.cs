@@ -10,7 +10,7 @@ namespace MaterialOverhaul.Core
     /// 索引使用原版建筑 prefab id（<c>KPrefabID.PrefabTag</c>），不按配置类名匹配：
     /// 同一建筑可能在不同配置类中重复实现，类名匹配不可靠（《建筑分类与温区适用范围》§1.2）。
     ///
-    /// 用户确认首个正式版仅处理金属精炼器、岩石粉碎机、玻璃熔炉。
+    /// 首发三栋后，用户授权第二批加入分子熔炉、化学精炼厂和窑炉；其余候选不接入。
     /// </summary>
     public static class BuildingWhitelist
     {
@@ -18,7 +18,10 @@ namespace MaterialOverhaul.Core
         {
             "MetalRefinery",
             "GlassForge",
-            "RockCrusher"
+            "RockCrusher",
+            "SupermaterialRefinery",
+            "ChemicalRefinery",
+            "Kiln"
         };
 
         public static int Count

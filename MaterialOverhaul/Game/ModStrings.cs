@@ -29,9 +29,9 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString ENABLE = "启用强制运行";
                         public static LocString DISABLE = "禁用强制运行";
-                        public static LocString TOOLTIP_ENABLE = "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。";
+                        public static LocString TOOLTIP_ENABLE = "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。";
                         public static LocString TOOLTIP_DISABLE = "恢复这个建筑的温度限制。\n当前生产进度会保留。";
-                        public static LocString TOOLTIP_NO_HEATING = "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需要材料、电力和复制人操作，自动化信号仍能暂停生产。";
+                        public static LocString TOOLTIP_NO_HEATING = "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。";
                     }
                 }
             }
@@ -74,6 +74,7 @@ namespace MaterialOverhaul.Game
                     /// 「过热温度」行的属性明细承担，配方最佳温区引导到配方详情。
                     /// </summary>
                     public static LocString TEMPZONE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度等于建造材料决定的过热温度。\n各配方的最佳温度见配方详情。";
+                    public static LocString TEMPZONE_IMMUNE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度按主材料熔点的75%及材料百分比修正计算。\n保留原版过热豁免，越过工作上限不会造成过热伤害；材料相变仍按原版处理。\n没有内置加热，各配方的最佳温度见配方详情。";
 
                     public static LocString HEAT_PREHEAT = "预热中";
 
@@ -279,7 +280,7 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString DESCRIPTION = "生产控制";
 
-                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足材料、电力和操作条件。未连接自动化线时允许生产。";
+                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足这个建筑的其他运行条件。未连接自动化线时允许生产。";
 
                         public static LocString INACTIVE = "<b><style=\"logic_off\">红色信号</style></b>：暂停生产。\n仍会准备当前配方；如有内置加热，预热和维持温度不受影响。";
                     }

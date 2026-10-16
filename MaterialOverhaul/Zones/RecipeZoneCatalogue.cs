@@ -16,8 +16,11 @@ namespace MaterialOverhaul.Zones
     {
         public readonly string[] Materials;
         public readonly float Amount;
+        public readonly float[] Amounts;
         public RecipeMaterial(string material, float amount) : this(new[] { material }, amount) { }
         public RecipeMaterial(string[] materials, float amount) { Materials = materials; Amount = amount; }
+        public RecipeMaterial(string[] materials, float[] amounts)
+        { Materials = materials; Amounts = amounts; Amount = amounts != null && amounts.Length > 0 ? amounts[0] : float.NaN; }
     }
 
     public sealed class RecipeZoneSpec
@@ -40,10 +43,13 @@ namespace MaterialOverhaul.Zones
         public float[] OutputAmounts;
         // 只用于原版单输入的制砂候选集合，不能把 null material 当成实际元素。
         public string[] InputOptions;
+        // 多输入替代材料，以及每种替代材料各自用量（例如窑炉燃料与隔热质织物）。
+        public RecipeMaterial[] InputAlternatives;
 
         public bool MatchesRecipe(IList<RecipeMaterial> inputs, IList<RecipeMaterial> outputs)
         {
             if (!MatchSide(Outputs, OutputAmounts, outputs)) return false;
+            if (InputAlternatives != null) return MatchAlternatives(InputAlternatives, inputs);
             if (InputOptions == null) return MatchSide(Inputs, InputAmounts, inputs);
             if (inputs == null || inputs.Count != 1 || inputs[0] == null || InputAmounts == null || InputAmounts.Length != 1
                 || inputs[0].Materials == null || inputs[0].Materials.Length == 0
@@ -51,6 +57,41 @@ namespace MaterialOverhaul.Zones
                 || Math.Abs(inputs[0].Amount - InputAmounts[0]) > 0.0001f) return false;
             foreach (string material in inputs[0].Materials)
                 if (Array.IndexOf(InputOptions, material) < 0) return false;
+            return true;
+        }
+
+        private static bool MatchAlternatives(RecipeMaterial[] expected, IList<RecipeMaterial> actual)
+        {
+            if (actual == null || actual.Count != expected.Length) return false;
+            bool[] used = new bool[actual.Count];
+            foreach (RecipeMaterial wanted in expected)
+            {
+                bool found = false;
+                for (int j = 0; j < actual.Count; j++)
+                    if (!used[j] && MatchesOptions(wanted, actual[j]))
+                    { used[j] = true; found = true; break; }
+                if (!found) return false;
+            }
+            return true;
+        }
+
+        private static bool MatchesOptions(RecipeMaterial expected, RecipeMaterial actual)
+        {
+            if (expected == null || actual == null || actual.Materials == null || actual.Materials.Length == 0
+                || expected.Materials == null || expected.Materials.Length == 0
+                || actual.Amounts != null && actual.Amounts.Length != actual.Materials.Length
+                || expected.Amounts != null && expected.Amounts.Length != expected.Materials.Length) return false;
+            HashSet<string> seen = new HashSet<string>();
+            for (int i = 0; i < actual.Materials.Length; i++)
+            {
+                string material = actual.Materials[i];
+                int index = Array.IndexOf(expected.Materials, material);
+                if (string.IsNullOrEmpty(material) || !seen.Add(material) || index < 0) return false;
+                float amount = actual.Amounts != null ? actual.Amounts[i] : actual.Amount;
+                float wanted = expected.Amounts != null ? expected.Amounts[index] : expected.Amount;
+                if (float.IsNaN(amount) || float.IsInfinity(amount) || amount <= 0f
+                    || float.IsNaN(wanted) || float.IsInfinity(wanted) || Math.Abs(amount - wanted) > .0001f) return false;
+            }
             return true;
         }
 
@@ -111,7 +152,7 @@ namespace MaterialOverhaul.Zones
     /// 用户授权接入的首发配方最佳温区初值，平衡仍待游戏验收；未设计配方不占位：
     /// 未登记的配方保持原版行为，并由接入层记录一条待定日志（避免「名单内配方静默落空」）。
     ///
-    /// 首发候选：金属13、粉碎26、玻璃1。按完整材料与质量在真实配方表中匹配，DLC缺失跳过。
+    /// 首发40个候选保留，第二批新增分子5、化学4、窑炉2，共51个。按完整材料与质量在真实配方表中匹配，DLC缺失跳过。
     /// 建筑下限见 <see cref="BuildingZoneTable"/>，上限由主建造材料推出；铝450–650 ℃沿用已确认值。
     ///
     /// 旧版「300／450／650／800 ℃ 四边界」中的 300 ℃ 已改由建筑下限承担（本版 80 ℃），
@@ -191,7 +232,32 @@ namespace MaterialOverhaul.Zones
                 "SedimentaryRock", "Shale", "SuperInsulator", "SiltStone", "Coquina", "Basalt" };
             entries.Add(sand);
             entries.Add(Entry("GlassForge", new[] { "Sand" }, new[] { 100f }, new[] { "MoltenGlass" }, new[] { 25f }, 900f, 1200f));
+            AppendSecondWave(entries);
             return entries.ToArray();
+        }
+
+        private static void AppendSecondWave(List<RecipeZoneSpec> entries)
+        {
+            int first = entries.Count;
+            entries.Add(Entry("SupermaterialRefinery", new[] { "Graphite", "Sulfur", "Aluminum" }, new[] { 90f, 5f, 5f }, new[] { "Fullerene" }, new[] { 100f }, 450f, 650f));
+            entries.Add(Entry("SupermaterialRefinery", new[] { "TempConductorSolid", "Polypropylene", "MilkFat" }, new[] { 15f, 70f, 15f }, new[] { "HardPolypropylene" }, new[] { 100f }, 80f, 140f));
+            RecipeZoneSpec insulation = Entry("SupermaterialRefinery", new[] { "Isoresin", "Katairite", "BasicFabric" }, new[] { 15f, 80f, 5f }, new[] { "SuperInsulator" }, new[] { 100f }, 200f, 400f);
+            insulation.InputAlternatives = new[] { new RecipeMaterial("Isoresin", 15f), new RecipeMaterial("Katairite", 80f), new RecipeMaterial(new[] { "BasicFabric", "FeatherFabric" }, 5f) };
+            entries.Add(insulation);
+            entries.Add(Entry("SupermaterialRefinery", new[] { "Niobium", "Tungsten" }, new[] { 5f, 95f }, new[] { "TempConductorSolid" }, new[] { 100f }, 1000f, 1400f));
+            entries.Add(Entry("SupermaterialRefinery", new[] { "EnrichedUranium" }, new[] { 10f }, new[] { "SelfChargingElectrobank" }, new[] { 1f }, 40f, 100f));
+            entries.Add(Entry("ChemicalRefinery", new[] { "Water", "Salt" }, new[] { 93f, 7f }, new[] { "SaltWater" }, new[] { 100f }, 15f, 40f));
+            entries.Add(Entry("ChemicalRefinery", new[] { "PhytoOil", "BleachStone" }, new[] { 160f, 40f }, new[] { "RefinedLipid" }, new[] { 200f }, 40f, 80f));
+            entries.Add(Entry("ChemicalRefinery", new[] { "Fullerene", "Gold", "Petroleum" }, new[] { 1f, 49.5f, 49.5f }, new[] { "SuperCoolant" }, new[] { 100f }, 80f, 160f));
+            entries.Add(Entry("ChemicalRefinery", new[] { "Isoresin", "Petroleum" }, new[] { 35f, 65f }, new[] { "ViscoGel" }, new[] { 100f }, 60f, 120f));
+            string[] fuels = { "WoodLog", "FabricatedWood", "PalmWood", "Carbon", "Peat" };
+            RecipeZoneSpec ceramic = Entry("Kiln", new[] { "Clay", "Carbon" }, new[] { 100f, 25f }, new[] { "Ceramic" }, new[] { 100f }, 300f, 600f);
+            ceramic.InputAlternatives = new[] { new RecipeMaterial("Clay", 100f), new RecipeMaterial(fuels, 25f) };
+            entries.Add(ceramic);
+            RecipeZoneSpec carbon = Entry("Kiln", new[] { "Carbon" }, new[] { 125f }, new[] { "RefinedCarbon" }, new[] { 100f }, 250f, 450f);
+            carbon.InputAlternatives = new[] { new RecipeMaterial(fuels, new[] { 200f, 200f, 200f, 125f, 300f }) };
+            entries.Add(carbon);
+            for (int i = first; i < entries.Count; i++) entries[i].Source = "第二批三建筑开发初值（平衡待验收）";
         }
     }
 }

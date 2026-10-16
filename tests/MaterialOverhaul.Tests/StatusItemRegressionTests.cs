@@ -16,7 +16,7 @@ namespace MaterialOverhaul.Tests
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(80, Strings.Values.Count, "真实文本树登记80条完整键");
+            TestRunner.CheckEqual(81, Strings.Values.Count, "真实文本树登记81条完整键");
             DamageStatusItems.Register();
             MaterialRiskStatusItems.Register();
             RunModeStatusItem.Register();

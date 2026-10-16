@@ -34,8 +34,8 @@ namespace MaterialOverhaul.Tests
         private static void ProfilesAndCurves()
         {
             TestRunner.Section("独立建筑参数与效率端点");
-            TestRunner.CheckEqual(3, BuildingProfiles.All.Count, "首发只有三栋");
-            TestRunner.Check(!BuildingWhitelist.Contains("Kiln") && !BuildingWhitelist.Contains("RubberMaker"), "旧候选退出接入名单");
+            TestRunner.CheckEqual(6, BuildingProfiles.All.Count, "首发三栋加第二批三栋");
+            TestRunner.Check(BuildingWhitelist.Contains("Kiln") && !BuildingWhitelist.Contains("RubberMaker"), "仅加入本轮三栋，不扩散到其余候选");
             string[] buildings = { "MetalRefinery", "RockCrusher", "GlassForge" };
             float[] floors = { 80f, -20f, 80f };
             float[] lows = { .30f, .80f, .25f };
@@ -151,7 +151,7 @@ namespace MaterialOverhaul.Tests
             ComplexRecipeManager.Instance.recipes.Clear();
             ContentRegistration.Apply();
             TestRunner.Check(!ContentRegistration.ZonesResolved, "空配方表不误报登记完成");
-            TestRunner.CheckEqual(40, RecipeZoneCatalogue.Count, "静态候选40条");
+            TestRunner.CheckEqual(51, RecipeZoneCatalogue.Count, "首发40条加第二批11条");
             TestRunner.CheckEqual(13, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "MetalRefinery"), "精炼13条");
             TestRunner.CheckEqual(26, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "RockCrusher"), "粉碎26条");
             TestRunner.CheckEqual(1, RecipeZoneCatalogue.All.Count(s => s.FabricatorId == "GlassForge"), "玻璃1条");
@@ -162,6 +162,11 @@ namespace MaterialOverhaul.Tests
                     ingredients = spec.Inputs.Select((s, i) => Element(s, spec.InputAmounts[i])).ToArray(),
                     results = spec.Outputs.Select((s, i) => Element(s, spec.OutputAmounts[i])).ToArray() };
                 if (spec.InputOptions != null) { recipe.ingredients[0].material = null; recipe.ingredients[0].possibleMaterials = spec.InputOptions.Select(s => new Tag(s)).ToArray(); }
+                if (spec.InputAlternatives != null)
+                    recipe.ingredients = spec.InputAlternatives.Select(s => new ComplexRecipe.RecipeElement {
+                        material = s.Materials.Length == 1 ? new Tag(s.Materials[0]) : null,
+                        possibleMaterials = s.Materials.Select(m => new Tag(m)).ToArray(),
+                        possibleMaterialAmounts = s.Amounts, amount = s.Amount }).ToArray();
                 ComplexRecipeManager.Instance.recipes.Add(recipe);
             }
             ComplexRecipe altered = new ComplexRecipe { id = "unknown-yield", fabricators = new List<Tag> { new Tag("GlassForge") },
@@ -169,7 +174,7 @@ namespace MaterialOverhaul.Tests
             ComplexRecipeManager.Instance.recipes.Add(altered);
             ContentRegistration.RegisterRecipeZones();
             TestRunner.Check(ContentRegistration.ZonesResolved, "真实表处理完成");
-            foreach (ComplexRecipe recipe in ComplexRecipeManager.Instance.recipes.Take(40))
+            foreach (ComplexRecipe recipe in ComplexRecipeManager.Instance.recipes.Take(51))
                 TestRunner.Check(RecipeZoneTable.GetOrUnconfigured(recipe.id).Configured, recipe.id + " 按完整材料和质量登记");
             TestRunner.Check(!RecipeZoneTable.GetOrUnconfigured(altered.id).Configured, "不同产量的其他Mod配方保持原版");
             ContentRegistration.RegisterRecipeZones();

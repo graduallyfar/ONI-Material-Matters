@@ -73,7 +73,7 @@ namespace MaterialOverhaul.Patches
                         __instance.inputPortInfo,
                         AutomationControlScope.PortId,
                         PortText(KeyControlDescription, "生产控制"),
-                        PortText(KeyControlActive, "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足材料、电力和操作条件。未连接自动化线时允许生产。"),
+                        PortText(KeyControlActive, "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足这个建筑的其他运行条件。未连接自动化线时允许生产。"),
                         PortText(KeyControlInactive, "<b><style=\"logic_off\">红色信号</style></b>：暂停生产。\n仍会准备当前配方；如有内置加热，预热和维持温度不受影响。"));
                 }
 
