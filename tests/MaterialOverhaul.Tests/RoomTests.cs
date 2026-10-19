@@ -242,7 +242,7 @@ namespace MaterialOverhaul.Tests
             // 未接入效果的分支不得提前挂 Effect，避免界面显示尚未发放的加成。
             string[] noEffectRooms =
             {
-                "MO_ShowerRoom", "MO_IndustrialArea", "MO_MedicalCenter", "MO_MissionControl",
+                "MO_IndustrialArea", "MO_MedicalCenter", "MO_MissionControl",
                 "MO_GeoTunerLab", "MO_Spaceport", "MO_CargoStation", "MO_DataCenter"
             };
             for (int i = 0; i < noEffectRooms.Length; i++)
@@ -252,6 +252,11 @@ namespace MaterialOverhaul.Tests
                     && (definition.EffectIds == null || definition.EffectIds.Length == 0),
                     noEffectRooms[i] + " 未挂未实装效果");
             }
+
+            TestRunner.CheckEqual(
+                RoomEffectIds.ShowerRelief,
+                Find("MO_ShowerRoom").EffectIds[0],
+                "淋浴间登记压力缓解效果");
 
             HashSet<string> effectIds = new HashSet<string>();
             RoomDefinition[] definitions = RoomCatalogue.NewRooms;

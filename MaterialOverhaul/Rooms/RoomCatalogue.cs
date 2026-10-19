@@ -36,6 +36,7 @@ namespace MaterialOverhaul.Rooms
                 },
                 // 同时存在厕所时保留原版卫生间／公共厕所，淋浴间只用于没有厕所的独立淋浴区。
                 Beats = null,
+                EffectIds = new[] { RoomEffectIds.ShowerRelief },
                 Priority = 0,
                 SortKey = 100
             },
