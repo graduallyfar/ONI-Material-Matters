@@ -7,10 +7,10 @@ using UnityEngine;
 namespace MaterialOverhaul.Patches
 {
     [HarmonyPatch(typeof(AdditionalDetailsPanel), "RefreshEnergyOverviewPanel")]
-    internal static class Patch_PowerInfoCard_NetworkCount
+    internal static class Patch_PowerInfoCard_WireCount
     {
-        internal const string LabelId = "MaterialOverhaul.PowerNetworkCount";
-        private const string Key = "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT";
+        internal const string LabelId = "MaterialOverhaul.PowerWireCount";
+        private const string Key = "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT";
 
         // 必须在原版Commit之前SetLabel；后置补丁再Commit会隐藏原版本轮已提交的其他行。
         internal static void Prefix(CollapsibleDetailContentPanel targetPanel, GameObject targetEntity)
@@ -20,13 +20,13 @@ namespace MaterialOverhaul.Patches
             try
             {
                 int count;
-                string text = PowerCircuitCount.TryGet(out count)
-                    ? string.Format(Localized(Key, "电网数量：{0}"), count)
-                    : Localized(Key + "_PENDING", "电网数量：统计中");
+                string text = PowerWireCount.TryGet(targetEntity, out count)
+                    ? string.Format(Localized(Key, "电线数量：{0}"), count)
+                    : Localized(Key + "_PENDING", "电线数量：统计中");
                 targetPanel.SetLabel(LabelId, text, Localized(Key + "_TOOLTIP",
-                    "当前存档中所有已建成的独立电网总数，包含未发电的电网及虚拟电网，不计规划线路。\n变压器两侧若未通过其他线路连通，分别计数。"));
+                    "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。"));
             }
-            catch (Exception e) { ModLog.WarnOnce("power-count-card", "电网数量信息卡显示失败：" + e); }
+            catch (Exception e) { ModLog.WarnOnce("power-count-card", "电线数量信息卡显示失败：" + e); }
         }
 
         private static string Localized(string key, string fallback)

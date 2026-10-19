@@ -49,9 +49,9 @@ namespace MaterialOverhaul.Game
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
                     public static LocString RECIPE_TEMP_RANGE_TOOLTIP = "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。";
 
-                    public static LocString POWER_NETWORK_COUNT = "电网数量：{0}";
-                    public static LocString POWER_NETWORK_COUNT_PENDING = "电网数量：统计中";
-                    public static LocString POWER_NETWORK_COUNT_TOOLTIP = "当前存档中所有已建成的独立电网总数，包含未发电的电网及虚拟电网，不计规划线路。\n变压器两侧若未通过其他线路连通，分别计数。";
+                    public static LocString POWER_WIRE_COUNT = "电线数量：{0}";
+                    public static LocString POWER_WIRE_COUNT_PENDING = "电线数量：统计中";
+                    public static LocString POWER_WIRE_COUNT_TOOLTIP = "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。";
 
                     public static class HEATING_POWER
                     {

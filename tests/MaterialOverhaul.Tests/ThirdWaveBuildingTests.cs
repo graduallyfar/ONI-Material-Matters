@@ -727,7 +727,7 @@ namespace MaterialOverhaul.Tests
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(91, Strings.Values.Count, "字段树登记 91 条（电网数量新增3条）");
+            TestRunner.CheckEqual(91, Strings.Values.Count, "字段树登记 91 条（电线数量3条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");

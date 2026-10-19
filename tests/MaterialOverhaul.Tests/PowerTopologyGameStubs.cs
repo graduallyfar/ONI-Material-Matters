@@ -101,6 +101,12 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
     public void AddNetworksRebuiltListener(Action<IList<UtilityNetwork>, ICollection<int>> listener) { rebuilt += listener; }
     public void RemoveNetworksRebuiltListener(Action<IList<UtilityNetwork>, ICollection<int>> listener) { rebuilt -= listener; }
     public UtilityNetwork GetNetworkForCell(int cell) => networks.TryGetValue(cell, out UtilityNetwork value) ? value : null;
+    public UtilityNetwork GetNetworkByID(int id)
+    {
+        foreach (UtilityNetwork network in networks.Values) if (network.id == id) return network;
+        foreach (UtilityNetwork network in ExtraNetworks) if (network.id == id) return network;
+        return null;
+    }
     public IList<UtilityNetwork> GetNetworks()
     {
         NetworkReads++;
@@ -121,6 +127,17 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
     public void SemiVirtual(int cell, object key) { semiVirtualLinks[cell] = key; IsDirty = true; }
     public void SimulateRebuild()
     {
+        // 与原版一致：一个物理网络维护自己的完整allWires名单。
+        var groups = new Dictionary<int, ElectricalUtilityNetwork>();
+        foreach (int cell in new List<int>(networks.Keys))
+        {
+            int id = networks[cell].id;
+            if (!groups.TryGetValue(id, out ElectricalUtilityNetwork group))
+            { group = new ElectricalUtilityNetwork { id = id }; groups.Add(id, group); }
+            Wire wire = items[cell] as Wire;
+            if (wire != null && !wire.IsDisconnected()) group.allWires.Add(wire);
+            networks[cell] = group;
+        }
         IsDirty = false; rebuilt?.Invoke(new List<UtilityNetwork>(networks.Values), physicalNodes);
     }
 }
