@@ -268,10 +268,66 @@ namespace MaterialOverhaul.Tests
             CheckEffectIds(RoomCatalogue.NewRooms, effectIds);
             CheckEffectIds(RoomCatalogue.Modifications, effectIds);
 
+            // 每个挂出的效果都必须有数值定义；每个数值定义也必须真的被某个房间使用，
+            // 避免出现「登记了但永远不会发放」或「房间引用了不存在的效果」。
+            foreach (string id in effectIds)
+            {
+                TestRunner.Check(RoomEffectCatalogue.Get(id) != null, "效果有数值定义：" + id);
+            }
+
+            RoomEffectSpec[] specs = RoomEffectCatalogue.All;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                TestRunner.Check(effectIds.Contains(specs[i].Id), "效果定义被房间使用：" + specs[i].Id);
+            }
+
             TestRunner.CheckEqual(
                 RoomEffectIds.ArtificialParkMorale,
                 Find("MO_ArtificialPark").EffectIds[0],
                 "人造公园士气效果 id 稳定");
+
+            EffectValues();
+        }
+
+        private static void EffectValues()
+        {
+            TestRunner.Section("效果数值与持续时间");
+
+            RoomEffectSpec park = RoomEffectCatalogue.Get(RoomEffectIds.ArtificialParkMorale);
+            TestRunner.Check(park != null && park.Morale == 2f && !park.HasStressReduction,
+                "人造公园：士气 +2，不改压力");
+
+            RoomEffectSpec shower = RoomEffectCatalogue.Get(RoomEffectIds.ShowerRelief);
+            TestRunner.Check(shower != null && !shower.HasMorale && shower.StressReductionPercent == 10f,
+                "淋浴间：压力上升速度 −10%");
+
+            RoomEffectSpec spa = RoomEffectCatalogue.Get(RoomEffectIds.SpaMorale);
+            TestRunner.Check(spa != null && spa.Morale == 2f && spa.StressReductionPercent == 50f,
+                "水疗室：士气 +2，压力上升速度 −50%");
+
+            RoomEffectSpec tea = RoomEffectCatalogue.Get(RoomEffectIds.TeaRoomMorale);
+            TestRunner.Check(tea != null && tea.Morale == 2f && tea.StressReductionPercent == 30f,
+                "茶歇室：士气 +2，压力上升速度 −30%");
+
+            RoomEffectSpec banquet = RoomEffectCatalogue.Get(RoomEffectIds.BanquetRelief);
+            TestRunner.Check(banquet != null && !banquet.HasMorale && banquet.StressReductionPercent == 10f,
+                "宴会厅：只追加压力 −10%，士气由原版效果负责");
+
+            RoomEffectSpec gallery = RoomEffectCatalogue.Get(RoomEffectIds.GalleryMorale);
+            TestRunner.Check(gallery != null && gallery.Morale == 2f, "展览馆：士气 +2");
+
+            RoomEffectSpec[] specs = RoomEffectCatalogue.All;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                TestRunner.Check(specs[i].DurationSeconds == RoomEffectCatalogue.DefaultDurationSeconds,
+                    specs[i].Id + " 使用统一工作初值持续时间");
+                TestRunner.Check(specs[i].HasMorale || specs[i].HasStressReduction,
+                    specs[i].Id + " 至少有一项修正");
+                TestRunner.Check(!string.IsNullOrEmpty(specs[i].StringToken),
+                    specs[i].Id + " 有本地化键片段");
+            }
+
+            TestRunner.CheckEqual(600f, RoomEffectCatalogue.DefaultDurationSeconds, "工作初值持续 1 周期");
         }
 
         private static void CheckEffectIds(RoomDefinition[] definitions, HashSet<string> effectIds)
