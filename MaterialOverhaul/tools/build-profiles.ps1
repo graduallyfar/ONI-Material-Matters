@@ -2,13 +2,13 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [ValidateSet('Industrial', 'Power', 'Combined')]
-    [string[]]$Profile = @('Industrial', 'Power', 'Combined'),
+    [ValidateSet('Industrial', 'Power', 'Room', 'Combined')]
+    [string[]]$Profile = @('Industrial', 'Power', 'Room', 'Combined'),
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release'
 )
 $ErrorActionPreference = 'Stop'
-$canonicalProfiles = @{ industrial = 'Industrial'; power = 'Power'; combined = 'Combined' }
+$canonicalProfiles = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined' }
 $Profile = @($Profile | ForEach-Object { $canonicalProfiles[$_] })
 $workspaceRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $projectRoot = Join-Path $workspaceRoot 'MaterialOverhaul'
@@ -35,9 +35,10 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     $version = (& dotnet msbuild $projectFile "-p:SystemProfile=$mode" -getProperty:Version).Trim()
     if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw "$mode 版本读取失败。" }
     $settings = switch ($mode) {
-        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电沿用原版。'; Industrial = $true; Power = $false } }
-        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true } }
-        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业与电力整合验证候选；包含温控、订单、磨损与电力损耗。游戏交互与平衡待验收。'; Industrial = $true; Power = $true } }
+        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false } }
+        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false } }
+        'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true } }
+        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业、电力与房间整合验证候选；包含温控、订单、磨损、电力损耗与房间条件。游戏交互与平衡待验收。'; Industrial = $true; Power = $true; Room = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }
@@ -56,8 +57,10 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     $selectedBlocks = foreach ($block in $poBlocks) {
         $context = [regex]::Match($block, '(?m)^msgctxt "([^"\r\n]+)"\r?$')
         if (!$context.Success) { $block; continue }
-        $isPower = $context.Groups[1].Value.StartsWith('STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_', [StringComparison]::Ordinal)
-        if ($mode -eq 'Combined' -or ($mode -eq 'Power' -and $isPower) -or ($mode -eq 'Industrial' -and !$isPower)) { $block }
+        $key = $context.Groups[1].Value
+        $isPower = $key.StartsWith('STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_', [StringComparison]::Ordinal)
+        $isRoom = $key.StartsWith('STRINGS.ROOMS.MATERIALOVERHAUL.', [StringComparison]::Ordinal)
+        if ($mode -eq 'Combined' -or ($mode -eq 'Power' -and $isPower) -or ($mode -eq 'Room' -and $isRoom) -or ($mode -eq 'Industrial' -and !$isPower -and !$isRoom)) { $block }
     }
     [System.IO.File]::WriteAllText((Join-Path $stringsDir 'zh.po'), ($selectedBlocks -join "`n`n") + "`n", $utf8)
     $fileHashes = [ordered]@{}
@@ -66,7 +69,7 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     }
     $manifest = [ordered]@{
         schemaVersion = 1; profile = $mode; version = [string]$version; configuration = $Configuration
-        industrialEnabled = $settings.Industrial; powerEnabled = $settings.Power
+        industrialEnabled = $settings.Industrial; powerEnabled = $settings.Power; roomEnabled = $settings.Room
         sourceCommit = $commit; sourceDirty = $sourceDirty; files = $fileHashes
     }
     [System.IO.File]::WriteAllText((Join-Path $packageDir 'build_profile.json'), ($manifest | ConvertTo-Json -Depth 5) + "`n", $utf8)

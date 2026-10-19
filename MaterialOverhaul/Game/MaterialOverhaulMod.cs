@@ -2,7 +2,7 @@ using System;
 using HarmonyLib;
 using KMod;
 using MaterialOverhaul.Core;
-#if !MATERIAL_OVERHAUL_POWER_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
 using MaterialOverhaul.Hardness;
 using MaterialOverhaul.Zones;
 #endif
@@ -28,7 +28,7 @@ namespace MaterialOverhaul
                 throw;
             }
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             Core.DebugValues.Initialize(path);
 #endif
 
@@ -38,12 +38,13 @@ namespace MaterialOverhaul
             LoadModStrings();
 
             ModLog.Info("v" + Core.ModInfo.Version + "；构建模式：" + BuildProfile.DisplayName
-                + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled + "。");
-#if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+                + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled
+                + "；房间=" + BuildProfile.RoomEnabled + "。");
+#if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             ModLog.Info("电力0.0.2：按最短物理路径实际支付损耗；设备、电池充放电与变压器分账；信息卡显示电线数量、输送和损耗。系数与电导率为首轮测试初值，尚未通过游戏平衡验收。");
 #endif
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count
@@ -63,9 +64,13 @@ namespace MaterialOverhaul
             ModLog.Info("工业温控、预热补热、订单、磨损、材料分类及过热改造未编入此验证版；工业建筑沿用原版机制。");
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
 #endif
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+            ModLog.Info("房间系统：16 个新增房间、2 项原版改造、平均装饰度／温度条件与独立模式已编入；"
+                + "士气、压力、生产效率、医疗、科研与航天效果尚未接入，游戏验收待执行。");
+#endif
         }
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
         private static void LogBalanceSummary()
         {
@@ -107,10 +112,15 @@ namespace MaterialOverhaul
         /// </summary>
         private static void RegisterStrings()
         {
+#if !MATERIAL_OVERHAUL_ROOM_ONLY
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.UI), "STRINGS.");
-#if !MATERIAL_OVERHAUL_POWER_ONLY
+#endif
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDING), "STRINGS.");
+#endif
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+            LocString.CreateLocStringKeys(typeof(Game.RoomStrings.ROOMS), "STRINGS.");
 #endif
         }
 

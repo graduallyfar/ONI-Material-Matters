@@ -750,7 +750,11 @@ namespace MaterialOverhaul.Tests
                 Match str = Regex.Match(line, "^msgstr \"(.*)\"$");
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
-            TestRunner.CheckEqual(102, po.Count, "zh.po有102条msgctxt");
+            // 房间系统的 69 条键与工业/电力共用同一个 zh.po，由 ProfileChecks 按构建模式
+            // 分别校验；这里只核对工业与电力共用的 102 条，避免把房间包差异算成工业回归。
+            foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
+                po.Remove(roomKey);
+            TestRunner.CheckEqual(102, po.Count, "zh.po有102条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;

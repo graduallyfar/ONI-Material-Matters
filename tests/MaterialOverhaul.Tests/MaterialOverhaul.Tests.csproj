@@ -59,6 +59,8 @@
     <Compile Include="..\..\MaterialOverhaul\Hardness\**\*.cs" LinkBase="Linked\Hardness" />
     <Compile Include="..\..\MaterialOverhaul\Orders\**\*.cs" LinkBase="Linked\Orders" />
     <Compile Include="..\..\MaterialOverhaul\Power\**\*.cs" LinkBase="Linked\Power" />
+    <!-- 房间纯判定层：配置、快照、平均环境、条件求值与覆盖规则。 -->
+    <Compile Include="..\..\MaterialOverhaul\Rooms\**\*.cs" LinkBase="Linked\Rooms" />
     <!-- 基础版只读电网快照的实际源码；原版对象由 PowerTopologyGameStubs 提供。 -->
     <Compile Include="..\..\MaterialOverhaul\Game\PowerTopologyMonitor.cs" Link="Linked\Game\PowerTopologyMonitor.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerTopologyPatches.cs" Link="Linked\Game\PowerTopologyPatches.cs" />

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     构建 MaterialOverhaul 并部署到本机缺氧的本地 Mod 目录。
 
@@ -13,7 +13,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Industrial', 'Power', 'Combined')]
+    [ValidateSet('Industrial', 'Power', 'Room', 'Combined')]
     [string]$Profile,
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release',
@@ -22,7 +22,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Profile = @{ industrial = 'Industrial'; power = 'Power'; combined = 'Combined' }[$Profile]
+$Profile = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined' }[$Profile]
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $projectRoot

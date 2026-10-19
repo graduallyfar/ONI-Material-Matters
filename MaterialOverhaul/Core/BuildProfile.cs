@@ -8,16 +8,25 @@ namespace MaterialOverhaul.Core
         public const string DisplayName = "电力独立验证版";
         public const bool IndustrialEnabled = false;
         public const bool PowerEnabled = true;
+        public const bool RoomEnabled = false;
 #elif MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
         public const string Name = "Industrial";
         public const string DisplayName = "工业独立验证版";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = false;
+        public const bool RoomEnabled = false;
+#elif MATERIAL_OVERHAUL_ROOM_ONLY
+        public const string Name = "Room";
+        public const string DisplayName = "房间独立验证版";
+        public const bool IndustrialEnabled = false;
+        public const bool PowerEnabled = false;
+        public const bool RoomEnabled = true;
 #else
         public const string Name = "Combined";
         public const string DisplayName = "完整整合验证版";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = true;
+        public const bool RoomEnabled = true;
 #endif
     }
 }

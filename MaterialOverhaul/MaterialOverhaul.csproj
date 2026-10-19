@@ -8,6 +8,7 @@
     <SystemProfile Condition="'$(SystemProfile)' == ''">Power</SystemProfile>
     <DefineConstants Condition="'$(SystemProfile)' == 'Power'">$(DefineConstants);MATERIAL_OVERHAUL_POWER_ONLY</DefineConstants>
     <DefineConstants Condition="'$(SystemProfile)' == 'Industrial'">$(DefineConstants);MATERIAL_OVERHAUL_INDUSTRIAL_ONLY</DefineConstants>
+    <DefineConstants Condition="'$(SystemProfile)' == 'Room'">$(DefineConstants);MATERIAL_OVERHAUL_ROOM_ONLY</DefineConstants>
     <IntermediateOutputPath>obj\$(SystemProfile)\$(Configuration)\</IntermediateOutputPath>
     <!-- 目标框架由游戏程序集核实：OxygenNotIncluded_Data\Managed\netstandard.dll 为 2.1.0.0 -->
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -38,16 +39,20 @@
 
   <!-- 真正排除另一系统的组件、判断层与补丁，而非只在运行期跳过。 -->
   <ItemGroup Condition="'$(SystemProfile)' == 'Power'">
-    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs" />
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Rooms\**\*.cs" />
     <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Industrial'">
-    <Compile Remove="Power\**\*.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+    <Compile Remove="Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SystemProfile)' == 'Room'">
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs" />
   </ItemGroup>
 
   <Target Name="CheckSystemProfile" BeforeTargets="PrepareForBuild">
-    <Error Condition="'$(SystemProfile)' != 'Industrial' and '$(SystemProfile)' != 'Power' and '$(SystemProfile)' != 'Combined'"
-           Text="未知SystemProfile：$(SystemProfile)。只支持Industrial、Power、Combined。" />
+    <Error Condition="'$(SystemProfile)' != 'Industrial' and '$(SystemProfile)' != 'Power' and '$(SystemProfile)' != 'Room' and '$(SystemProfile)' != 'Combined'"
+           Text="未知SystemProfile：$(SystemProfile)。只支持Industrial、Power、Room、Combined。" />
   </Target>
 
   <PropertyGroup>

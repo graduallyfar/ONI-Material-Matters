@@ -17,6 +17,16 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_PowerInfoCard_WireCount",
         "MaterialOverhaul.Patches.Patch_PowerSettlement_Sim"
     };
+    private static readonly HashSet<string> RoomPatches = new(StringComparer.Ordinal)
+    {
+        "MaterialOverhaul.Patches.Patch_Room_Db_Initialize",
+        "MaterialOverhaul.Patches.Patch_RoomTypes_GetRoomType",
+        "MaterialOverhaul.Patches.Patch_RoomType_IsSatisfactory",
+        "MaterialOverhaul.Patches.Patch_RoomProber_Refresh",
+        "MaterialOverhaul.Patches.Patch_RoomProber_Sim1000ms",
+        "MaterialOverhaul.Patches.Patch_RoomConstraints_RoomCriteriaString",
+        "MaterialOverhaul.Patches.Patch_RoomDetails_RoomDetailString"
+    };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 
     private static void Check(bool condition, string message)
@@ -35,15 +45,21 @@ internal static partial class Program
                 Console.WriteLine($"原版电力IL调用契约 {checks} 项，全部通过。");
                 return 0;
             }
-            Check(args.Length > 0 && args.Length % 2 == 0, "用法：ProfileChecks <Industrial|Power|Combined> <包目录> [更多模式与目录]");
+            Check(args.Length > 0 && args.Length % 2 == 0, "用法：ProfileChecks <Industrial|Power|Room|Combined> <包目录> [更多模式与目录]");
             var profiles = new Dictionary<string, Snapshot>();
             for (int i = 0; i < args.Length; i += 2) profiles.Add(args[i], Inspect(args[i], args[i + 1]));
             if (profiles.TryGetValue("Combined", out var combined)
-                && profiles.TryGetValue("Industrial", out var industrial) && profiles.TryGetValue("Power", out var power))
+                && profiles.TryGetValue("Industrial", out var industrial)
+                && profiles.TryGetValue("Power", out var power)
+                && profiles.TryGetValue("Room", out var room))
             {
-                var union = new HashSet<string>(industrial.Patches); union.UnionWith(power.Patches);
-                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于两个独立版补丁的并集。");
-                Check(!industrial.Patches.Overlaps(power.Patches), "两个独立版不得包含同一个功能补丁。");
+                var union = new HashSet<string>(industrial.Patches);
+                union.UnionWith(power.Patches);
+                union.UnionWith(room.Patches);
+                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于三个独立版补丁的并集。");
+                Check(!industrial.Patches.Overlaps(power.Patches), "工业与电力独立版不得包含同一个功能补丁。");
+                Check(!industrial.Patches.Overlaps(room.Patches), "工业与房间独立版不得包含同一个功能补丁。");
+                Check(!power.Patches.Overlaps(room.Patches), "电力与房间独立版不得包含同一个功能补丁。");
             }
             Console.WriteLine($"隔离程序集与验证包检查 {checks} 项，全部通过。");
             return 0;
@@ -53,15 +69,16 @@ internal static partial class Program
 
     private static Snapshot Inspect(string profile, string directory)
     {
-        Check(profile is "Industrial" or "Power" or "Combined", "未知构建模式：" + profile);
+        Check(profile is "Industrial" or "Power" or "Room" or "Combined", "未知构建模式：" + profile);
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
         JsonElement root = manifest.RootElement;
         string expectedVersion = profile == "Power" ? "0.0.2" : "0.2.2";
         Check(root.GetProperty("version").GetString() == expectedVersion, "包版本与系统专属版本不符。");
         Check(File.ReadAllText(Path.Combine(directory, "mod_info.yaml")).Contains("version: \"" + expectedVersion + "\""), "模组元数据版本不符。");
         Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
-        Check(root.GetProperty("industrialEnabled").GetBoolean() == (profile != "Power"), "清单工业开关不符。");
-        Check(root.GetProperty("powerEnabled").GetBoolean() == (profile != "Industrial"), "清单电力开关不符。");
+        Check(root.GetProperty("industrialEnabled").GetBoolean() == (profile is "Industrial" or "Combined"), "清单工业开关不符。");
+        Check(root.GetProperty("powerEnabled").GetBoolean() == (profile is "Power" or "Combined"), "清单电力开关不符。");
+        Check(root.GetProperty("roomEnabled").GetBoolean() == (profile is "Room" or "Combined"), "清单房间开关不符。");
         foreach (JsonProperty file in root.GetProperty("files").EnumerateObject())
         {
             string path = Path.GetFullPath(Path.Combine(directory, file.Name));
@@ -121,25 +138,39 @@ internal static partial class Program
                     switch (metadata.GetString(field.Name))
                     {
                         case "Name": Check(Encoding.Unicode.GetString(bytes) == profile, "入口构建名称不符。"); break;
-                        case "IndustrialEnabled": Check((bytes[0] != 0) == (profile != "Power"), "DLL工业开关不符。"); break;
-                        case "PowerEnabled": Check((bytes[0] != 0) == (profile != "Industrial"), "DLL电力开关不符。"); break;
+                        case "IndustrialEnabled": Check((bytes[0] != 0) == (profile is "Industrial" or "Combined"), "DLL工业开关不符。"); break;
+                        case "PowerEnabled": Check((bytes[0] != 0) == (profile is "Power" or "Combined"), "DLL电力开关不符。"); break;
+                        case "RoomEnabled": Check((bytes[0] != 0) == (profile is "Room" or "Combined"), "DLL房间开关不符。"); break;
                     }
                 }
             }
             const string textPrefix = "MaterialOverhaul.Game.ModStrings+";
+            const string roomTextPrefix = "MaterialOverhaul.Game.RoomStrings+";
             if (name.StartsWith(textPrefix, StringComparison.Ordinal))
                 foreach (FieldDefinitionHandle field in type.GetFields())
                     textKeys.Add("STRINGS." + name[textPrefix.Length..].Replace('+', '.').ToUpperInvariant()
+                        + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
+            if (name.StartsWith(roomTextPrefix, StringComparison.Ordinal))
+                foreach (FieldDefinitionHandle field in type.GetFields())
+                    textKeys.Add("STRINGS." + name[roomTextPrefix.Length..].Replace('+', '.').ToUpperInvariant()
                         + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
         }
         Check(types.Contains("MaterialOverhaul.Core.BuildProfile"), "缺少构建身份。");
         if (profile == "Power")
         {
             Check(patches.SetEquals(PowerPatches), "电力独立版只应包含明确的5个电力补丁。");
-            foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders." })
-                Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "电力独立版混入工业判断层：" + forbidden);
+            foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders.", "MaterialOverhaul.Rooms." })
+                Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "电力独立版混入其他判断层：" + forbidden);
             foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist" })
                 Check(!types.Any(t => t.Split('+')[0].EndsWith("." + forbidden, StringComparison.Ordinal)), "电力独立版混入工业组件：" + forbidden);
+        }
+        else if (profile == "Room")
+        {
+            Check(patches.SetEquals(RoomPatches), "房间独立版只应包含明确的7个房间补丁。");
+            foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders.", "MaterialOverhaul.Power." })
+                Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "房间独立版混入其他系统判断层：" + forbidden);
+            foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist", "PowerTopologyMonitor", "PowerWireCount" })
+                Check(!types.Any(t => t.Split('+')[0].EndsWith("." + forbidden, StringComparison.Ordinal)), "房间独立版混入其他系统组件：" + forbidden);
         }
         else
         {
@@ -149,12 +180,19 @@ internal static partial class Program
             if (profile == "Industrial")
             {
                 Check(!patches.Overlaps(PowerPatches), "工业独立版包含电力补丁。");
+                Check(!patches.Overlaps(RoomPatches), "工业独立版包含房间补丁。");
                 Check(!types.Any(t => t.StartsWith("MaterialOverhaul.Power.", StringComparison.Ordinal)), "工业独立版包含电力计算层。");
+                Check(!types.Any(t => t.StartsWith("MaterialOverhaul.Rooms.", StringComparison.Ordinal)), "工业独立版包含房间判断层。");
                 Check(!types.Contains("MaterialOverhaul.Game.PowerTopologyMonitor") && !types.Contains("MaterialOverhaul.Game.PowerWireCount"), "工业独立版包含电力服务。");
+                Check(!types.Contains("MaterialOverhaul.Game.RoomRegistration"), "工业独立版包含房间服务。");
             }
-            else Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
+            else
+            {
+                Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
+                Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
+            }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : 102;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 69 : 171;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

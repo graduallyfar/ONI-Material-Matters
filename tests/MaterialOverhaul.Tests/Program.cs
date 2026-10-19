@@ -35,6 +35,7 @@ namespace MaterialOverhaul.Tests
             Run("电网信息卡：选中独立电网的电线数量", PowerWireCountTests.Run);
             Run("电力0.0.2：实际IL转接和原版回退源码", PowerPatchCallsTests.Run);
             Run("电力0.0.2：预算内取电、充放电、变压器、损耗显示与回退", PowerSettlementTests.Run);
+            Run("房间系统：平均环境、构成条件与覆盖规则", RoomTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");
