@@ -17,7 +17,7 @@ namespace MaterialOverhaul.Rooms
     {
         public const string Shower = "Shower";
         public const string ParkSign = "ParkSign";
-        public const string Jukebot = "Jukebot";
+        public const string Phonobox = "Phonobox";
         public const string ArcadeMachine = "ArcadeMachine";
         public const string BeachChair = "BeachChair";
         public const string MechanicalSurfboard = "MechanicalSurfboard";
@@ -28,7 +28,7 @@ namespace MaterialOverhaul.Rooms
         public const string SodaFountain = "SodaFountain";
         public const string WaterCooler = "WaterCooler";
         public const string Juicer = "Juicer";
-        public const string Pedestal = "Pedestal";
+        public const string ItemPedestal = "ItemPedestal";
         public const string MissionControl = "MissionControl";
         public const string MissionControlCluster = "MissionControlCluster";
         public const string GeoTuner = "GeoTuner";
@@ -79,7 +79,7 @@ namespace MaterialOverhaul.Rooms
         /// </summary>
         private static readonly HashSet<string> AdvancedRecreation = new HashSet<string>(StringComparer.Ordinal)
         {
-            Jukebot,
+            Phonobox,
             ArcadeMachine,
             BeachChair,
             MechanicalSurfboard,
@@ -100,14 +100,13 @@ namespace MaterialOverhaul.Rooms
         {
             "Bed",
             "LuxuryBed",
-            "Clinic",
             MedicalCot,
             "DiningTable",
             "MultiMinionDiningTable",
             "Outhouse",
             "FlushToilet",
             "WallToilet",
-            Jukebot,
+            Phonobox,
             ArcadeMachine,
             BeachChair,
             MechanicalSurfboard,

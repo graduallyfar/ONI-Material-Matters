@@ -155,6 +155,61 @@ namespace MaterialOverhaul.Game
                     public static LocString AVERAGE_DECOR = "平均装饰度：{0}";
                     public static LocString AVERAGE_TEMPERATURE = "平均温度：{0}";
                 }
+
+                /// <summary>
+                /// 已实装房间效果的名称与提示。只登记真正会发放的效果；
+                /// 压力、特质、生产效率等未接入项不在此虚构。
+                /// </summary>
+                public static class EFFECTS
+                {
+                    public static class ARTIFICIAL_PARK_MORALE
+                    {
+                        public static LocString NAME = "公园漫步";
+                        public static LocString TOOLTIP = "最近经过人造公园，士气 +2。";
+                    }
+
+                    public static class DANCE_HALL_MORALE
+                    {
+                        public static LocString NAME = "舞厅时光";
+                        public static LocString TOOLTIP = "最近在舞厅放松过，士气 +2。";
+                    }
+
+                    public static class ARCADE_HALL_MORALE
+                    {
+                        public static LocString NAME = "街机厅时光";
+                        public static LocString TOOLTIP = "最近在街机厅玩过，士气 +2。";
+                    }
+
+                    public static class BEACH_PARADISE_MORALE
+                    {
+                        public static LocString NAME = "海滨假期";
+                        public static LocString TOOLTIP = "最近在海滨乐园休息过，士气 +2。";
+                    }
+
+                    public static class GALLERY_MORALE
+                    {
+                        public static LocString NAME = "艺术熏陶";
+                        public static LocString TOOLTIP = "最近参观过展览馆，士气 +2。";
+                    }
+
+                    public static class WIND_TUNNEL_MORALE
+                    {
+                        public static LocString NAME = "风洞训练";
+                        public static LocString TOOLTIP = "最近在风洞训练室活动过，士气 +2。";
+                    }
+
+                    public static class SPA_MORALE
+                    {
+                        public static LocString NAME = "水疗放松";
+                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2。";
+                    }
+
+                    public static class TEA_ROOM_MORALE
+                    {
+                        public static LocString NAME = "茶歇时光";
+                        public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2。";
+                    }
+                }
             }
         }
     }

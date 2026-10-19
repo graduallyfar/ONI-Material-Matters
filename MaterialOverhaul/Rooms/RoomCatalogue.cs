@@ -56,6 +56,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(64)
                 },
                 Beats = new[] { "Park", "NatureReserve" },
+                EffectIds = new[] { RoomEffectIds.ArtificialParkMorale },
                 Priority = 1,
                 SortKey = 101
             },
@@ -125,7 +126,7 @@ namespace MaterialOverhaul.Rooms
                 NameKey = Prefix + "DANCE_HALL.NAME",
                 DescriptionKey = Prefix + "DANCE_HALL.DESC",
                 TooltipKey = Prefix + "DANCE_HALL.TOOLTIP",
-                PrimaryPrefabIds = new[] { RoomBuildingCatalogue.Jukebot },
+                PrimaryPrefabIds = new[] { RoomBuildingCatalogue.Phonobox },
                 Additional = new[]
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
@@ -137,6 +138,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.DanceHallMorale },
                 Priority = 1,
                 SortKey = 104
             },
@@ -160,6 +162,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.ArcadeHallMorale },
                 Priority = 1,
                 SortKey = 105
             },
@@ -184,6 +187,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.BeachParadiseMorale },
                 Priority = 1,
                 SortKey = 106
             },
@@ -195,7 +199,7 @@ namespace MaterialOverhaul.Rooms
                 NameKey = Prefix + "GALLERY.NAME",
                 DescriptionKey = Prefix + "GALLERY.DESC",
                 TooltipKey = Prefix + "GALLERY.TOOLTIP",
-                PrimaryPrefabIds = new[] { RoomBuildingCatalogue.Pedestal },
+                PrimaryPrefabIds = new[] { RoomBuildingCatalogue.ItemPedestal },
                 Additional = new[]
                 {
                     RoomRequirement.RequireOrnament(),
@@ -209,6 +213,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.GalleryMorale },
                 Priority = 2,
                 SortKey = 107
             },
@@ -232,6 +237,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.WindTunnelMorale },
                 Priority = 1,
                 SortKey = 108
             },
@@ -255,6 +261,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(64)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.SpaMorale },
                 Priority = 1,
                 SortKey = 109
             },
@@ -277,6 +284,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(64)
                 },
                 Beats = new[] { "RecRoom" },
+                EffectIds = new[] { RoomEffectIds.TeaRoomMorale },
                 Priority = 1,
                 SortKey = 110
             },

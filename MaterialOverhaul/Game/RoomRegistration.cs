@@ -293,6 +293,12 @@ namespace MaterialOverhaul.Game
             return DefinitionOf(roomId) != null;
         }
 
+        /// <summary>该房间类型是否由本 Mod 登记（用于限制效果触发只作用于新增房间）。</summary>
+        public static bool IsModRoom(RoomType roomType)
+        {
+            return roomType != null && IsModRoomId(roomType.Id);
+        }
+
         /// <summary>对原版房间追加环境条件：主条件满足但附加条件不足时降级为「主条件满足」。</summary>
         public static RoomType.RoomIdentificationResult ApplyModifications(
             RoomType roomType,

@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using Klei.AI;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Game;
 using MaterialOverhaul.Rooms;
@@ -14,6 +15,7 @@ namespace MaterialOverhaul.Patches
         {
             try
             {
+                RoomEffects.Register();
                 RoomRegistration.Register();
             }
             catch (Exception e)
@@ -118,6 +120,64 @@ namespace MaterialOverhaul.Patches
         private static void Prefix()
         {
             RoomSnapshotCache.BeginEvaluation();
+        }
+    }
+
+    /// <summary>
+    /// 使用本 Mod 房间的专属设施后触发房间效果。
+    ///
+    /// 原版只有床、厕所、餐桌和公园标识等少数建筑显式调用
+    /// <c>RoomType.TriggerRoomEffects</c>；娱乐设施与淋浴间没有。这里在
+    /// <c>Workable.CompleteWork</c> 后统一补一次，并且只在房间类型由本 Mod 登记时执行，
+    /// 不改变原版房间的效果触发时机。是否触发仍由原版
+    /// <c>TriggerRoomEffects</c> 的主设施谓词判定，因此其他建筑不会误触发。
+    ///
+    /// 进入型触发（例如公园标识）仍走原版路径，不在此重复。
+    /// </summary>
+    [HarmonyPatch(typeof(Workable), "CompleteWork")]
+    internal static class Patch_Workable_CompleteWork
+    {
+        private static void Postfix(Workable __instance, object[] __args)
+        {
+            try
+            {
+                if (__instance == null || __args == null || __args.Length == 0)
+                {
+                    return;
+                }
+
+                WorkerBase worker = __args[0] as WorkerBase;
+                if (worker == null)
+                {
+                    return;
+                }
+
+                global::Game game = global::Game.Instance;
+                RoomProber prober = game == null ? null : game.roomProber;
+                if (prober == null)
+                {
+                    return;
+                }
+
+                Room room = prober.GetRoomOfGameObject(__instance.gameObject);
+                if (room == null || !RoomRegistration.IsModRoom(room.roomType))
+                {
+                    return;
+                }
+
+                Effects effects = worker.GetComponent<Effects>();
+                KPrefabID prefab = __instance.GetComponent<KPrefabID>();
+                if (effects == null || prefab == null)
+                {
+                    return;
+                }
+
+                room.roomType.TriggerRoomEffects(prefab, effects);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间设施使用后触发效果失败：" + e);
+            }
         }
     }
 }

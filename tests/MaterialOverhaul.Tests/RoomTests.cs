@@ -135,7 +135,7 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckEqual("MO_DanceHall", dance.Id, "舞厅定义位置稳定");
 
             RoomSnapshot snapshot = Snapshot(40);
-            snapshot.PrefabIds.Add(RoomBuildingCatalogue.Jukebot);
+            snapshot.PrefabIds.Add(RoomBuildingCatalogue.Phonobox);
             TestRunner.Check(
                 RoomEvaluator.IsSatisfied(dance, RoomRequirement.NoOtherAdvancedRecreation(), snapshot),
                 "只有点唱机器人时不算「其他高级娱乐建筑」");
@@ -165,7 +165,7 @@ namespace MaterialOverhaul.Tests
             RoomDefinition dance = Find("MO_DanceHall");
 
             RoomSnapshot snapshot = Snapshot(40);
-            snapshot.PrefabIds.Add(RoomBuildingCatalogue.Jukebot);
+            snapshot.PrefabIds.Add(RoomBuildingCatalogue.Phonobox);
             snapshot.PrefabIds.Add(RoomBuildingCatalogue.ParkSign);
             snapshot.HasDecoration = true;
             snapshot.AverageDecor = 120f;
@@ -217,8 +217,64 @@ namespace MaterialOverhaul.Tests
 
             TestRunner.Check(RoomBuildingCatalogue.IsIndustrialBuilding("MetalRefinery"), "金属精炼器属工业建筑");
             TestRunner.Check(!RoomBuildingCatalogue.IsIndustrialBuilding("Generator"), "发电机不属工业建筑名单");
-            TestRunner.Check(RoomBuildingCatalogue.IsAdvancedRecreation("Jukebot"), "点唱机器人属高级娱乐建筑");
+            TestRunner.Check(RoomBuildingCatalogue.IsAdvancedRecreation("Phonobox"), "点唱机器人属高级娱乐建筑");
             TestRunner.Check(RoomBuildingCatalogue.IsLifeBuilding("Bed"), "床属生活建筑");
+
+            Effects();
+        }
+
+        private static void Effects()
+        {
+            TestRunner.Section("已实装房间效果登记");
+
+            string[] moraleRooms =
+            {
+                "MO_ArtificialPark", "MO_DanceHall", "MO_ArcadeHall", "MO_BeachParadise",
+                "MO_Gallery", "MO_WindTunnel", "MO_Spa", "MO_TeaRoom"
+            };
+            for (int i = 0; i < moraleRooms.Length; i++)
+            {
+                RoomDefinition definition = Find(moraleRooms[i]);
+                TestRunner.Check(definition != null && definition.EffectIds != null
+                    && definition.EffectIds.Length == 1, moraleRooms[i] + " 登记了 1 项士气效果");
+            }
+
+            // 未接入效果的分支不得提前挂 Effect，避免界面显示尚未发放的加成。
+            string[] noEffectRooms =
+            {
+                "MO_ShowerRoom", "MO_IndustrialArea", "MO_MedicalCenter", "MO_MissionControl",
+                "MO_GeoTunerLab", "MO_Spaceport", "MO_CargoStation", "MO_DataCenter"
+            };
+            for (int i = 0; i < noEffectRooms.Length; i++)
+            {
+                RoomDefinition definition = Find(noEffectRooms[i]);
+                TestRunner.Check(definition != null
+                    && (definition.EffectIds == null || definition.EffectIds.Length == 0),
+                    noEffectRooms[i] + " 未挂未实装效果");
+            }
+
+            HashSet<string> effectIds = new HashSet<string>();
+            RoomDefinition[] definitions = RoomCatalogue.NewRooms;
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                string[] ids = definitions[i].EffectIds;
+                if (ids == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < ids.Length; j++)
+                {
+                    TestRunner.Check(ids[j].StartsWith("MO_Room", System.StringComparison.Ordinal),
+                        "效果 id 使用 Mod 命名空间：" + ids[j]);
+                    TestRunner.Check(effectIds.Add(ids[j]), "效果 id 唯一：" + ids[j]);
+                }
+            }
+
+            TestRunner.CheckEqual(
+                RoomEffectIds.ArtificialParkMorale,
+                Find("MO_ArtificialPark").EffectIds[0],
+                "人造公园士气效果 id 稳定");
         }
 
         private static RoomDefinition Find(string id)

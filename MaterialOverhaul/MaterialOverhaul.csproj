@@ -43,11 +43,11 @@
     <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Industrial'">
-    <Compile Remove="Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+    <Compile Remove="Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Room'">
     <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs" />
-    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs" />
   </ItemGroup>
 
   <Target Name="CheckSystemProfile" BeforeTargets="PrepareForBuild">

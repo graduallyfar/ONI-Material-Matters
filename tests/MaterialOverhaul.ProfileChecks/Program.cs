@@ -25,7 +25,8 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_RoomProber_Refresh",
         "MaterialOverhaul.Patches.Patch_RoomProber_Sim1000ms",
         "MaterialOverhaul.Patches.Patch_RoomConstraints_RoomCriteriaString",
-        "MaterialOverhaul.Patches.Patch_RoomDetails_RoomDetailString"
+        "MaterialOverhaul.Patches.Patch_RoomDetails_RoomDetailString",
+        "MaterialOverhaul.Patches.Patch_Workable_CompleteWork"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 
@@ -192,7 +193,7 @@ internal static partial class Program
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 69 : 171;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 85 : 187;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();
