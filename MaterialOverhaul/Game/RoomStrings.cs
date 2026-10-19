@@ -174,6 +174,12 @@ namespace MaterialOverhaul.Game
                         public static LocString TOOLTIP = "最近洗过澡，压力上升速度 −10%。";
                     }
 
+                    public static class BANQUET_RELIEF
+                    {
+                        public static LocString NAME = "宴会余韵";
+                        public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力上升速度 −10%。";
+                    }
+
                     public static class DANCE_HALL_MORALE
                     {
                         public static LocString NAME = "舞厅时光";

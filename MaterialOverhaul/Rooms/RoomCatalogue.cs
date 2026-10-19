@@ -425,6 +425,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumDecor(120f)
                 },
+                EffectIds = new[] { RoomEffectIds.BanquetRelief },
                 SortKey = 0
             }
         };

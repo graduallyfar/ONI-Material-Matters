@@ -258,8 +258,24 @@ namespace MaterialOverhaul.Tests
                 Find("MO_ShowerRoom").EffectIds[0],
                 "淋浴间登记压力缓解效果");
 
+            RoomDefinition banquet = RoomCatalogue.ModificationFor("BanquetHall");
+            TestRunner.Check(banquet != null && banquet.EffectIds != null
+                && banquet.EffectIds.Length == 1
+                && banquet.EffectIds[0] == RoomEffectIds.BanquetRelief,
+                "宴会厅改造追加压力缓解效果");
+
             HashSet<string> effectIds = new HashSet<string>();
-            RoomDefinition[] definitions = RoomCatalogue.NewRooms;
+            CheckEffectIds(RoomCatalogue.NewRooms, effectIds);
+            CheckEffectIds(RoomCatalogue.Modifications, effectIds);
+
+            TestRunner.CheckEqual(
+                RoomEffectIds.ArtificialParkMorale,
+                Find("MO_ArtificialPark").EffectIds[0],
+                "人造公园士气效果 id 稳定");
+        }
+
+        private static void CheckEffectIds(RoomDefinition[] definitions, HashSet<string> effectIds)
+        {
             for (int i = 0; i < definitions.Length; i++)
             {
                 string[] ids = definitions[i].EffectIds;
@@ -275,11 +291,6 @@ namespace MaterialOverhaul.Tests
                     TestRunner.Check(effectIds.Add(ids[j]), "效果 id 唯一：" + ids[j]);
                 }
             }
-
-            TestRunner.CheckEqual(
-                RoomEffectIds.ArtificialParkMorale,
-                Find("MO_ArtificialPark").EffectIds[0],
-                "人造公园士气效果 id 稳定");
         }
 
         private static RoomDefinition Find(string id)

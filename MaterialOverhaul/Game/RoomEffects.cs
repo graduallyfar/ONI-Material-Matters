@@ -34,6 +34,11 @@ namespace MaterialOverhaul.Game
                 0f,
                 10f);
             AddEffect(
+                RoomEffectIds.BanquetRelief,
+                "BANQUET_RELIEF",
+                0f,
+                10f);
+            AddEffect(
                 RoomEffectIds.DanceHallMorale,
                 "DANCE_HALL_MORALE",
                 2f,

@@ -114,6 +114,8 @@ namespace MaterialOverhaul.Game
                     continue;
                 }
 
+                AppendModificationEffects(type, definition);
+
                 FieldInfo field = typeof(RoomType).GetField(
                     "<additional_constraints>k__BackingField",
                     BindingFlags.Instance | BindingFlags.NonPublic);
@@ -140,6 +142,54 @@ namespace MaterialOverhaul.Game
                 ModLog.Info("房间改造：" + definition.ExistingRoomId + " 追加 "
                     + extra.Length + " 项条件（" + JoinRequirementNames(definition) + "）。");
             }
+        }
+
+        /// <summary>
+        /// 把改造项新增的效果 id 追加到原版房间的 <c>effects</c> 数组。
+        /// 只追加未登记的效果 id，保留原版已有的房间效果（例如宴会厅原本的士气效果）。
+        /// </summary>
+        private static void AppendModificationEffects(RoomType type, RoomDefinition definition)
+        {
+            if (definition.EffectIds == null || definition.EffectIds.Length == 0)
+            {
+                return;
+            }
+
+            FieldInfo field = typeof(RoomType).GetField(
+                "<effects>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field == null)
+            {
+                ModLog.WarnOnce("room|mod|effects-field",
+                    "房间改造：无法访问 RoomType.effects 的私有字段，"
+                    + definition.ExistingRoomId + " 的新增效果不会发放。");
+                return;
+            }
+
+            string[] current = (string[])field.GetValue(type);
+            List<string> merged = new List<string>();
+            if (current != null)
+            {
+                merged.AddRange(current);
+            }
+
+            int added = 0;
+            for (int i = 0; i < definition.EffectIds.Length; i++)
+            {
+                if (!merged.Contains(definition.EffectIds[i]))
+                {
+                    merged.Add(definition.EffectIds[i]);
+                    added++;
+                }
+            }
+
+            if (added == 0)
+            {
+                return;
+            }
+
+            field.SetValue(type, merged.ToArray());
+            ModLog.Info("房间改造：" + definition.ExistingRoomId + " 追加 " + added + " 项效果。");
         }
 
         /// <summary>

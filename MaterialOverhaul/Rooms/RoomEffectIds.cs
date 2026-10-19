@@ -8,6 +8,7 @@ namespace MaterialOverhaul.Rooms
     {
         public const string ArtificialParkMorale = "MO_RoomArtificialParkMorale";
         public const string ShowerRelief = "MO_RoomShowerRelief";
+        public const string BanquetRelief = "MO_RoomBanquetRelief";
         public const string DanceHallMorale = "MO_RoomDanceHallMorale";
         public const string ArcadeHallMorale = "MO_RoomArcadeHallMorale";
         public const string BeachParadiseMorale = "MO_RoomBeachParadiseMorale";
