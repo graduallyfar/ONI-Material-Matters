@@ -17,6 +17,7 @@ namespace MaterialOverhaul.Rooms
 
         public const string IndustrialAreaId = "MO_IndustrialArea";
         public const string DataCenterId = "MO_DataCenter";
+        public const string MedicalCenterId = "MO_MedicalCenter";
 
         private const string Prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.";
 
@@ -95,7 +96,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_MedicalCenter",
+                Id = MedicalCenterId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Hospital",
                 NameKey = Prefix + "MEDICAL_CENTER.NAME",
@@ -119,6 +120,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MaximumSize(108)
                 },
                 Beats = new[] { "Hospital" },
+                EffectIds = new[] { RoomEffectIds.MedicalCenterRecovery },
                 Priority = 2,
                 SortKey = 103
             },
@@ -431,6 +433,15 @@ namespace MaterialOverhaul.Rooms
                 },
                 EffectIds = new[] { RoomEffectIds.BanquetRelief },
                 FallbackRoomIds = new[] { "GreatHall", "MessHall" },
+                SortKey = 0
+            },
+            new RoomDefinition
+            {
+                Id = "MO_Mod_Hospital",
+                Tier = RoomTier.Improved,
+                ExistingRoomId = "Hospital",
+                Additional = new RoomRequirement[0],
+                EffectIds = new[] { RoomEffectIds.HospitalRecovery },
                 SortKey = 0
             }
         };

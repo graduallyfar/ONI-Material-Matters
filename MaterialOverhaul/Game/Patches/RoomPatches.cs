@@ -262,4 +262,77 @@ namespace MaterialOverhaul.Patches
             }
         }
     }
+
+    /// <summary>
+    /// 患者进入诊疗床治疗状态时追加生命回复效果。
+    /// 原版 <c>Clinic</c> 在治疗状态进入时对患者调用 <c>StartEffect</c>；这里按诊疗床所在
+    /// 房间类型追加医院／医疗中心效果。离开治疗状态时在 <c>StopEffect</c> 移除。
+    /// </summary>
+    [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StartEffect")]
+    internal static class Patch_Room_Clinic_StartEffect
+    {
+        private static void Postfix(Clinic.ClinicSM.Instance __instance, string effect)
+        {
+            try
+            {
+                Clinic clinic = __instance == null ? null : __instance.master;
+                if (clinic == null || clinic.worker == null)
+                {
+                    return;
+                }
+
+                string id = RoomRecoveryEffect.ForRoomType(RoomTypeIdOf(clinic.gameObject));
+                if (id == null)
+                {
+                    return;
+                }
+
+                Effects effects = clinic.worker.GetComponent<Effects>();
+                if (effects != null)
+                {
+                    effects.Add(id, false);
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间治疗恢复效果失败：" + e);
+            }
+        }
+
+        private static string RoomTypeIdOf(UnityEngine.GameObject go)
+        {
+            global::Game game = global::Game.Instance;
+            RoomProber prober = game == null ? null : game.roomProber;
+            if (prober == null)
+            {
+                return null;
+            }
+
+            Room room = prober.GetRoomOfGameObject(go);
+            return room == null || room.roomType == null ? null : room.roomType.Id;
+        }
+    }
+
+    /// <summary>患者离开诊疗床治疗状态时移除医院／医疗中心的恢复效果。</summary>
+    [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StopEffect")]
+    internal static class Patch_Room_Clinic_StopEffect
+    {
+        private static void Postfix(Clinic.ClinicSM.Instance __instance)
+        {
+            try
+            {
+                Clinic clinic = __instance == null ? null : __instance.master;
+                if (clinic == null || clinic.worker == null)
+                {
+                    return;
+                }
+
+                RoomRecoveryEffect.RemoveAll(clinic.worker.GetComponent<Effects>());
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间治疗恢复效果清理失败：" + e);
+            }
+        }
+    }
 }

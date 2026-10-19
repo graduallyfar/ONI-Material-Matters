@@ -182,6 +182,18 @@ namespace MaterialOverhaul.Game
                         public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力缓解 −10%。";
                     }
 
+                    public static class HOSPITAL_RECOVERY
+                    {
+                        public static LocString NAME = "医院护理";
+                        public static LocString TOOLTIP = "正在医院接受治疗，生命值回复速度 +20%。";
+                    }
+
+                    public static class MEDICAL_CENTER_RECOVERY
+                    {
+                        public static LocString NAME = "医疗中心护理";
+                        public static LocString TOOLTIP = "正在医疗中心接受治疗，生命值回复速度 +50%。";
+                    }
+
                     public static class DANCE_HALL_MORALE
                     {
                         public static LocString NAME = "舞厅时光";

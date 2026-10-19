@@ -39,6 +39,20 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomEffectSpec
             {
+                Id = RoomEffectIds.HospitalRecovery,
+                StringToken = "HOSPITAL_RECOVERY",
+                HealthRecoveryPercent = 20f,
+                DurationSeconds = 0f
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.MedicalCenterRecovery,
+                StringToken = "MEDICAL_CENTER_RECOVERY",
+                HealthRecoveryPercent = 50f,
+                DurationSeconds = 0f
+            },
+            new RoomEffectSpec
+            {
                 Id = RoomEffectIds.DanceHallMorale,
                 StringToken = "DANCE_HALL_MORALE",
                 Morale = 2f,

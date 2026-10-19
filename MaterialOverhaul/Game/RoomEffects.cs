@@ -63,10 +63,20 @@ namespace MaterialOverhaul.Game
                     is_multiplier: true));
             }
 
+            if (spec.HasHealthRecovery)
+            {
+                effect.Add(new AttributeModifier(
+                    Db.Get().Amounts.HitPoints.deltaAttribute.Id,
+                    spec.HealthRecoveryPercent / 100f,
+                    name,
+                    is_multiplier: true));
+            }
+
             Db.Get().effects.Add(effect);
             ModLog.Info("房间效果：" + spec.Id + "（" + name + "）士气 " + Signed(spec.Morale)
                 + "、压力缓解 " + Stress(spec.StressReductionPercent)
-                + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08 未确认）。");
+                + "、生命回复 " + Health(spec.HealthRecoveryPercent)
+                + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08／D10 未确认）。");
         }
 
         private static string Signed(float value)
@@ -77,6 +87,11 @@ namespace MaterialOverhaul.Game
         private static string Stress(float percent)
         {
             return percent == 0f ? "不变" : "−" + percent.ToString("0") + "%";
+        }
+
+        private static string Health(float percent)
+        {
+            return percent == 0f ? "不变" : "+" + percent.ToString("0") + "%";
         }
     }
 }

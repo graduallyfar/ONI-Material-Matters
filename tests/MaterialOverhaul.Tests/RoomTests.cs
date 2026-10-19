@@ -200,7 +200,7 @@ namespace MaterialOverhaul.Tests
             TestRunner.Section("目录完整性");
 
             TestRunner.CheckEqual(16, RoomCatalogue.NewRoomCount, "新增房间 16 个");
-            TestRunner.CheckEqual(2, RoomCatalogue.ModificationCount, "原版改造 2 项");
+            TestRunner.CheckEqual(3, RoomCatalogue.ModificationCount, "原版改造 3 项");
 
             HashSet<string> ids = new HashSet<string>();
             RoomDefinition[] definitions = RoomCatalogue.NewRooms;
@@ -219,6 +219,7 @@ namespace MaterialOverhaul.Tests
 
             TestRunner.Check(RoomCatalogue.ModificationFor("Private Bedroom") != null, "私人卧室有改造定义");
             TestRunner.Check(RoomCatalogue.ModificationFor("BanquetHall") != null, "宴会厅有改造定义");
+            TestRunner.Check(RoomCatalogue.ModificationFor("Hospital") != null, "医院有改造定义");
             TestRunner.Check(RoomCatalogue.ModificationFor("Neutral") == null, "中立房间没有改造定义");
             TestRunner.Check(HasFallback("Private Bedroom", "Bedroom"), "私人卧室记录降级目标 Bedroom");
             TestRunner.Check(HasFallback("BanquetHall", "GreatHall"), "宴会厅记录降级目标 GreatHall");
@@ -274,7 +275,7 @@ namespace MaterialOverhaul.Tests
             // 未接入效果的分支不得提前挂 Effect，避免界面显示尚未发放的加成。
             string[] noEffectRooms =
             {
-                "MO_IndustrialArea", "MO_MedicalCenter", "MO_MissionControl",
+                "MO_IndustrialArea", "MO_MissionControl",
                 "MO_GeoTunerLab", "MO_Spaceport", "MO_CargoStation", "MO_DataCenter"
             };
             for (int i = 0; i < noEffectRooms.Length; i++)
@@ -295,6 +296,14 @@ namespace MaterialOverhaul.Tests
                 && banquet.EffectIds.Length == 1
                 && banquet.EffectIds[0] == RoomEffectIds.BanquetRelief,
                 "宴会厅改造追加压力缓解效果");
+
+            RoomDefinition hospitalMod = RoomCatalogue.ModificationFor("Hospital");
+            TestRunner.Check(hospitalMod != null && hospitalMod.EffectIds != null
+                && hospitalMod.EffectIds.Length == 1
+                && hospitalMod.EffectIds[0] == RoomEffectIds.HospitalRecovery,
+                "医院改造追加生命回复效果");
+            TestRunner.Check(Find("MO_MedicalCenter").EffectIds[0] == RoomEffectIds.MedicalCenterRecovery,
+                "医疗中心登记生命回复效果");
 
             HashSet<string> effectIds = new HashSet<string>();
             CheckEffectIds(RoomCatalogue.NewRooms, effectIds);
@@ -348,12 +357,26 @@ namespace MaterialOverhaul.Tests
             RoomEffectSpec gallery = RoomEffectCatalogue.Get(RoomEffectIds.GalleryMorale);
             TestRunner.Check(gallery != null && gallery.Morale == 2f, "展览馆：士气 +2");
 
+            RoomEffectSpec hospital = RoomEffectCatalogue.Get(RoomEffectIds.HospitalRecovery);
+            TestRunner.Check(hospital != null && hospital.HealthRecoveryPercent == 20f
+                && !hospital.HasMorale && !hospital.HasStressReduction,
+                "医院：生命回复 +20%，不附带士气或压力");
+
+            RoomEffectSpec medicalCenter = RoomEffectCatalogue.Get(RoomEffectIds.MedicalCenterRecovery);
+            TestRunner.Check(medicalCenter != null && medicalCenter.HealthRecoveryPercent == 50f,
+                "医疗中心：生命回复 +50%");
+
             RoomEffectSpec[] specs = RoomEffectCatalogue.All;
             for (int i = 0; i < specs.Length; i++)
             {
-                TestRunner.Check(specs[i].DurationSeconds == RoomEffectCatalogue.DefaultDurationSeconds,
-                    specs[i].Id + " 使用统一工作初值持续时间");
-                TestRunner.Check(specs[i].HasMorale || specs[i].HasStressReduction,
+                // 治疗恢复效果按治疗状态存续，离开时移除，因此持续时间 0（永久直到移除）；
+                // 其余士气／压力效果使用 1 周期工作初值。
+                float expectedDuration = specs[i].HasHealthRecovery
+                    ? 0f
+                    : RoomEffectCatalogue.DefaultDurationSeconds;
+                TestRunner.Check(specs[i].DurationSeconds == expectedDuration,
+                    specs[i].Id + " 持续时间符合效果类型");
+                TestRunner.Check(specs[i].HasMorale || specs[i].HasStressReduction || specs[i].HasHealthRecovery,
                     specs[i].Id + " 至少有一项修正");
                 TestRunner.Check(!string.IsNullOrEmpty(specs[i].StringToken),
                     specs[i].Id + " 有本地化键片段");

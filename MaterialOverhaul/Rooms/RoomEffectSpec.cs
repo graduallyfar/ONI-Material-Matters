@@ -17,6 +17,9 @@ namespace MaterialOverhaul.Rooms
         /// <summary>压力缓解百分比（正数；50 表示 −50%），0 表示不修改。工作口径为实现为压力变化乘数。</summary>
         public float StressReductionPercent;
 
+        /// <summary>生命值回复速度提高百分比（正数；50 表示 +50%），0 表示不修改。</summary>
+        public float HealthRecoveryPercent;
+
         /// <summary>效果持续时间（秒）。</summary>
         public float DurationSeconds;
 
@@ -28,6 +31,11 @@ namespace MaterialOverhaul.Rooms
         public bool HasStressReduction
         {
             get { return StressReductionPercent != 0f; }
+        }
+
+        public bool HasHealthRecovery
+        {
+            get { return HealthRecoveryPercent != 0f; }
         }
     }
 }

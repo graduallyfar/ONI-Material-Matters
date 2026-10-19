@@ -82,6 +82,8 @@ internal static partial class Program
         Method("ComplexFabricator", "ComputeWorkProgress", "Single(Single,ComplexRecipe)");
         Method("ElementConverter", "GetSpeedMultiplier", "Single()");
         Method("LegacyModMain", "ConfigElements", "Void()");
+        Method("Clinic+ClinicSM+Instance", "StartEffect", "EffectInstance(String,Boolean)");
+        Method("Clinic+ClinicSM+Instance", "StopEffect", "Void(String)");
 
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");
