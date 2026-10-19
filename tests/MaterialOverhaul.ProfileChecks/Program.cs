@@ -46,6 +46,12 @@ internal static partial class Program
                 Console.WriteLine($"原版电力IL调用契约 {checks} 项，全部通过。");
                 return 0;
             }
+            if (args.Length == 2 && args[0] == "--room-game")
+            {
+                InspectRoomGameContract(args[1]);
+                Console.WriteLine($"原版房间补丁与反射字段契约 {checks} 项，全部通过。");
+                return 0;
+            }
             Check(args.Length > 0 && args.Length % 2 == 0, "用法：ProfileChecks <Industrial|Power|Room|Combined> <包目录> [更多模式与目录]");
             var profiles = new Dictionary<string, Snapshot>();
             for (int i = 0; i < args.Length; i += 2) profiles.Add(args[i], Inspect(args[i], args[i + 1]));

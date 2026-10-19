@@ -23,11 +23,18 @@ $poText = Get-Content -LiteralPath (Join-Path $projectRoot 'mod\strings\zh.po') 
 $poBlocks = [regex]::Split($poText.Trim(), '\r?\n\s*\r?\n')
 $checkArgs = @()
 
-if ($Profile -contains 'Power' -or $Profile -contains 'Combined') {
+if ($Profile -contains 'Power' -or $Profile -contains 'Room' -or $Profile -contains 'Combined') {
     $managedDir = (& dotnet msbuild $projectFile -getProperty:ManagedDir).Trim()
     if ($LASTEXITCODE -ne 0) { throw '无法读取游戏依赖路径。' }
-    & dotnet run --project $checkerProject -c $Configuration -- --game (Join-Path $managedDir 'Assembly-CSharp.dll')
-    if ($LASTEXITCODE -ne 0) { throw '目标电力结算IL契约不匹配。' }
+    $gameAssembly = Join-Path $managedDir 'Assembly-CSharp.dll'
+    if ($Profile -contains 'Power' -or $Profile -contains 'Combined') {
+        & dotnet run --project $checkerProject -c $Configuration -- --game $gameAssembly
+        if ($LASTEXITCODE -ne 0) { throw '目标电力结算IL契约不匹配。' }
+    }
+    if ($Profile -contains 'Room' -or $Profile -contains 'Combined') {
+        & dotnet run --project $checkerProject -c $Configuration -- --room-game $gameAssembly
+        if ($LASTEXITCODE -ne 0) { throw '目标房间补丁或反射字段契约不匹配。' }
+    }
 }
 
 foreach ($mode in @($Profile | Select-Object -Unique)) {
