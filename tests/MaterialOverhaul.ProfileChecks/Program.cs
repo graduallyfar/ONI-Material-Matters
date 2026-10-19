@@ -32,7 +32,8 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_ElementConverter_GetSpeedMultiplier",
         "MaterialOverhaul.Patches.Patch_RoomMaterial_ConfigElements",
         "MaterialOverhaul.Patches.Patch_Room_Clinic_StartEffect",
-        "MaterialOverhaul.Patches.Patch_Room_Clinic_StopEffect"
+        "MaterialOverhaul.Patches.Patch_Room_Clinic_StopEffect",
+        "MaterialOverhaul.Patches.Patch_Room_Caregiver_CompleteWork"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 
@@ -205,7 +206,7 @@ internal static partial class Program
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 95 : 197;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 97 : 199;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

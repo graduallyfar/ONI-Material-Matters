@@ -53,6 +53,14 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomEffectSpec
             {
+                Id = RoomEffectIds.CaregiverBoost,
+                StringToken = "CAREGIVER_BOOST",
+                HealthRecoveryPercent = 50f,
+                DurationSeconds = 0f,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
                 Id = RoomEffectIds.DanceHallMorale,
                 StringToken = "DANCE_HALL_MORALE",
                 Morale = 2f,

@@ -26,6 +26,11 @@ namespace MaterialOverhaul.Game
             return null;
         }
 
+        public static bool IsRecoveryRoom(string roomTypeId)
+        {
+            return ForRoomType(roomTypeId) != null;
+        }
+
         public static void RemoveAll(Effects effects)
         {
             if (effects == null)
@@ -35,6 +40,7 @@ namespace MaterialOverhaul.Game
 
             Remove(effects, RoomEffectIds.HospitalRecovery);
             Remove(effects, RoomEffectIds.MedicalCenterRecovery);
+            Remove(effects, RoomEffectIds.CaregiverBoost);
         }
 
         private static void Remove(Effects effects, string id)

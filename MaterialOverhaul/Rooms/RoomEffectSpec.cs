@@ -20,6 +20,9 @@ namespace MaterialOverhaul.Rooms
         /// <summary>生命值回复速度提高百分比（正数；50 表示 +50%），0 表示不修改。</summary>
         public float HealthRecoveryPercent;
 
+        /// <summary>是否直接挂到房间类型上显示；由特殊触发路径发放的效果为 false。</summary>
+        public bool AttachedToRoom = true;
+
         /// <summary>效果持续时间（秒）。</summary>
         public float DurationSeconds;
 

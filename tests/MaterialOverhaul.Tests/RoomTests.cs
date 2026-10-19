@@ -319,7 +319,15 @@ namespace MaterialOverhaul.Tests
             RoomEffectSpec[] specs = RoomEffectCatalogue.All;
             for (int i = 0; i < specs.Length; i++)
             {
-                TestRunner.Check(effectIds.Contains(specs[i].Id), "效果定义被房间使用：" + specs[i].Id);
+                if (specs[i].AttachedToRoom)
+                {
+                    TestRunner.Check(effectIds.Contains(specs[i].Id), "效果定义被房间使用：" + specs[i].Id);
+                }
+                else
+                {
+                    TestRunner.Check(!effectIds.Contains(specs[i].Id),
+                        "特殊触发效果不挂到房间类型：" + specs[i].Id);
+                }
             }
 
             TestRunner.CheckEqual(
@@ -365,6 +373,11 @@ namespace MaterialOverhaul.Tests
             RoomEffectSpec medicalCenter = RoomEffectCatalogue.Get(RoomEffectIds.MedicalCenterRecovery);
             TestRunner.Check(medicalCenter != null && medicalCenter.HealthRecoveryPercent == 50f,
                 "医疗中心：生命回复 +50%");
+
+            RoomEffectSpec caregiver = RoomEffectCatalogue.Get(RoomEffectIds.CaregiverBoost);
+            TestRunner.Check(caregiver != null && caregiver.HealthRecoveryPercent == 50f
+                && !caregiver.AttachedToRoom,
+                "护理员特质：治疗期间再 +50%，不挂房间类型");
 
             RoomEffectSpec[] specs = RoomEffectCatalogue.All;
             for (int i = 0; i < specs.Length; i++)

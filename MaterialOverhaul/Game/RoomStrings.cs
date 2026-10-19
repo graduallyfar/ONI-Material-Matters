@@ -194,6 +194,12 @@ namespace MaterialOverhaul.Game
                         public static LocString TOOLTIP = "正在医疗中心接受治疗，生命值回复速度 +50%。";
                     }
 
+                    public static class CAREGIVER_BOOST
+                    {
+                        public static LocString NAME = "护理员照料";
+                        public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 +50%。";
+                    }
+
                     public static class DANCE_HALL_MORALE
                     {
                         public static LocString NAME = "舞厅时光";

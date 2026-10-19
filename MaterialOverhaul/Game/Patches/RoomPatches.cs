@@ -335,4 +335,67 @@ namespace MaterialOverhaul.Patches
             }
         }
     }
+
+    /// <summary>
+    /// 护理员特质加成：医生完成一次诊疗时，若其拥有原版 「Caregiver」（<c>BedsideManner</c>）特质，
+    /// 给正在该诊疗床接受治疗的患者追加 +50% 生命回复效果。患者离开治疗状态时由
+    /// <see cref="Patch_Room_Clinic_StopEffect"/> 一并移除。
+    /// </summary>
+    [HarmonyPatch(typeof(Workable), "CompleteWork")]
+    internal static class Patch_Room_Caregiver_CompleteWork
+    {
+        private const string CaregiverTraitId = "BedsideManner";
+
+        private static void Postfix(Workable __instance, object[] __args)
+        {
+            try
+            {
+                if (!(__instance is DoctorChoreWorkable) || __args == null || __args.Length == 0)
+                {
+                    return;
+                }
+
+                WorkerBase doctor = __args[0] as WorkerBase;
+                Clinic clinic = __instance.GetComponent<Clinic>();
+                if (doctor == null || clinic == null || clinic.worker == null)
+                {
+                    return;
+                }
+
+                Traits traits = doctor.GetComponent<Traits>();
+                if (traits == null || !traits.HasTrait(CaregiverTraitId))
+                {
+                    return;
+                }
+
+                if (!RoomRecoveryEffect.IsRecoveryRoom(RoomTypeIdOf(clinic.gameObject)))
+                {
+                    return;
+                }
+
+                Effects effects = clinic.worker.GetComponent<Effects>();
+                if (effects != null)
+                {
+                    effects.Add(RoomEffectIds.CaregiverBoost, false);
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("护理员治疗加成失败：" + e);
+            }
+        }
+
+        private static string RoomTypeIdOf(UnityEngine.GameObject go)
+        {
+            global::Game game = global::Game.Instance;
+            RoomProber prober = game == null ? null : game.roomProber;
+            if (prober == null)
+            {
+                return null;
+            }
+
+            Room room = prober.GetRoomOfGameObject(go);
+            return room == null || room.roomType == null ? null : room.roomType.Id;
+        }
+    }
 }
