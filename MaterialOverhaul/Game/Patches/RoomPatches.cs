@@ -213,7 +213,7 @@ namespace MaterialOverhaul.Patches
     ///
     /// 原版 <c>ComplexFabricator.Sim200ms</c> 只在 <c>!duplicantOperated</c> 时调用本方法；
     /// 数据挖掘中心的覆写会再乘温度效率，因此这里只乘房间倍率、不重复处理温度。
-    /// 连续转换设备（<c>ElementConverter</c> 等）尚未接入，见开发计划 P4 与 D09。
+    /// 连续转换设备见 <see cref="Patch_Room_ElementConverter_GetSpeedMultiplier"/>。
     /// </summary>
     [HarmonyPatch(typeof(ComplexFabricator), "ComputeWorkProgress")]
     internal static class Patch_Room_ComplexFabricator_ComputeWorkProgress
@@ -232,6 +232,33 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("房间生产加成（无人进度）失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 连续转换设备的生产速度 +20%（工业区）。
+    ///
+    /// 原版 <c>ElementConverter.GetSpeedMultiplier</c> 同时决定消耗与产出速率；工业温控补丁
+    /// 也在此乘温度效率，两个后置补丁按乘法叠加（顺序无关）。不改变配方投入产出比例。
+    /// </summary>
+    [HarmonyPatch(typeof(ElementConverter), "GetSpeedMultiplier")]
+    internal static class Patch_Room_ElementConverter_GetSpeedMultiplier
+    {
+        private static void Postfix(ElementConverter __instance, ref float __result)
+        {
+            try
+            {
+                if (__result <= 0f)
+                {
+                    return;
+                }
+
+                __result *= RoomProductionBonus.MultiplierFor(__instance);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间生产加成（连续转换）失败：" + e);
             }
         }
     }
