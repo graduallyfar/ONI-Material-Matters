@@ -34,6 +34,8 @@ if ($Profile -contains 'Power' -or $Profile -contains 'Room' -or $Profile -conta
     if ($Profile -contains 'Room' -or $Profile -contains 'Combined') {
         & dotnet run --project $checkerProject -c $Configuration -- --room-game $gameAssembly
         if ($LASTEXITCODE -ne 0) { throw '目标房间补丁或反射字段契约不匹配。' }
+        & (Join-Path $PSScriptRoot 'check-room-assets.ps1') -GameDll $gameAssembly
+        if ($LASTEXITCODE -ne 0) { throw '房间配置引用的 prefab／房间 id 与目标程序集不匹配。' }
     }
 }
 
