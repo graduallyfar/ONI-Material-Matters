@@ -26,7 +26,9 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_RoomProber_Sim1000ms",
         "MaterialOverhaul.Patches.Patch_RoomConstraints_RoomCriteriaString",
         "MaterialOverhaul.Patches.Patch_RoomDetails_RoomDetailString",
-        "MaterialOverhaul.Patches.Patch_Workable_CompleteWork"
+        "MaterialOverhaul.Patches.Patch_Workable_CompleteWork",
+        "MaterialOverhaul.Patches.Patch_Room_Workable_GetEfficiencyMultiplier",
+        "MaterialOverhaul.Patches.Patch_Room_ComplexFabricator_ComputeWorkProgress"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 

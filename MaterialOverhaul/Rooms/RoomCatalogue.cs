@@ -15,6 +15,9 @@ namespace MaterialOverhaul.Rooms
         public const string DlcExpansion1 = "EXPANSION1_ID";
         public const string Dlc3 = "DLC3_ID";
 
+        public const string IndustrialAreaId = "MO_IndustrialArea";
+        public const string DataCenterId = "MO_DataCenter";
+
         private const string Prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.";
 
         private static readonly RoomDefinition[] NewRoomsValue =
@@ -63,7 +66,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_IndustrialArea",
+                Id = IndustrialAreaId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Industrial",
                 NameKey = Prefix + "INDUSTRIAL_AREA.NAME",
@@ -380,7 +383,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_DataCenter",
+                Id = DataCenterId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Science",
                 NameKey = Prefix + "DATA_CENTER.NAME",

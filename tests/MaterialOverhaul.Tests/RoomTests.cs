@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Tests
             CategoryRequirements();
             Arbitration();
             CatalogueIntegrity();
+            Production();
         }
 
         private static RoomSnapshot Snapshot(int cells)
@@ -349,6 +350,50 @@ namespace MaterialOverhaul.Tests
                     TestRunner.Check(effectIds.Add(ids[j]), "效果 id 唯一：" + ids[j]);
                 }
             }
+        }
+
+        private static void Production()
+        {
+            TestRunner.Section("房间生产加成（工作口径）");
+
+            TestRunner.CheckClose(1.2f, RoomProduction.IndustrialAreaMultiplier, 0.0001f, "工业区 +20%");
+            TestRunner.CheckClose(1.2f, RoomProduction.DataCenterMultiplier, 0.0001f, "数据机房 +20%");
+
+            TestRunner.CheckClose(
+                1.2f,
+                RoomProduction.Multiplier(RoomCatalogue.IndustrialAreaId, "MetalRefinery"),
+                0.0001f,
+                "工业区内工业建筑获得加成");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.IndustrialAreaId, "Generator"),
+                0.0001f,
+                "工业区不作用于发电建筑");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier("MO_DanceHall", "MetalRefinery"),
+                0.0001f,
+                "非工业区不获得生产加成");
+            TestRunner.CheckClose(
+                1.2f,
+                RoomProduction.Multiplier(RoomCatalogue.DataCenterId, RoomBuildingCatalogue.DataMiner),
+                0.0001f,
+                "数据机房作用于数据挖掘中心");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.DataCenterId, "MetalRefinery"),
+                0.0001f,
+                "数据机房不作用于其它工业建筑");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(null, "MetalRefinery"),
+                0.0001f,
+                "无房间类型时无加成");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.IndustrialAreaId, null),
+                0.0001f,
+                "无 prefab 时无加成");
         }
 
         private static bool HasFallback(string existingRoomId, string fallbackRoomId)

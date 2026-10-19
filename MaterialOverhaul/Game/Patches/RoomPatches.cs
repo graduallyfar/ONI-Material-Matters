@@ -180,4 +180,59 @@ namespace MaterialOverhaul.Patches
             }
         }
     }
+
+    /// <summary>
+    /// 工业区内工业建筑的批次生产速度 +20%。
+    ///
+    /// 有人操作的批次建筑由 <c>ComplexFabricatorWorkable</c> 的工作速度决定；只对这类
+    /// 设施乘算，避免把修理、清洁等其它工作也算成生产加成。配方投入产出比例不变。
+    /// </summary>
+    [HarmonyPatch(typeof(Workable), "GetEfficiencyMultiplier")]
+    internal static class Patch_Room_Workable_GetEfficiencyMultiplier
+    {
+        private static void Postfix(Workable __instance, ref float __result)
+        {
+            try
+            {
+                if (__result <= 0f || !(__instance is ComplexFabricatorWorkable))
+                {
+                    return;
+                }
+
+                __result *= RoomProductionBonus.MultiplierFor(__instance);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间生产加成（工作速度）失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 无人批次与数据挖掘中心的进度 +20%。
+    ///
+    /// 原版 <c>ComplexFabricator.Sim200ms</c> 只在 <c>!duplicantOperated</c> 时调用本方法；
+    /// 数据挖掘中心的覆写会再乘温度效率，因此这里只乘房间倍率、不重复处理温度。
+    /// 连续转换设备（<c>ElementConverter</c> 等）尚未接入，见开发计划 P4 与 D09。
+    /// </summary>
+    [HarmonyPatch(typeof(ComplexFabricator), "ComputeWorkProgress")]
+    internal static class Patch_Room_ComplexFabricator_ComputeWorkProgress
+    {
+        private static void Postfix(ComplexFabricator __instance, ref float __result)
+        {
+            try
+            {
+                if (__instance == null || __result <= 0f || __instance.duplicantOperated)
+                {
+                    return;
+                }
+
+                __result *= RoomProductionBonus.MultiplierFor(__instance);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间生产加成（无人进度）失败：" + e);
+            }
+        }
+    }
 }

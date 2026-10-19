@@ -78,6 +78,8 @@ internal static partial class Program
         Method("RoomConstraints", "RoomCriteriaString", "String(Room)");
         Method("RoomDetails", "RoomDetailString", "String(Room)");
         Method("Workable", "CompleteWork", "Void(WorkerBase)");
+        Method("Workable", "GetEfficiencyMultiplier", "Single(WorkerBase)");
+        Method("ComplexFabricator", "ComputeWorkProgress", "Single(Single,ComplexRecipe)");
 
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");
