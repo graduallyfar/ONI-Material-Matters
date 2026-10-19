@@ -61,6 +61,72 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomEffectSpec
             {
+                Id = RoomEffectIds.TraitSuperstar,
+                StringToken = "TRAIT_SUPERSTAR",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "Athletics",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.TraitEsports,
+                StringToken = "TRAIT_ESPORTS",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "Machinery",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.TraitBeach,
+                StringToken = "TRAIT_BEACH",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "Digging",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.TraitAdventurer,
+                StringToken = "TRAIT_ADVENTURER",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "Construction",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.TraitArtist,
+                StringToken = "TRAIT_ARTIST",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "Art",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
+                Id = RoomEffectIds.TraitRocket,
+                StringToken = "TRAIT_ROCKET",
+                Morale = 5f,
+                StressReductionPercent = 30f,
+                AttributeId = "SpaceNavigation",
+                AttributeBonus = 6f,
+                DurationSeconds = DefaultDurationSeconds,
+                AttachedToRoom = false
+            },
+            new RoomEffectSpec
+            {
                 Id = RoomEffectIds.DanceHallMorale,
                 StringToken = "DANCE_HALL_MORALE",
                 Morale = 2f,

@@ -20,6 +20,12 @@ namespace MaterialOverhaul.Rooms
         /// <summary>生命值回复速度提高百分比（正数；50 表示 +50%），0 表示不修改。</summary>
         public float HealthRecoveryPercent;
 
+        /// <summary>属性加成 id（例如 Athletics）；为空表示不修改属性。</summary>
+        public string AttributeId;
+
+        /// <summary>属性加成数值。</summary>
+        public float AttributeBonus;
+
         /// <summary>是否直接挂到房间类型上显示；由特殊触发路径发放的效果为 false。</summary>
         public bool AttachedToRoom = true;
 
@@ -39,6 +45,11 @@ namespace MaterialOverhaul.Rooms
         public bool HasHealthRecovery
         {
             get { return HealthRecoveryPercent != 0f; }
+        }
+
+        public bool HasAttributeBonus
+        {
+            get { return !string.IsNullOrEmpty(AttributeId) && AttributeBonus != 0f; }
         }
     }
 }

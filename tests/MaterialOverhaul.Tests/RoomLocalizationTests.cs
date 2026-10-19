@@ -24,7 +24,7 @@ namespace MaterialOverhaul.Tests
                 .Where(pair => pair.Key.StartsWith(Prefix, StringComparison.Ordinal))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            TestRunner.CheckEqual(98, roomKeys.Count, "房间字段树登记 98 条");
+            TestRunner.CheckEqual(122, roomKeys.Count, "房间字段树登记 122 条");
             foreach (KeyValuePair<string, string> entry in roomKeys)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -42,7 +42,7 @@ namespace MaterialOverhaul.Tests
             Dictionary<string, string> roomPo = po
                 .Where(pair => pair.Key.StartsWith(Prefix, StringComparison.Ordinal))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
-            TestRunner.CheckEqual(98, roomPo.Count, "zh.po 有 98 条房间键");
+            TestRunner.CheckEqual(122, roomPo.Count, "zh.po 有 122 条房间键");
             TestRunner.Check(roomKeys.Keys.OrderBy(k => k).SequenceEqual(roomPo.Keys.OrderBy(k => k)),
                 "房间字段树键与 PO 键集合一致");
 

@@ -20,6 +20,7 @@ namespace MaterialOverhaul.Tests
             CatalogueIntegrity();
             Production();
             MaterialDecor();
+            Traits();
         }
 
         private static RoomSnapshot Snapshot(int cells)
@@ -450,6 +451,52 @@ namespace MaterialOverhaul.Tests
                 "导热质 +20%");
             TestRunner.CheckClose(10f, MaterialDecorCatalogue.Get("FabricatedWood").Percent, 0.0001f,
                 "交合板 +10%");
+        }
+
+        private static void Traits()
+        {
+            TestRunner.Section("娱乐偏好特质与专用效果");
+
+            TestRunner.CheckEqual(6, RoomTraitCatalogue.Count, "六项娱乐偏好特质");
+            HashSet<string> traitIds = new HashSet<string>();
+            HashSet<string> effectIds = new HashSet<string>();
+            RoomTraitSpec[] specs = RoomTraitCatalogue.All;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                TestRunner.Check(specs[i].TraitId.StartsWith("MO_", System.StringComparison.Ordinal),
+                    "特质 id 使用 Mod 命名空间：" + specs[i].TraitId);
+                TestRunner.Check(traitIds.Add(specs[i].TraitId), "特质 id 唯一：" + specs[i].TraitId);
+                TestRunner.Check(effectIds.Add(specs[i].EffectId), "特质效果 id 唯一：" + specs[i].EffectId);
+                TestRunner.Check(Find(specs[i].RoomId) != null, "特质指向已登记房间：" + specs[i].RoomId);
+                TestRunner.Check(!string.IsNullOrEmpty(specs[i].StringToken), "特质有本地化键片段");
+            }
+
+            RoomEffectSpec superstar = RoomEffectCatalogue.Get(RoomEffectIds.TraitSuperstar);
+            TestRunner.Check(superstar != null && superstar.Morale == 5f
+                && superstar.StressReductionPercent == 30f
+                && superstar.AttributeId == "Athletics"
+                && superstar.AttributeBonus == 6f
+                && !superstar.AttachedToRoom,
+                "超级明星：士气 +5、压力 −30%、运动 +6，不挂房间类型");
+
+            RoomEffectSpec rocket = RoomEffectCatalogue.Get(RoomEffectIds.TraitRocket);
+            TestRunner.Check(rocket != null && rocket.AttributeId == "SpaceNavigation",
+                "火箭专家：驾驶（SpaceNavigation）+6");
+
+            for (int i = 0; i < specs.Length; i++)
+            {
+                RoomEffectSpec effect = RoomEffectCatalogue.Get(specs[i].EffectId);
+                TestRunner.Check(effect != null, "特质效果有数值定义：" + specs[i].EffectId);
+                if (effect == null)
+                {
+                    continue;
+                }
+
+                TestRunner.Check(effect.HasAttributeBonus && effect.AttributeBonus == 6f,
+                    specs[i].EffectId + " 有 +6 属性");
+                TestRunner.Check(effect.DurationSeconds == RoomEffectCatalogue.DefaultDurationSeconds,
+                    specs[i].EffectId + " 使用 1 周期工作初值");
+            }
         }
 
         private static void Production()

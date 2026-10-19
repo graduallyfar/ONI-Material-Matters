@@ -84,6 +84,8 @@ internal static partial class Program
         Method("LegacyModMain", "ConfigElements", "Void()");
         Method("Clinic+ClinicSM+Instance", "StartEffect", "EffectInstance(String,Boolean)");
         Method("Clinic+ClinicSM+Instance", "StopEffect", "Void(String)");
+        Method("CavityInfo", "OnEnter", "Void(Object)");
+        Method("ModifierSet", "CreateTrait", "Trait(String,String,String,String,Boolean,ChoreGroup[],Boolean,Boolean)");
 
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");

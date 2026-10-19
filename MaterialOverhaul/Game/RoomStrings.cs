@@ -125,6 +125,49 @@ namespace MaterialOverhaul.Game
                     public static LocString TOOLTIP = "需要至少一个数据挖掘中心，平均温度低于 20 ℃，大小 12–96 格。";
                 }
 
+                /// <summary>
+                /// 本 Mod 创建的六项娱乐偏好特质。工作口径（D13 未确认）：加入原版先天性特质池，
+                /// 在对应房间内获得专用效果；同时拥有两项相关特质时取映射表第一项。
+                /// </summary>
+                public static class TRAITS
+                {
+                    public static class SUPERSTAR
+                    {
+                        public static LocString NAME = "超级明星";
+                        public static LocString DESC = "需要在舞厅舒展天赋。";
+                    }
+
+                    public static class ESPORTS
+                    {
+                        public static LocString NAME = "电子竞技选手";
+                        public static LocString DESC = "需要在街机厅舒展天赋。";
+                    }
+
+                    public static class BEACH
+                    {
+                        public static LocString NAME = "海滨达人";
+                        public static LocString DESC = "需要模拟海边来放松。";
+                    }
+
+                    public static class ADVENTURER
+                    {
+                        public static LocString NAME = "冒险家";
+                        public static LocString DESC = "需要机械冲浪板来展现天赋。";
+                    }
+
+                    public static class ARTIST
+                    {
+                        public static LocString NAME = "艺术家";
+                        public static LocString DESC = "需要展览馆来放松自己。";
+                    }
+
+                    public static class ROCKET
+                    {
+                        public static LocString NAME = "火箭专家";
+                        public static LocString DESC = "需要风洞来锻炼自己。";
+                    }
+                }
+
                 /// <summary>房间条件文本模板。与 <c>RoomText</c> 的格式化一一对应。</summary>
                 public static class CRITERIA
                 {
@@ -199,6 +242,42 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString NAME = "护理员照料";
                         public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 +50%。";
+                    }
+
+                    public static class TRAIT_SUPERSTAR
+                    {
+                        public static LocString NAME = "舞台焦点";
+                        public static LocString TOOLTIP = "在舞厅舒展天赋：士气 +5、压力缓解 −30%、运动 +6。";
+                    }
+
+                    public static class TRAIT_ESPORTS
+                    {
+                        public static LocString NAME = "竞技状态";
+                        public static LocString TOOLTIP = "在街机厅舒展天赋：士气 +5、压力缓解 −30%、机械 +6。";
+                    }
+
+                    public static class TRAIT_BEACH
+                    {
+                        public static LocString NAME = "海滨放松";
+                        public static LocString TOOLTIP = "在海滨乐园放松：士气 +5、压力缓解 −30%、挖掘 +6。";
+                    }
+
+                    public static class TRAIT_ADVENTURER
+                    {
+                        public static LocString NAME = "冲浪冒险";
+                        public static LocString TOOLTIP = "在海滨乐园冲浪：士气 +5、压力缓解 −30%、建造 +6。";
+                    }
+
+                    public static class TRAIT_ARTIST
+                    {
+                        public static LocString NAME = "艺术灵感";
+                        public static LocString TOOLTIP = "在展览馆放松：士气 +5、压力缓解 −30%、艺术 +6。";
+                    }
+
+                    public static class TRAIT_ROCKET
+                    {
+                        public static LocString NAME = "风洞训练";
+                        public static LocString TOOLTIP = "在风洞训练：士气 +5、压力缓解 −30%、驾驶 +6。";
                     }
 
                     public static class DANCE_HALL_MORALE

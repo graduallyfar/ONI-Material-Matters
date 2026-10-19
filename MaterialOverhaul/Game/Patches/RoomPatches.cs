@@ -16,6 +16,7 @@ namespace MaterialOverhaul.Patches
             try
             {
                 RoomEffects.Register();
+                RoomTraitRegistration.Register();
                 RoomRegistration.Register();
             }
             catch (Exception e)
@@ -168,6 +169,12 @@ namespace MaterialOverhaul.Patches
                 Effects effects = worker.GetComponent<Effects>();
                 KPrefabID prefab = __instance.GetComponent<KPrefabID>();
                 if (effects == null || prefab == null)
+                {
+                    return;
+                }
+
+                // 拥有对应娱乐偏好的复制人获得特质专用效果，不再叠加普通士气。
+                if (RoomTraitEffects.TryApply(room.roomType, worker))
                 {
                     return;
                 }
@@ -396,6 +403,46 @@ namespace MaterialOverhaul.Patches
 
             Room room = prober.GetRoomOfGameObject(go);
             return room == null || room.roomType == null ? null : room.roomType.Id;
+        }
+    }
+
+    /// <summary>
+    /// 复制人进入房间时发放娱乐偏好特质加成。
+    ///
+    /// 原版 <c>RoomMonitor</c> 在路径推进时调用 <c>CavityInfo.OnEnter</c>；这里补一次
+    /// 特质效果，使展览馆等没有可完成工作任务的房间也能触发。只处理特质持有者，
+    /// 普通复制人的房间效果仍由设施使用完成时发放。
+    /// </summary>
+    [HarmonyPatch(typeof(CavityInfo), "OnEnter")]
+    internal static class Patch_Room_CavityInfo_OnEnter
+    {
+        private static void Postfix(CavityInfo __instance, object data)
+        {
+            try
+            {
+                if (__instance == null || __instance.room == null)
+                {
+                    return;
+                }
+
+                UnityEngine.GameObject go = data as UnityEngine.GameObject;
+                if (go == null)
+                {
+                    return;
+                }
+
+                WorkerBase worker = go.GetComponent<WorkerBase>();
+                if (worker == null)
+                {
+                    return;
+                }
+
+                RoomTraitEffects.TryApply(__instance.room.roomType, worker);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间进入时发放特质效果失败：" + e);
+            }
         }
     }
 }

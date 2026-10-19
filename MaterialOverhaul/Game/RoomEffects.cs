@@ -72,11 +72,17 @@ namespace MaterialOverhaul.Game
                     is_multiplier: true));
             }
 
+            if (spec.HasAttributeBonus)
+            {
+                effect.Add(new AttributeModifier(spec.AttributeId, spec.AttributeBonus, name));
+            }
+
             Db.Get().effects.Add(effect);
             ModLog.Info("房间效果：" + spec.Id + "（" + name + "）士气 " + Signed(spec.Morale)
                 + "、压力缓解 " + Stress(spec.StressReductionPercent)
                 + "、生命回复 " + Health(spec.HealthRecoveryPercent)
-                + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08／D10 未确认）。");
+                + (spec.HasAttributeBonus ? "、" + spec.AttributeId + " +" + spec.AttributeBonus.ToString("0") : string.Empty)
+                + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08／D10／D13 未确认）。");
         }
 
         private static string Signed(float value)

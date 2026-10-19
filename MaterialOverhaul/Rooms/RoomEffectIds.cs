@@ -12,6 +12,12 @@ namespace MaterialOverhaul.Rooms
         public const string HospitalRecovery = "MO_RoomHospitalRecovery";
         public const string MedicalCenterRecovery = "MO_RoomMedicalCenterRecovery";
         public const string CaregiverBoost = "MO_RoomCaregiverBoost";
+        public const string TraitSuperstar = "MO_RoomTraitSuperstar";
+        public const string TraitEsports = "MO_RoomTraitEsports";
+        public const string TraitBeach = "MO_RoomTraitBeach";
+        public const string TraitAdventurer = "MO_RoomTraitAdventurer";
+        public const string TraitArtist = "MO_RoomTraitArtist";
+        public const string TraitRocket = "MO_RoomTraitRocket";
         public const string DanceHallMorale = "MO_RoomDanceHallMorale";
         public const string ArcadeHallMorale = "MO_RoomArcadeHallMorale";
         public const string BeachParadiseMorale = "MO_RoomBeachParadiseMorale";
