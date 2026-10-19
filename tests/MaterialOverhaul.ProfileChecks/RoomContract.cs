@@ -88,6 +88,7 @@ internal static partial class Program
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");
         Field("RoomType", "<effects>k__BackingField", "String[]");
+        Field("RoomType", "<display_details>k__BackingField", "Detail[]");
 
         // 房间效果引用的原版类型。
         Check(types.ContainsKey("Klei.AI.Effect"), "原版类型缺失：Klei.AI.Effect");

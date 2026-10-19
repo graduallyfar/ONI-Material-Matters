@@ -128,6 +128,25 @@ namespace MaterialOverhaul.Game
             return string.Format(Strings.Get("STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.AVERAGE_TEMPERATURE"), value);
         }
 
+        /// <summary>工业区／数据机房的生产加成显示行；其它房间返回空字符串。</summary>
+        public static string ProductionLine(Room room)
+        {
+            if (room == null || room.roomType == null)
+            {
+                return string.Empty;
+            }
+
+            float multiplier = RoomProduction.MultiplierForRoom(room.roomType.Id);
+            if (multiplier <= 1f)
+            {
+                return string.Empty;
+            }
+
+            return string.Format(
+                Strings.Get("STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.PRODUCTION_BONUS"),
+                ((multiplier - 1f) * 100f).ToString("0"));
+        }
+
         private static string Criteria(string fieldName)
         {
             return Strings.Get(CriteriaPrefix + fieldName);

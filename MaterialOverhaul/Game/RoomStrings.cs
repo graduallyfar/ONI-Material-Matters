@@ -156,6 +156,7 @@ namespace MaterialOverhaul.Game
                 {
                     public static LocString AVERAGE_DECOR = "平均装饰度：{0}";
                     public static LocString AVERAGE_TEMPERATURE = "平均温度：{0}";
+                    public static LocString PRODUCTION_BONUS = "生产效率：+{0}%";
                 }
 
                 /// <summary>

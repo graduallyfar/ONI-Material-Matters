@@ -15,6 +15,22 @@ namespace MaterialOverhaul.Rooms
 
         public const float DataCenterMultiplier = 1.2f;
 
+        /// <summary>按房间类型返回展示用加成倍率；不是生产加成房间时返回 1。</summary>
+        public static float MultiplierForRoom(string roomTypeId)
+        {
+            if (string.Equals(roomTypeId, RoomCatalogue.IndustrialAreaId, System.StringComparison.Ordinal))
+            {
+                return IndustrialAreaMultiplier;
+            }
+
+            if (string.Equals(roomTypeId, RoomCatalogue.DataCenterId, System.StringComparison.Ordinal))
+            {
+                return DataCenterMultiplier;
+            }
+
+            return 1f;
+        }
+
         /// <summary>返回该建筑在当前房间类型下的生产倍率；不适用时为 1。</summary>
         public static float Multiplier(string roomTypeId, string prefabId)
         {

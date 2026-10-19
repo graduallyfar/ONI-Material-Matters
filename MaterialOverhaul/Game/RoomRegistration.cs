@@ -190,7 +190,44 @@ namespace MaterialOverhaul.Game
             }
 
             field.SetValue(type, merged.ToArray());
+            AppendDisplayDetail(type, RoomDetails.EFFECTS);
             ModLog.Info("房间改造：" + definition.ExistingRoomId + " 追加 " + added + " 项效果。");
+        }
+
+        /// <summary>把一条房间详情追加到原版房间类型；已存在同一实例时跳过。</summary>
+        private static void AppendDisplayDetail(RoomType type, RoomDetails.Detail detail)
+        {
+            FieldInfo field = typeof(RoomType).GetField(
+                "<display_details>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field == null)
+            {
+                ModLog.WarnOnce("room|mod|details-field",
+                    "房间改造：无法访问 RoomType.display_details 的私有字段，效果不会显示在房间详情。");
+                return;
+            }
+
+            RoomDetails.Detail[] current = (RoomDetails.Detail[])field.GetValue(type);
+            if (current != null)
+            {
+                for (int i = 0; i < current.Length; i++)
+                {
+                    if (ReferenceEquals(current[i], detail))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            RoomDetails.Detail[] merged =
+                new RoomDetails.Detail[(current == null ? 0 : current.Length) + 1];
+            if (current != null)
+            {
+                Array.Copy(current, merged, current.Length);
+            }
+
+            merged[merged.Length - 1] = detail;
+            field.SetValue(type, merged);
         }
 
         /// <summary>
@@ -428,6 +465,17 @@ namespace MaterialOverhaul.Game
             {
                 details.Add(new RoomDetails.Detail(room => RoomText.AverageDecorLine(room)));
                 details.Add(new RoomDetails.Detail(room => RoomText.AverageTemperatureLine(room)));
+            }
+
+            if (definition.EffectIds != null && definition.EffectIds.Length > 0)
+            {
+                details.Add(RoomDetails.EFFECTS);
+            }
+
+            if (definition.Id == RoomCatalogue.IndustrialAreaId
+                || definition.Id == RoomCatalogue.DataCenterId)
+            {
+                details.Add(new RoomDetails.Detail(room => RoomText.ProductionLine(room)));
             }
 
             return new RoomType(
