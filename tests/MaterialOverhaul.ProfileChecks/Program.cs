@@ -29,7 +29,8 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Workable_CompleteWork",
         "MaterialOverhaul.Patches.Patch_Room_Workable_GetEfficiencyMultiplier",
         "MaterialOverhaul.Patches.Patch_Room_ComplexFabricator_ComputeWorkProgress",
-        "MaterialOverhaul.Patches.Patch_Room_ElementConverter_GetSpeedMultiplier"
+        "MaterialOverhaul.Patches.Patch_Room_ElementConverter_GetSpeedMultiplier",
+        "MaterialOverhaul.Patches.Patch_RoomMaterial_ConfigElements"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 

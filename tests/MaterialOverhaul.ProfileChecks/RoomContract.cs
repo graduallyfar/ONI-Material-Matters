@@ -81,6 +81,7 @@ internal static partial class Program
         Method("Workable", "GetEfficiencyMultiplier", "Single(WorkerBase)");
         Method("ComplexFabricator", "ComputeWorkProgress", "Single(Single,ComplexRecipe)");
         Method("ElementConverter", "GetSpeedMultiplier", "Single()");
+        Method("LegacyModMain", "ConfigElements", "Void()");
 
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");

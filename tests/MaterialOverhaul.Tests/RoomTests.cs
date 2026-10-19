@@ -19,6 +19,7 @@ namespace MaterialOverhaul.Tests
             Arbitration();
             CatalogueIntegrity();
             Production();
+            MaterialDecor();
         }
 
         private static RoomSnapshot Snapshot(int cells)
@@ -350,6 +351,37 @@ namespace MaterialOverhaul.Tests
                     TestRunner.Check(effectIds.Add(ids[j]), "效果 id 唯一：" + ids[j]);
                 }
             }
+        }
+
+        private static void MaterialDecor()
+        {
+            TestRunner.Section("材料装饰度配置（D07 工作口径）");
+
+            TestRunner.CheckEqual(13, MaterialDecorCatalogue.ElementCount,
+                "14 项设计材料中 13 项作为元素登记");
+            TestRunner.Check(MaterialDecorCatalogue.Get("FeatherFabric") == null,
+                "羽毛纤维是 prefab，不进入元素目录");
+
+            HashSet<string> ids = new HashSet<string>();
+            MaterialDecorSpec[] specs = MaterialDecorCatalogue.All;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                TestRunner.Check(!string.IsNullOrEmpty(specs[i].SimHash), "材料有 SimHashes 名");
+                TestRunner.Check(ids.Add(specs[i].SimHash), "材料条目唯一：" + specs[i].SimHash);
+            }
+
+            TestRunner.CheckClose(25f, MaterialDecorCatalogue.Get("Ceramic").Percent, 0.0001f,
+                "陶瓷改为 +25%");
+            TestRunner.CheckClose(25f, MaterialDecorCatalogue.Get("Granite").Percent, 0.0001f,
+                "花岗岩改为 +25%");
+            TestRunner.CheckClose(-50f, MaterialDecorCatalogue.Get("DepletedUranium").Percent, 0.0001f,
+                "贫铀 −50%");
+            TestRunner.CheckClose(50f, MaterialDecorCatalogue.Get("PalmWood").Percent, 0.0001f,
+                "粘胶木材 +50%");
+            TestRunner.CheckClose(20f, MaterialDecorCatalogue.Get("TempConductorSolid").Percent, 0.0001f,
+                "导热质 +20%");
+            TestRunner.CheckClose(10f, MaterialDecorCatalogue.Get("FabricatedWood").Percent, 0.0001f,
+                "交合板 +10%");
         }
 
         private static void Production()
