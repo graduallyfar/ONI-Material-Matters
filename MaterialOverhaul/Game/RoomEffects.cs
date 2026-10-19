@@ -65,7 +65,7 @@ namespace MaterialOverhaul.Game
 
             Db.Get().effects.Add(effect);
             ModLog.Info("房间效果：" + spec.Id + "（" + name + "）士气 " + Signed(spec.Morale)
-                + "、压力上升速度 " + Stress(spec.StressReductionPercent)
+                + "、压力缓解 " + Stress(spec.StressReductionPercent)
                 + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08 未确认）。");
         }
 

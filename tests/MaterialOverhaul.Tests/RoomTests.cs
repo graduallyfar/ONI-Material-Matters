@@ -299,15 +299,15 @@ namespace MaterialOverhaul.Tests
 
             RoomEffectSpec shower = RoomEffectCatalogue.Get(RoomEffectIds.ShowerRelief);
             TestRunner.Check(shower != null && !shower.HasMorale && shower.StressReductionPercent == 10f,
-                "淋浴间：压力上升速度 −10%");
+                "淋浴间：压力缓解 −10%");
 
             RoomEffectSpec spa = RoomEffectCatalogue.Get(RoomEffectIds.SpaMorale);
             TestRunner.Check(spa != null && spa.Morale == 2f && spa.StressReductionPercent == 50f,
-                "水疗室：士气 +2，压力上升速度 −50%");
+                "水疗室：士气 +2，压力缓解 −50%");
 
             RoomEffectSpec tea = RoomEffectCatalogue.Get(RoomEffectIds.TeaRoomMorale);
             TestRunner.Check(tea != null && tea.Morale == 2f && tea.StressReductionPercent == 30f,
-                "茶歇室：士气 +2，压力上升速度 −30%");
+                "茶歇室：士气 +2，压力缓解 −30%");
 
             RoomEffectSpec banquet = RoomEffectCatalogue.Get(RoomEffectIds.BanquetRelief);
             TestRunner.Check(banquet != null && !banquet.HasMorale && banquet.StressReductionPercent == 10f,

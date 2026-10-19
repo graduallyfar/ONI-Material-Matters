@@ -171,13 +171,13 @@ namespace MaterialOverhaul.Game
                     public static class SHOWER_RELIEF
                     {
                         public static LocString NAME = "清爽淋浴";
-                        public static LocString TOOLTIP = "最近洗过澡，压力上升速度 −10%。";
+                        public static LocString TOOLTIP = "最近洗过澡，压力缓解 −10%。";
                     }
 
                     public static class BANQUET_RELIEF
                     {
                         public static LocString NAME = "宴会余韵";
-                        public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力上升速度 −10%。";
+                        public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力缓解 −10%。";
                     }
 
                     public static class DANCE_HALL_MORALE
@@ -213,13 +213,13 @@ namespace MaterialOverhaul.Game
                     public static class SPA_MORALE
                     {
                         public static LocString NAME = "水疗放松";
-                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力上升速度 −50%。";
+                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力缓解 −50%。";
                     }
 
                     public static class TEA_ROOM_MORALE
                     {
                         public static LocString NAME = "茶歇时光";
-                        public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2，压力上升速度 −30%。";
+                        public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2，压力缓解 −30%。";
                     }
                 }
             }

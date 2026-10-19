@@ -14,7 +14,7 @@ namespace MaterialOverhaul.Rooms
         /// <summary>士气修正（<c>QualityOfLife</c>），0 表示不修改。</summary>
         public float Morale;
 
-        /// <summary>压力上升速度的降低百分比（正数；50 表示 −50%），0 表示不修改。</summary>
+        /// <summary>压力缓解百分比（正数；50 表示 −50%），0 表示不修改。工作口径为实现为压力变化乘数。</summary>
         public float StressReductionPercent;
 
         /// <summary>效果持续时间（秒）。</summary>

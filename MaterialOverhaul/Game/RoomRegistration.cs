@@ -150,7 +150,8 @@ namespace MaterialOverhaul.Game
         /// </summary>
         private static void AppendModificationEffects(RoomType type, RoomDefinition definition)
         {
-            if (definition.EffectIds == null || definition.EffectIds.Length == 0)
+            string[] effectIds = ExistingEffectIds(definition.EffectIds);
+            if (effectIds.Length == 0)
             {
                 return;
             }
@@ -174,11 +175,11 @@ namespace MaterialOverhaul.Game
             }
 
             int added = 0;
-            for (int i = 0; i < definition.EffectIds.Length; i++)
+            for (int i = 0; i < effectIds.Length; i++)
             {
-                if (!merged.Contains(definition.EffectIds[i]))
+                if (!merged.Contains(effectIds[i]))
                 {
-                    merged.Add(definition.EffectIds[i]);
+                    merged.Add(effectIds[i]);
                     added++;
                 }
             }
@@ -443,8 +444,33 @@ namespace MaterialOverhaul.Game
                 null,
                 false,
                 false,
-                definition.EffectIds,
+                ExistingEffectIds(definition.EffectIds),
                 definition.SortKey);
+        }
+
+        /// <summary>过滤出已经登记到 <c>Db.Get().effects</c> 的效果 id；缺失项留可定位日志。</summary>
+        private static string[] ExistingEffectIds(string[] effectIds)
+        {
+            if (effectIds == null || effectIds.Length == 0)
+            {
+                return new string[0];
+            }
+
+            List<string> existing = new List<string>();
+            for (int i = 0; i < effectIds.Length; i++)
+            {
+                if (Db.Get().effects.TryGet(effectIds[i]) != null)
+                {
+                    existing.Add(effectIds[i]);
+                }
+                else
+                {
+                    ModLog.WarnOnce("room|effect|missing|" + effectIds[i],
+                        "房间效果：" + effectIds[i] + " 尚未登记到 Db.effects，本次不挂到房间上。");
+                }
+            }
+
+            return existing.ToArray();
         }
 
         private static bool MatchesPrimary(RoomDefinition definition, KPrefabID entity)
