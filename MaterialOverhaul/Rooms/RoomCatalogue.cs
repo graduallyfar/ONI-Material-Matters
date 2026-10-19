@@ -412,6 +412,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(80f),
                     RoomRequirement.TemperatureRange(10f, 40f)
                 },
+                FallbackRoomIds = new[] { "Bedroom" },
                 SortKey = 0
             },
             new RoomDefinition
@@ -426,6 +427,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(120f)
                 },
                 EffectIds = new[] { RoomEffectIds.BanquetRelief },
+                FallbackRoomIds = new[] { "GreatHall", "MessHall" },
                 SortKey = 0
             }
         };

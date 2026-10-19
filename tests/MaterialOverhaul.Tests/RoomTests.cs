@@ -214,6 +214,8 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(RoomCatalogue.ModificationFor("Private Bedroom") != null, "私人卧室有改造定义");
             TestRunner.Check(RoomCatalogue.ModificationFor("BanquetHall") != null, "宴会厅有改造定义");
             TestRunner.Check(RoomCatalogue.ModificationFor("Neutral") == null, "中立房间没有改造定义");
+            TestRunner.Check(HasFallback("Private Bedroom", "Bedroom"), "私人卧室记录降级目标 Bedroom");
+            TestRunner.Check(HasFallback("BanquetHall", "GreatHall"), "宴会厅记录降级目标 GreatHall");
 
             TestRunner.Check(RoomBuildingCatalogue.IsIndustrialBuilding("MetalRefinery"), "金属精炼器属工业建筑");
             TestRunner.Check(!RoomBuildingCatalogue.IsIndustrialBuilding("Generator"), "发电机不属工业建筑名单");
@@ -347,6 +349,25 @@ namespace MaterialOverhaul.Tests
                     TestRunner.Check(effectIds.Add(ids[j]), "效果 id 唯一：" + ids[j]);
                 }
             }
+        }
+
+        private static bool HasFallback(string existingRoomId, string fallbackRoomId)
+        {
+            RoomDefinition definition = RoomCatalogue.ModificationFor(existingRoomId);
+            if (definition == null || definition.FallbackRoomIds == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < definition.FallbackRoomIds.Length; i++)
+            {
+                if (definition.FallbackRoomIds[i] == fallbackRoomId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static RoomDefinition Find(string id)

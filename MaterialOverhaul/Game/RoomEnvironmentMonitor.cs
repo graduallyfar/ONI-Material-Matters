@@ -94,6 +94,13 @@ namespace MaterialOverhaul.Game
             for (int i = 0; i < modifications.Length; i++)
             {
                 ids.Add(modifications[i].ExistingRoomId);
+                if (modifications[i].FallbackRoomIds != null)
+                {
+                    for (int j = 0; j < modifications[i].FallbackRoomIds.Length; j++)
+                    {
+                        ids.Add(modifications[i].FallbackRoomIds[j]);
+                    }
+                }
             }
 
             return ids;

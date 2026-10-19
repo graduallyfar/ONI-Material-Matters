@@ -46,6 +46,12 @@ namespace MaterialOverhaul.Rooms
         /// <summary>已实装的原版 Effect id；留空表示效果尚未接入。</summary>
         public string[] EffectIds;
 
+        /// <summary>
+        /// 改造项失效时可能降级到的原版房间 id。环境监控必须继续观察这些房间，
+        /// 否则条件恢复后不会重新升回改造房间。
+        /// </summary>
+        public string[] FallbackRoomIds;
+
         public bool IsModification
         {
             get { return !string.IsNullOrEmpty(ExistingRoomId); }
