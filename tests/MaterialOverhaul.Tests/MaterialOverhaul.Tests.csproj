@@ -57,6 +57,10 @@
     <Compile Include="..\..\MaterialOverhaul\Heating\**\*.cs" LinkBase="Linked\Heating" />
     <Compile Include="..\..\MaterialOverhaul\Hardness\**\*.cs" LinkBase="Linked\Hardness" />
     <Compile Include="..\..\MaterialOverhaul\Orders\**\*.cs" LinkBase="Linked\Orders" />
+    <Compile Include="..\..\MaterialOverhaul\Power\**\*.cs" LinkBase="Linked\Power" />
+    <!-- 基础版只读电网快照的实际源码；原版对象由 PowerTopologyGameStubs 提供。 -->
+    <Compile Include="..\..\MaterialOverhaul\Game\PowerTopologyMonitor.cs" Link="Linked\Game\PowerTopologyMonitor.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerTopologyPatches.cs" Link="Linked\Game\PowerTopologyPatches.cs" />
   </ItemGroup>
 
 </Project>

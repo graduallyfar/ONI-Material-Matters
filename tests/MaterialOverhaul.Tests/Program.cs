@@ -30,6 +30,8 @@ namespace MaterialOverhaul.Tests
             Run("v0.2.2 材料百分比与深渊晶石分类（实际源码＋游戏替身）", MaterialRegistrationTests.Run);
             Run("第二批：分子熔炉、化学精炼厂、窑炉", SecondWaveBuildingTests.Run);
             Run("第三批：23栋工业建筑与端口／文本／连续计时", ThirdWaveBuildingTests.Run);
+            Run("电力基础版：物理路径、混合线材、缓存和独立记账", PowerFoundationTests.Run);
+            Run("电力基础版：实际快照源码与游戏替身", PowerTopologyMonitorTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");
