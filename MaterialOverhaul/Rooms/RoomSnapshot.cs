@@ -30,6 +30,10 @@ namespace MaterialOverhaul.Rooms
 
         public bool HasLight;
 
+        public bool HasToilet;
+
+        public bool HasDiningTable;
+
         public bool HasDecoration;
 
         public bool HasOrnamentDisplayed;

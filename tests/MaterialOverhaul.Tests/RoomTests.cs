@@ -118,11 +118,15 @@ namespace MaterialOverhaul.Tests
 
             snapshot.HasStorage = true;
             snapshot.HasLight = true;
+            snapshot.HasToilet = true;
+            snapshot.HasDiningTable = true;
             snapshot.HasDecoration = true;
             snapshot.HasOrnamentDisplayed = true;
             snapshot.HasMasterpiece = true;
             TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireStorage(), snapshot), "存储设备");
             TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireLight(), snapshot), "光照设备");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireToilet(), snapshot), "任意厕所");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireDiningTable(), snapshot), "任意餐桌");
             TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireDecoration(), snapshot), "装饰建筑");
             TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireOrnament(), snapshot), "藏品展示");
             TestRunner.Check(RoomEvaluator.IsSatisfied(RoomRequirement.RequireMasterpiece(), snapshot), "杰出艺术品");
@@ -224,7 +228,31 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(RoomBuildingCatalogue.IsAdvancedRecreation("Phonobox"), "点唱机器人属高级娱乐建筑");
             TestRunner.Check(RoomBuildingCatalogue.IsLifeBuilding("Bed"), "床属生活建筑");
 
+            RoomDefinition medical = Find("MO_MedicalCenter");
+            TestRunner.Check(HasRequirement(medical, RoomRequirementKind.RequireToilet),
+                "医疗中心要求任意厕所");
+            TestRunner.Check(HasRequirement(medical, RoomRequirementKind.RequireDiningTable),
+                "医疗中心要求任意餐桌");
+
             Effects();
+        }
+
+        private static bool HasRequirement(RoomDefinition definition, RoomRequirementKind kind)
+        {
+            if (definition == null || definition.Additional == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < definition.Additional.Length; i++)
+            {
+                if (definition.Additional[i].Kind == kind)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void Effects()

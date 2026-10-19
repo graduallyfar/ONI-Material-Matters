@@ -67,6 +67,10 @@ namespace MaterialOverhaul.Rooms
                     return snapshot.HasStorage;
                 case RoomRequirementKind.RequireLight:
                     return snapshot.HasLight;
+                case RoomRequirementKind.RequireToilet:
+                    return snapshot.HasToilet;
+                case RoomRequirementKind.RequireDiningTable:
+                    return snapshot.HasDiningTable;
                 case RoomRequirementKind.RequireDecoration:
                     return snapshot.HasDecoration;
                 case RoomRequirementKind.RequireOrnament:

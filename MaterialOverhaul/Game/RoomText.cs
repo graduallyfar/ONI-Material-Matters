@@ -56,6 +56,10 @@ namespace MaterialOverhaul.Game
                     return Criteria("STORAGE");
                 case RoomRequirementKind.RequireLight:
                     return Criteria("LIGHT");
+                case RoomRequirementKind.RequireToilet:
+                    return Criteria("TOILET");
+                case RoomRequirementKind.RequireDiningTable:
+                    return Criteria("DINING_TABLE");
                 case RoomRequirementKind.RequireDecoration:
                     return Criteria("DECORATION");
                 case RoomRequirementKind.RequireOrnament:

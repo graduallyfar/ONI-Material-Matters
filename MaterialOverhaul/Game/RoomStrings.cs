@@ -136,6 +136,8 @@ namespace MaterialOverhaul.Game
                     public static LocString INDUSTRIAL_BUILDING = "至少 1 栋工业建筑";
                     public static LocString STORAGE = "至少 1 个存储设备";
                     public static LocString LIGHT = "至少 1 个光照设备";
+                    public static LocString TOILET = "至少 1 个厕所";
+                    public static LocString DINING_TABLE = "至少 1 张餐桌";
                     public static LocString DECORATION = "至少 1 个装饰建筑";
                     public static LocString ORNAMENT = "基座展示藏品";
                     public static LocString MASTERPIECE = "至少 1 件杰出艺术品";

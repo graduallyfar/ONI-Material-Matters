@@ -110,6 +110,16 @@ namespace MaterialOverhaul.Game
                     snapshot.SciencePrefabIds.Add(prefabId);
                 }
 
+                if (entity.HasTag(RoomConstraints.ConstraintTags.ToiletType))
+                {
+                    snapshot.HasToilet = true;
+                }
+
+                if (entity.HasTag(RoomConstraints.ConstraintTags.DiningTableType))
+                {
+                    snapshot.HasDiningTable = true;
+                }
+
                 if (entity.HasTag(GameTags.Decoration))
                 {
                     snapshot.HasDecoration = true;

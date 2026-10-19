@@ -29,6 +29,12 @@ namespace MaterialOverhaul.Rooms
         /// <summary>至少一盏正在发光的光照设备。</summary>
         RequireLight,
 
+        /// <summary>至少一个厕所（公共厕所、冲水厕所或壁挂厕所）。</summary>
+        RequireToilet,
+
+        /// <summary>至少一张餐桌（单人餐桌或多座位餐桌）。</summary>
+        RequireDiningTable,
+
         /// <summary>至少一个带原版 Decoration 标签的装饰建筑。</summary>
         RequireDecoration,
 
@@ -121,6 +127,16 @@ namespace MaterialOverhaul.Rooms
         public static RoomRequirement RequireLight()
         {
             return new RoomRequirement { Kind = RoomRequirementKind.RequireLight };
+        }
+
+        public static RoomRequirement RequireToilet()
+        {
+            return new RoomRequirement { Kind = RoomRequirementKind.RequireToilet };
+        }
+
+        public static RoomRequirement RequireDiningTable()
+        {
+            return new RoomRequirement { Kind = RoomRequirementKind.RequireDiningTable };
         }
 
         public static RoomRequirement RequireDecoration()
