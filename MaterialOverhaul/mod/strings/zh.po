@@ -467,3 +467,18 @@ msgstr "存在原料齐备的加工、发电或清洗任务，且建筑温度处
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE"
 msgid "Red when there is no runnable process, fuel or scrubbing task, or the temperature is outside the best range. Control mode is off while this output stays unwired."
 msgstr "没有可执行工艺、燃料或清洗任务，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时使用默认模式。"
+
+#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT"
+msgid "Power networks: {0}"
+msgstr "电网数量：{0}"
+
+#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT_PENDING
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT_PENDING"
+msgid "Power networks: updating"
+msgstr "电网数量：统计中"
+
+#. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT_TOOLTIP
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_NETWORK_COUNT_TOOLTIP"
+msgid "All built independent power networks in this save, including unpowered and virtual networks. Planned wires are excluded. Transformer sides count separately unless connected by other wires."
+msgstr "当前存档中所有已建成的独立电网总数，包含未发电的电网及虚拟电网，不计规划线路。\n变压器两侧若未通过其他线路连通，分别计数。"

@@ -32,6 +32,7 @@ namespace MaterialOverhaul.Tests
             Run("第三批：23栋工业建筑与端口／文本／连续计时", ThirdWaveBuildingTests.Run);
             Run("电力基础版：物理路径、混合线材、缓存和独立记账", PowerFoundationTests.Run);
             Run("电力基础版：实际快照源码与游戏替身", PowerTopologyMonitorTests.Run);
+            Run("电网信息卡：所有独立电网数量", PowerCircuitCountTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

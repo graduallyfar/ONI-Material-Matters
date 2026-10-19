@@ -31,7 +31,7 @@ public static class Grid
 [Flags]
 public enum UtilityConnections { Left = 1, Right = 2, Up = 4, Down = 8 }
 public class UtilityNetwork { public int id; }
-public sealed class ElectricalUtilityNetwork : UtilityNetwork { }
+public sealed class ElectricalUtilityNetwork : UtilityNetwork { public readonly List<Wire> allWires = new List<Wire>(); }
 public interface ICircuitConnected { bool IsVirtual { get; } int PowerCell { get; } }
 public interface IEnergyConsumer : ICircuitConnected { }
 public class Generator : KMonoBehaviour, ICircuitConnected
@@ -59,6 +59,8 @@ public class Wire : KMonoBehaviour
     public enum WattageRating { Max500, Max1000, Max2000, Max20000, Max50000, Max4000, NumRatings }
     public WattageRating MaxWattageRating = WattageRating.Max1000;
     public bool Disconnected;
+    public int Cell;
+    public int GetNetworkCell() => Cell;
     public bool IsDisconnected() => Disconnected;
     public static float GetMaxWattageAsFloat(WattageRating rating)
     {
@@ -90,6 +92,8 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
     private readonly Dictionary<int, object> semiVirtualLinks = new Dictionary<int, object>();
     private readonly Dictionary<int, UtilityConnections> connections = new Dictionary<int, UtilityConnections>();
     private readonly Dictionary<int, UtilityNetwork> networks = new Dictionary<int, UtilityNetwork>();
+    public readonly List<UtilityNetwork> ExtraNetworks = new List<UtilityNetwork>();
+    public int NetworkReads;
     private Action<IList<UtilityNetwork>, ICollection<int>> rebuilt;
     public bool IsDirty { get; private set; }
     public int ListenerCount => rebuilt?.GetInvocationList().Length ?? 0;
@@ -97,6 +101,11 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
     public void AddNetworksRebuiltListener(Action<IList<UtilityNetwork>, ICollection<int>> listener) { rebuilt += listener; }
     public void RemoveNetworksRebuiltListener(Action<IList<UtilityNetwork>, ICollection<int>> listener) { rebuilt -= listener; }
     public UtilityNetwork GetNetworkForCell(int cell) => networks.TryGetValue(cell, out UtilityNetwork value) ? value : null;
+    public IList<UtilityNetwork> GetNetworks()
+    {
+        NetworkReads++;
+        var result = new List<UtilityNetwork>(networks.Values); result.AddRange(ExtraNetworks); return result;
+    }
     public UtilityConnections GetConnections(int cell, bool physical)
     {
         if (physical) PhysicalConnectionReads++; else VisualConnectionReads++;
@@ -105,7 +114,8 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
     public void Put(int cell, Wire wire, UtilityConnections directions, int network = 1)
     {
         physicalNodes.Add(cell); items[cell] = wire; connections[cell] = directions;
-        networks[cell] = new ElectricalUtilityNetwork { id = network }; IsDirty = true;
+        var electrical = new ElectricalUtilityNetwork { id = network }; wire.Cell = cell; electrical.allWires.Add(wire);
+        networks[cell] = electrical; IsDirty = true;
     }
     public void Bridge(int first, int second) { links[first] = second; links[second] = first; IsDirty = true; }
     public void SemiVirtual(int cell, object key) { semiVirtualLinks[cell] = key; IsDirty = true; }
@@ -114,9 +124,18 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
         IsDirty = false; rebuilt?.Invoke(new List<UtilityNetwork>(networks.Values), physicalNodes);
     }
 }
-public sealed class CircuitManager { }
+public sealed class CircuitManager
+{
+    public readonly Dictionary<ICircuitConnected, ushort> VirtualIds = new Dictionary<ICircuitConnected, ushort>();
+    public ushort GetCircuitID(ICircuitConnected endpoint)
+    {
+        if (endpoint.IsVirtual) return VirtualIds.TryGetValue(endpoint, out ushort id) ? id : ushort.MaxValue;
+        return (ushort)(Game.Instance.electricalConduitSystem.GetNetworkForCell(endpoint.PowerCell)?.id ?? ushort.MaxValue);
+    }
+}
 public sealed class Game
 {
     public static Game Instance;
     public UtilityNetworkManager<ElectricalUtilityNetwork, Wire> electricalConduitSystem;
+    public CircuitManager circuitManager = new CircuitManager();
 }

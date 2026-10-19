@@ -16,7 +16,7 @@ namespace MaterialOverhaul.Tests
     /// 第三批 23 栋工业建筑的专项回归（第三批工业23建筑开发计划 §8）。
     ///
     /// 覆盖范围：数值与范围、温控端点与启动目标、加热范围与过热豁免、60 个配方候选的完整材料匹配、
-    /// 自动化端口占格与冲突、88 条文本键与中文 PO 一致、连续转换的真实生产秒数与区间并集。
+    /// 自动化端口占格与冲突、当前文本键与中文 PO 一致、连续转换的真实生产秒数与区间并集。
     ///
     /// **不覆盖**：Harmony 补丁在游戏内的实际装配、SIM 质量与电热结算、复制人寻路与动画、读档恢复。
     /// 这些仍需按 §9 的 I01–I20 在游戏内验收，替身测试不能替代。
@@ -723,11 +723,11 @@ namespace MaterialOverhaul.Tests
 
         private static void LocalizationKeys()
         {
-            TestRunner.Section("文本：88条字段树键与中文PO一一对应");
+            TestRunner.Section("文本：91条字段树键与中文PO一一对应");
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(88, Strings.Values.Count, "字段树登记 88 条");
+            TestRunner.CheckEqual(91, Strings.Values.Count, "字段树登记 91 条（电网数量新增3条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -750,7 +750,7 @@ namespace MaterialOverhaul.Tests
                 Match str = Regex.Match(line, "^msgstr \"(.*)\"$");
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
-            TestRunner.CheckEqual(88, po.Count, "zh.po 有 88 条 msgctxt");
+            TestRunner.CheckEqual(91, po.Count, "zh.po 有 91 条 msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;

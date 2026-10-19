@@ -46,6 +46,7 @@ namespace MaterialOverhaul.Game
 
         private static void OnNetworksRebuilt(IList<UtilityNetwork> networks, ICollection<int> cells)
         {
+            PowerCircuitCount.Reset();
             // 这里 CircuitManager 的设备名单尚未刷新，只使缓存失效。
             topologyDirty = true; paths = null;
             endpoints = new List<PowerEndpoint>().AsReadOnly(); NodeCount = LinkCount = 0;

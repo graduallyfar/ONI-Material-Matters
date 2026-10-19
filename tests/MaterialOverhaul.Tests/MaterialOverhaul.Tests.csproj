@@ -61,6 +61,8 @@
     <!-- 基础版只读电网快照的实际源码；原版对象由 PowerTopologyGameStubs 提供。 -->
     <Compile Include="..\..\MaterialOverhaul\Game\PowerTopologyMonitor.cs" Link="Linked\Game\PowerTopologyMonitor.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerTopologyPatches.cs" Link="Linked\Game\PowerTopologyPatches.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\PowerCircuitCount.cs" Link="Linked\Game\PowerCircuitCount.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerInfoCardPatches.cs" Link="Linked\Game\PowerInfoCardPatches.cs" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityEngine { public sealed class GameObject { } }
+namespace UnityEngine { public sealed partial class GameObject { } }
 public interface IGameObjectEffectDescriptor
 {
     List<Descriptor> GetDescriptors(UnityEngine.GameObject go);
