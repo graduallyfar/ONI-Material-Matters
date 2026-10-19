@@ -48,6 +48,10 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(0f, RoomEnvironment.AverageDecor(vacuumOnly), 0.001f, "全真空仍可算装饰度 0");
             TestRunner.Check(float.IsNaN(RoomEnvironment.AverageTemperature(new RoomCellSample[0])), "空格集合 → 温度 NaN");
             TestRunner.Check(float.IsNaN(RoomEnvironment.AverageDecor(null)), "null 集合 → 装饰度 NaN");
+            TestRunner.Check(RoomEnvironment.ApproximatelyEqual(293.15f, 293.151f, 0.01f), "容差内视为未变化");
+            TestRunner.Check(!RoomEnvironment.ApproximatelyEqual(293.15f, 293.20f, 0.01f), "超出容差视为变化");
+            TestRunner.Check(RoomEnvironment.ApproximatelyEqual(float.NaN, float.NaN, 0.01f), "两个缺失值视为相同");
+            TestRunner.Check(!RoomEnvironment.ApproximatelyEqual(float.NaN, 293.15f, 0.01f), "缺失与有值视为变化");
         }
 
         private static void SizeAndCounts()

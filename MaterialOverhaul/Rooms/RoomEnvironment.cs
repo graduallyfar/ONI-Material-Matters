@@ -81,5 +81,19 @@ namespace MaterialOverhaul.Rooms
 
             return count == 0 ? float.NaN : (float)(sum / count);
         }
+
+        /// <summary>
+        /// 判断两个环境平均值是否可视为未变化；两个缺失值视为相同。
+        /// 用于环境重判时跳过不必要的房间类型重算，不参与条件比较。
+        /// </summary>
+        public static bool ApproximatelyEqual(float left, float right, float tolerance)
+        {
+            if (float.IsNaN(left) || float.IsNaN(right))
+            {
+                return float.IsNaN(left) && float.IsNaN(right);
+            }
+
+            return Math.Abs(left - right) <= tolerance;
+        }
     }
 }
