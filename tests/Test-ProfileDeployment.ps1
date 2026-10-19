@@ -32,15 +32,25 @@ Copy-Item -LiteralPath $powerPackage -Destination $corrupt -Recurse
 Add-Content -LiteralPath (Join-Path $corrupt 'strings\zh.po') -Value 'tampered'
 $invalidHash = & dotnet run --no-build --project $checker -c Release -- Power $corrupt 2>&1
 Assert ($LASTEXITCODE -ne 0) '被修改的验证包必须拒绝。'
+$wrongVersion = Join-Path $fixture 'wrong-version-package'
+Copy-Item -LiteralPath $powerPackage -Destination $wrongVersion -Recurse
+$versionManifestPath = Join-Path $wrongVersion 'build_profile.json'
+$versionManifest = Get-Content -LiteralPath $versionManifestPath -Raw | ConvertFrom-Json
+$versionManifest.version = '0.2.2'
+[IO.File]::WriteAllText($versionManifestPath, ($versionManifest | ConvertTo-Json -Depth 5))
+$invalidVersion = & dotnet run --no-build --project $checker -c Release -- Power $wrongVersion 2>&1
+Assert ($LASTEXITCODE -ne 0) 'Power包不得混用工业版本号，即使文件哈希都正确。'
 
 foreach ($mode in @('Power', 'Industrial', 'Combined', 'Power')) {
     & $deploy -Profile $mode -ModsDir $mods -SkipBuild | Out-Null
     $manifest = Get-Content -LiteralPath (Join-Path $target 'build_profile.json') -Raw | ConvertFrom-Json
     Assert ($manifest.profile -eq $mode) "$mode 身份应与请求一致。"
+    $expectedVersion = if ($mode -eq 'Power') { '0.0.2' } else { '0.2.2' }
+    Assert ($manifest.version -eq $expectedVersion) "$mode 应使用对应系统版本号。"
     Assert ($manifest.industrialEnabled -eq ($mode -ne 'Power')) "$mode 工业启用状态不符。"
     Assert ($manifest.powerEnabled -eq ($mode -ne 'Industrial')) "$mode 电力启用状态不符。"
     $keys = @(Select-String -LiteralPath (Join-Path $target 'strings\zh.po') -Pattern '^msgctxt ')
-    $expected = if ($mode -eq 'Power') { 3 } elseif ($mode -eq 'Industrial') { 88 } else { 91 }
+    $expected = if ($mode -eq 'Power') { 14 } elseif ($mode -eq 'Industrial') { 88 } else { 102 }
     Assert ($keys.Count -eq $expected) "$mode 本地化文件未完整替换。"
     Assert ((Get-Content -LiteralPath (Join-Path $target 'keep.txt') -Raw) -eq 'existing configuration') '部署不应覆盖无关配置。'
     foreach ($file in $manifest.files.PSObject.Properties) {

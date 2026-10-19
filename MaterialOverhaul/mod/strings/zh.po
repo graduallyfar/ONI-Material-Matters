@@ -482,3 +482,47 @@ msgstr "电线数量：统计中"
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT_TOOLTIP"
 msgid "Built wire cells on the selected object's independent circuit. Planned wires, bridges and buildings are excluded. Disconnected objects show zero."
 msgstr "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS"
+msgid "Line loss: {0:0.##} W"
+msgstr "线路损耗：{0:0.##} W"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_DELIVERED"
+msgid "Delivered power: {0:0.##} W"
+msgstr "实际输送：{0:0.##} W"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_TOOLTIP"
+msgid "Actual loss and delivered power in the last 0.2 second step, including consumers, battery charging and transformer input. The source pays the loss; it is excluded from vanilla overload power and creates no extra heat. Initial test balance."
+msgstr "最近一次0.2秒结算的实际线路损耗与交付功率，包含设备用电、电池充电和变压器输入。\n损耗由实际供电端支付，不计入原版过载功率，也不额外产生热量。数值为首轮测试初值。"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_PENDING"
+msgid "Line loss: awaiting settlement"
+msgstr "线路损耗：等待结算"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_FALLBACK"
+msgid "Line loss: vanilla settlement"
+msgstr "线路损耗：原版结算"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_REPORT"
+msgid "Line loss"
+msgstr "线路损耗"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_REASON_UNSUPPORTED"
+msgid "Unsupported path or connection type"
+msgstr "路径或连接类型尚不支持"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_REASON_MATERIAL"
+msgid "Missing electrical conductivity: {0}"
+msgstr "未配置电导率：{0}"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_REASON_RANGE"
+msgid "Path loss exceeds numeric range"
+msgstr "路径损耗超出数值范围"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_REASON_VIRTUAL"
+msgid "Unsupported endpoint type or virtual connection"
+msgstr "接电端类型或虚拟连接尚不支持"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_REASON_PATCH"
+msgid "Settlement patch is not ready"
+msgstr "结算补丁未就绪"

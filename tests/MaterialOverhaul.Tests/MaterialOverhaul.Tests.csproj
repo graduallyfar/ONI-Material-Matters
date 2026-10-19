@@ -63,6 +63,9 @@
     <Compile Include="..\..\MaterialOverhaul\Game\PowerTopologyMonitor.cs" Link="Linked\Game\PowerTopologyMonitor.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerTopologyPatches.cs" Link="Linked\Game\PowerTopologyPatches.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\PowerWireCount.cs" Link="Linked\Game\PowerWireCount.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\PowerText.cs" Link="Linked\Game\PowerText.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\PowerSettlement.cs" Link="Linked\Game\PowerSettlement.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerSettlementPatches.cs" Link="Linked\Game\PowerSettlementPatches.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerInfoCardPatches.cs" Link="Linked\Game\PowerInfoCardPatches.cs" />
   </ItemGroup>
 

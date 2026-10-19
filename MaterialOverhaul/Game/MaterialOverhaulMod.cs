@@ -40,7 +40,7 @@ namespace MaterialOverhaul
             ModLog.Info("v" + Core.ModInfo.Version + "；构建模式：" + BuildProfile.DisplayName
                 + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled + "。");
 #if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
-            ModLog.Info("电力基础版：物理线路拓扑、路径与公式准备，电力信息卡显示当前电网电线数量；线路损耗扣电尚未启用。");
+            ModLog.Info("电力0.0.2：按最短物理路径实际支付损耗；设备、电池充放电与变压器分账；信息卡显示电线数量、输送和损耗。系数与电导率为首轮测试初值，尚未通过游戏平衡验收。");
 #endif
 
 #if !MATERIAL_OVERHAUL_POWER_ONLY

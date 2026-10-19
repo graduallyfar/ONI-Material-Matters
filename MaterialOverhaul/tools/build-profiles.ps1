@@ -15,8 +15,6 @@ $projectRoot = Join-Path $workspaceRoot 'MaterialOverhaul'
 $projectFile = Join-Path $projectRoot 'MaterialOverhaul.csproj'
 $checkerProject = Join-Path $workspaceRoot 'tests\MaterialOverhaul.ProfileChecks\MaterialOverhaul.ProfileChecks.csproj'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
-$projectXml = [xml](Get-Content -LiteralPath $projectFile -Raw)
-$version = @($projectXml.Project.PropertyGroup.Version | Where-Object { $_ })[0]
 $commit = (& git -C $workspaceRoot rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw '无法读取源码提交。' }
 $changes = @(& git -C $workspaceRoot status --porcelain --untracked-files=normal | Where-Object { $_ -notmatch '^\?\? \.obsidian/' })
@@ -25,11 +23,21 @@ $poText = Get-Content -LiteralPath (Join-Path $projectRoot 'mod\strings\zh.po') 
 $poBlocks = [regex]::Split($poText.Trim(), '\r?\n\s*\r?\n')
 $checkArgs = @()
 
+if ($Profile -contains 'Power' -or $Profile -contains 'Combined') {
+    $managedDir = (& dotnet msbuild $projectFile -getProperty:ManagedDir).Trim()
+    if ($LASTEXITCODE -ne 0) { throw '无法读取游戏依赖路径。' }
+    & dotnet run --project $checkerProject -c $Configuration -- --game (Join-Path $managedDir 'Assembly-CSharp.dll')
+    if ($LASTEXITCODE -ne 0) { throw '目标电力结算IL契约不匹配。' }
+}
+
 foreach ($mode in @($Profile | Select-Object -Unique)) {
+    # 读取MSBuild求值后的版本，避免Power专属版本影响工业包。
+    $version = (& dotnet msbuild $projectFile "-p:SystemProfile=$mode" -getProperty:Version).Trim()
+    if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw "$mode 版本读取失败。" }
     $settings = switch ($mode) {
         'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电沿用原版。'; Industrial = $true; Power = $false } }
-        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '仅启用电力基础拓扑与当前电网电线数量；工业与材料机制保持原版，线路损耗尚未启用。'; Industrial = $false; Power = $true } }
-        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业与电力功能整合验证；包含温控、订单、磨损与电力基础功能，线路损耗尚未启用。'; Industrial = $true; Power = $true } }
+        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true } }
+        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业与电力整合验证候选；包含温控、订单、磨损与电力损耗。游戏交互与平衡待验收。'; Industrial = $true; Power = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }
@@ -42,11 +50,13 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     }
     [System.IO.File]::WriteAllText((Join-Path $packageDir 'mod.yaml'),
         "title: `"$($settings.Title)`"`ndescription: `"$($settings.Description)`"`nstaticID: `"MaterialOverhaul`"`n", $utf8)
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'mod\mod_info.yaml') -Destination $packageDir -Force
+    $modInfo = Get-Content -LiteralPath (Join-Path $projectRoot 'mod\mod_info.yaml') -Raw
+    $modInfo = [regex]::Replace($modInfo, '(?m)^version:.*$', "version: `"$version`"")
+    [System.IO.File]::WriteAllText((Join-Path $packageDir 'mod_info.yaml'), $modInfo, $utf8)
     $selectedBlocks = foreach ($block in $poBlocks) {
         $context = [regex]::Match($block, '(?m)^msgctxt "([^"\r\n]+)"\r?$')
         if (!$context.Success) { $block; continue }
-        $isPower = $context.Groups[1].Value.StartsWith('STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT', [StringComparison]::Ordinal)
+        $isPower = $context.Groups[1].Value.StartsWith('STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_', [StringComparison]::Ordinal)
         if ($mode -eq 'Combined' -or ($mode -eq 'Power' -and $isPower) -or ($mode -eq 'Industrial' -and !$isPower)) { $block }
     }
     [System.IO.File]::WriteAllText((Join-Path $stringsDir 'zh.po'), ($selectedBlocks -join "`n`n") + "`n", $utf8)

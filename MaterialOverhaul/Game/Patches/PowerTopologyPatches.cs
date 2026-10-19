@@ -13,7 +13,7 @@ namespace MaterialOverhaul.Patches
     [HarmonyPatch(typeof(global::Game), "OnCleanUp")]
     internal static class Patch_PowerTopology_CleanUp
     {
-        private static void Prefix() { PowerTopologyMonitor.Reset(); }
+        private static void Prefix() { PowerSettlement.Reset(); PowerTopologyMonitor.Reset(); }
     }
 
     [HarmonyPatch(typeof(CircuitManager), "Rebuild")]
@@ -23,6 +23,7 @@ namespace MaterialOverhaul.Patches
             HashSet<WireUtilityNetworkLink> ___bridges)
         {
             PowerTopologyMonitor.AfterCircuitRebuild(___generators, ___consumers, ___bridges);
+            PowerSettlement.Rebuild(___generators, ___consumers);
         }
     }
 }

@@ -10,6 +10,7 @@ public sealed class LocString
     public readonly string Text;
     private LocString(string text) { Text = text; }
     public static implicit operator LocString(string value) { return new LocString(value); }
+    public static explicit operator string(LocString value) { return value.Text; }
     public static void CreateLocStringKeys(Type type, string prefix)
     {
         string current = prefix + type.Name.ToUpperInvariant() + ".";

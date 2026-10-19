@@ -723,11 +723,11 @@ namespace MaterialOverhaul.Tests
 
         private static void LocalizationKeys()
         {
-            TestRunner.Section("文本：91条字段树键与中文PO一一对应");
+            TestRunner.Section("文本：102条字段树键与中文PO一一对应");
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(91, Strings.Values.Count, "字段树登记 91 条（电线数量3条）");
+            TestRunner.CheckEqual(102, Strings.Values.Count, "字段树登记102条（电力14条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -750,7 +750,7 @@ namespace MaterialOverhaul.Tests
                 Match str = Regex.Match(line, "^msgstr \"(.*)\"$");
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
-            TestRunner.CheckEqual(91, po.Count, "zh.po 有 91 条 msgctxt");
+            TestRunner.CheckEqual(102, po.Count, "zh.po有102条msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;

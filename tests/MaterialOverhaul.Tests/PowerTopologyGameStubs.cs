@@ -5,6 +5,12 @@ using System.Reflection;
 // 电力基础版实际 Monitor 源码的替身。字段名与目标744825程序集核对；不加载游戏或Unity。
 namespace HarmonyLib
 {
+    public sealed class CodeInstruction
+    {
+        public System.Reflection.Emit.OpCode opcode;
+        public object operand;
+        public CodeInstruction(System.Reflection.Emit.OpCode opcode, object operand) { this.opcode = opcode; this.operand = operand; }
+    }
     public static class AccessTools
     {
         public static FieldInfo Field(Type type, string name)
@@ -14,6 +20,7 @@ namespace HarmonyLib
 
 public class KMonoBehaviour
 {
+    public UnityEngine.GameObject gameObject = new UnityEngine.GameObject();
     private static int nextId;
     private readonly int instanceId = ++nextId;
     private readonly Dictionary<Type, object> components = new Dictionary<Type, object>();
@@ -33,19 +40,28 @@ public enum UtilityConnections { Left = 1, Right = 2, Up = 4, Down = 8 }
 public class UtilityNetwork { public int id; }
 public sealed class ElectricalUtilityNetwork : UtilityNetwork { public readonly List<Wire> allWires = new List<Wire>(); }
 public interface ICircuitConnected { bool IsVirtual { get; } int PowerCell { get; } }
-public interface IEnergyConsumer : ICircuitConnected { }
+public interface IEnergyConsumer : ICircuitConnected { string Name { get; } }
 public class Generator : KMonoBehaviour, ICircuitConnected
 {
     public bool IsVirtual { get; set; }
     public int PowerCell { get; set; }
     public float Joules = 1000;
+    public float JoulesAvailable => Joules;
+    public virtual void ApplyDeltaJoules(float delta) { Joules = Math.Max(0, Joules + delta); }
+    public virtual void ConsumeEnergy(float joules) { Joules = Math.Max(0, Joules - joules); }
 }
-public sealed class PowerTransformer : Generator { }
+public sealed class PowerTransformer : Generator
+{
+    public Battery Input;
+    public override void ApplyDeltaJoules(float delta) { base.ApplyDeltaJoules(delta); Input?.ConsumeEnergy(-delta); }
+    public override void ConsumeEnergy(float joules) { base.ConsumeEnergy(joules); Input?.ConsumeEnergy(joules); }
+}
 public class EnergyConsumer : KMonoBehaviour, IEnergyConsumer
 {
     public bool IsVirtual { get; set; }
     public int PowerCell { get; set; }
     public float Watts = 100;
+    public string Name => "test consumer";
 }
 public sealed class Battery : KMonoBehaviour, IEnergyConsumer
 {
@@ -53,6 +69,20 @@ public sealed class Battery : KMonoBehaviour, IEnergyConsumer
     public int PowerCell { get; set; }
     public PowerTransformer powerTransformer;
     public float Joules = 1000;
+    public string Name => "test battery";
+    public float JoulesAvailable => Joules;
+    public float Capacity = 20000;
+    public float ChargeCapacity = float.PositiveInfinity;
+    public void ConsumeEnergy(float joules) { Joules = Math.Max(0, Joules - joules); }
+    public void AddEnergy(float joules) { Joules = Math.Min(Capacity, Joules + joules); ChargeCapacity -= joules; }
+}
+
+public sealed class ReportManager
+{
+    public enum ReportType { EnergyCreated }
+    public static readonly ReportManager Instance = new ReportManager();
+    public readonly List<(float Joules, string Name)> Entries = new List<(float, string)>();
+    public void ReportValue(ReportType type, float value, string name) { Entries.Add((value, name)); }
 }
 public class Wire : KMonoBehaviour
 {
@@ -143,6 +173,11 @@ public sealed class UtilityNetworkManager<NetworkType, ItemType>
 }
 public sealed class CircuitManager
 {
+    public int NativeGeneratorCalls, NativeBatteryCalls, NativeChargeCalls, NativeTransformerCalls;
+    private float PowerFromGenerator(float needed, Generator source, IEnergyConsumer consumer) { NativeGeneratorCalls++; return needed; }
+    private float PowerFromBatteries(float needed, List<Battery> sources, IEnergyConsumer consumer) { NativeBatteryCalls++; return needed; }
+    private void ChargeBatteries(List<Battery> sinks, List<Generator> sources, ref float used) { NativeChargeCalls++; used += 7; }
+    private void ChargeTransformers<T>(List<Battery> sinks, List<T> sources, ref float used) { NativeTransformerCalls++; used += 11; }
     public readonly Dictionary<ICircuitConnected, ushort> VirtualIds = new Dictionary<ICircuitConnected, ushort>();
     public ushort GetCircuitID(ICircuitConnected endpoint)
     {

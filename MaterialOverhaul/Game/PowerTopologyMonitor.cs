@@ -8,7 +8,7 @@ using MaterialOverhaul.Power;
 namespace MaterialOverhaul.Game
 {
     /// <summary>
-    /// 基础版的只读拓扑服务：在原版重建后拍快照，按需寻路；不订阅模拟扣电、不更改能量。
+    /// 只读拓扑服务：在原版重建后拍快照，按需寻路并缓存损耗系数；能量由结算服务处理。
     /// 使用经过目标程序集核对的闭合泛型私有字段，仅取原版真实物理连接。
     /// </summary>
     internal static class PowerTopologyMonitor
@@ -23,6 +23,7 @@ namespace MaterialOverhaul.Game
         private static readonly HashSet<int> unsupportedNetworks = new HashSet<int>();
         private static readonly Dictionary<int, int> cellNetworks = new Dictionary<int, int>();
         private static PowerPathCache paths;
+        private static PowerLossPathCache losses;
         private static IReadOnlyList<PowerEndpoint> endpoints = new List<PowerEndpoint>().AsReadOnly();
         internal static IReadOnlyList<PowerEndpoint> Endpoints => endpoints;
         internal static int NodeCount { get; private set; }
@@ -38,8 +39,9 @@ namespace MaterialOverhaul.Game
 
         internal static void Reset()
         {
+            PowerSettlement.Reset();
             if (manager != null) manager.RemoveNetworksRebuiltListener(OnNetworksRebuilt);
-            manager = null; topologyDirty = true; paths = null;
+            manager = null; topologyDirty = true; paths = null; losses = null;
             cellNetworks.Clear(); unsupportedNetworks.Clear();
             endpoints = new List<PowerEndpoint>().AsReadOnly(); NodeCount = LinkCount = 0;
         }
@@ -47,7 +49,8 @@ namespace MaterialOverhaul.Game
         private static void OnNetworksRebuilt(IList<UtilityNetwork> networks, ICollection<int> cells)
         {
             // 这里 CircuitManager 的设备名单尚未刷新，只使缓存失效。
-            topologyDirty = true; paths = null;
+            topologyDirty = true; paths = null; losses = null;
+            PowerSettlement.Reset();
             endpoints = new List<PowerEndpoint>().AsReadOnly(); NodeCount = LinkCount = 0;
         }
 
@@ -58,6 +61,20 @@ namespace MaterialOverhaul.Game
             return manager != null && !manager.IsDirty && !topologyDirty && paths != null
                 && cellNetworks.TryGetValue(sourceCell, out network) && !unsupportedNetworks.Contains(network)
                 && paths.TryGetPath(sourceCell, receiverCell, out path);
+        }
+
+        internal static bool TryGetLoss(int sourceCell, int receiverCell, out double length,
+            out LineLossCoefficients coefficients, out string reason)
+        {
+            coefficients = null; length = 0; reason = PowerText.Get("POWER_REASON_UNSUPPORTED", "路径或连接类型尚不支持");
+            if (!TryGetPath(sourceCell, receiverCell, out LinePath path)) return false;
+            length = path.Length;
+            if (losses == null) losses = new PowerLossPathCache(paths, PowerBalance.Parameters, PowerBalance.Conductivities);
+            LineLossStatus status = losses.TryGet(sourceCell, receiverCell, out coefficients, out string material);
+            reason = status == LineLossStatus.MissingConductivity
+                ? string.Format(PowerText.Get("POWER_REASON_MATERIAL", "未配置电导率：{0}"), material)
+                : PowerText.Get("POWER_REASON_RANGE", "路径损耗超出数值范围");
+            return status == LineLossStatus.Success;
         }
 
         internal static void AfterCircuitRebuild(IEnumerable<Generator> generators,
@@ -89,8 +106,8 @@ namespace MaterialOverhaul.Game
                     AddEndpoint(result, consumer, component.GetInstanceID(), kind);
                 }
                 result.Sort((a, b) => a.Id.CompareTo(b.Id)); endpoints = result.AsReadOnly();
-                ModLog.InfoOnce("power-foundation-snapshot", "电力基础版已收到原版重建：物理线格 " + NodeCount
-                    + "、连接 " + LinkCount + "；仅缓存拓扑，不启用线路损耗扣电。");
+                ModLog.InfoOnce("power-foundation-snapshot", "电力系统已收到原版重建：物理线格 " + NodeCount
+                    + "、连接 " + LinkCount + "；供电结算按物理路径读取缓存。");
             }
             catch (Exception e)
             {
@@ -125,7 +142,7 @@ namespace MaterialOverhaul.Game
 
         private static void CaptureTopology(IEnumerable<WireUtilityNetworkLink> bridges)
         {
-            paths = null; cellNetworks.Clear(); unsupportedNetworks.Clear();
+            paths = null; losses = null; cellNetworks.Clear(); unsupportedNetworks.Clear();
             var physicalNodes = Read<HashSet<int>>(NodesField);
             var items = Read<Dictionary<int, object>>(ItemsField);
             var actualLinks = Read<Dictionary<int, int>>(LinksField);

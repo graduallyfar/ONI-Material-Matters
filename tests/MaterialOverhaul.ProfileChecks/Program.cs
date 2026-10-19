@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 // 只读PE元数据，绝不加载Unity或游戏程序集，也不以替身代码证明隔离。
-internal static class Program
+internal static partial class Program
 {
     private static int checks;
     private static readonly HashSet<string> PowerPatches = new(StringComparer.Ordinal)
@@ -14,7 +14,8 @@ internal static class Program
         "MaterialOverhaul.Patches.Patch_PowerTopology_Initialize",
         "MaterialOverhaul.Patches.Patch_PowerTopology_CleanUp",
         "MaterialOverhaul.Patches.Patch_PowerTopology_Rebuild",
-        "MaterialOverhaul.Patches.Patch_PowerInfoCard_WireCount"
+        "MaterialOverhaul.Patches.Patch_PowerInfoCard_WireCount",
+        "MaterialOverhaul.Patches.Patch_PowerSettlement_Sim"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 
@@ -28,6 +29,12 @@ internal static class Program
     {
         try
         {
+            if (args.Length == 2 && args[0] == "--game")
+            {
+                InspectGameContract(args[1]);
+                Console.WriteLine($"原版电力IL调用契约 {checks} 项，全部通过。");
+                return 0;
+            }
             Check(args.Length > 0 && args.Length % 2 == 0, "用法：ProfileChecks <Industrial|Power|Combined> <包目录> [更多模式与目录]");
             var profiles = new Dictionary<string, Snapshot>();
             for (int i = 0; i < args.Length; i += 2) profiles.Add(args[i], Inspect(args[i], args[i + 1]));
@@ -49,6 +56,9 @@ internal static class Program
         Check(profile is "Industrial" or "Power" or "Combined", "未知构建模式：" + profile);
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
         JsonElement root = manifest.RootElement;
+        string expectedVersion = profile == "Power" ? "0.0.2" : "0.2.2";
+        Check(root.GetProperty("version").GetString() == expectedVersion, "包版本与系统专属版本不符。");
+        Check(File.ReadAllText(Path.Combine(directory, "mod_info.yaml")).Contains("version: \"" + expectedVersion + "\""), "模组元数据版本不符。");
         Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
         Check(root.GetProperty("industrialEnabled").GetBoolean() == (profile != "Power"), "清单工业开关不符。");
         Check(root.GetProperty("powerEnabled").GetBoolean() == (profile != "Industrial"), "清单电力开关不符。");
@@ -69,16 +79,23 @@ internal static class Program
         using var stream = File.OpenRead(Path.Combine(directory, "MaterialOverhaul.dll"));
         using var pe = new PEReader(stream);
         MetadataReader metadata = pe.GetMetadataReader();
+        Check(metadata.GetAssemblyDefinition().Version == Version.Parse(expectedVersion + ".0"), "程序集版本与系统专属版本不符。");
         string? embeddedProfile = null;
+        string? fileVersion = null, productVersion = null;
         foreach (CustomAttributeHandle handle in metadata.GetAssemblyDefinition().GetCustomAttributes())
         {
             var attribute = metadata.GetCustomAttribute(handle);
-            if (AttributeType(metadata, attribute) != "System.Reflection.AssemblyMetadataAttribute") continue;
+            string attributeType = AttributeType(metadata, attribute);
+            if (attributeType is not ("System.Reflection.AssemblyMetadataAttribute" or "System.Reflection.AssemblyFileVersionAttribute" or "System.Reflection.AssemblyInformationalVersionAttribute")) continue;
             var blob = metadata.GetBlobReader(attribute.Value); blob.ReadUInt16();
-            string? key = blob.ReadSerializedString(); string? value = blob.ReadSerializedString();
-            if (key == "MaterialOverhaul.SystemProfile") embeddedProfile = value;
+            string? key = blob.ReadSerializedString();
+            if (attributeType == "System.Reflection.AssemblyFileVersionAttribute") fileVersion = key;
+            else if (attributeType == "System.Reflection.AssemblyInformationalVersionAttribute") productVersion = key;
+            else if (key == "MaterialOverhaul.SystemProfile") embeddedProfile = blob.ReadSerializedString();
         }
         Check(embeddedProfile == profile, "DLL内嵌模式与验证包不符。");
+        Check(fileVersion == expectedVersion + ".0", "DLL文件版本不符。");
+        Check(productVersion == expectedVersion || productVersion?.StartsWith(expectedVersion + "+", StringComparison.Ordinal) == true, "DLL产品版本不符。");
         var types = new HashSet<string>(StringComparer.Ordinal);
         var patches = new HashSet<string>(StringComparer.Ordinal);
         var textKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -86,6 +103,11 @@ internal static class Program
         {
             TypeDefinition type = metadata.GetTypeDefinition(handle);
             string name = TypeName(metadata, handle); types.Add(name);
+            if (name == "MaterialOverhaul.Core.ModInfo")
+            {
+                var versionField = type.GetFields().Select(metadata.GetFieldDefinition).Single(f => metadata.GetString(f.Name) == "Version");
+                Check(Encoding.Unicode.GetString(metadata.GetBlobBytes(metadata.GetConstant(versionField.GetDefaultValue()).Value)) == expectedVersion, "启动日志版本与包版本不一致。");
+            }
             foreach (CustomAttributeHandle attr in type.GetCustomAttributes())
                 if (AttributeType(metadata, metadata.GetCustomAttribute(attr)) == "HarmonyLib.HarmonyPatch") patches.Add(name);
             if (name == "MaterialOverhaul.Core.BuildProfile")
@@ -113,7 +135,7 @@ internal static class Program
         Check(types.Contains("MaterialOverhaul.Core.BuildProfile"), "缺少构建身份。");
         if (profile == "Power")
         {
-            Check(patches.SetEquals(PowerPatches), "电力独立版只应包含明确的4个电力补丁。");
+            Check(patches.SetEquals(PowerPatches), "电力独立版只应包含明确的5个电力补丁。");
             foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders." })
                 Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "电力独立版混入工业判断层：" + forbidden);
             foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist" })
@@ -132,7 +154,7 @@ internal static class Program
             }
             else Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
         }
-        int expectedKeys = profile == "Power" ? 3 : profile == "Industrial" ? 88 : 91;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : 102;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();
