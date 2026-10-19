@@ -1,0 +1,162 @@
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
+// 只读PE元数据，绝不加载Unity或游戏程序集，也不以替身代码证明隔离。
+internal static class Program
+{
+    private static int checks;
+    private static readonly HashSet<string> PowerPatches = new(StringComparer.Ordinal)
+    {
+        "MaterialOverhaul.Patches.Patch_PowerTopology_Initialize",
+        "MaterialOverhaul.Patches.Patch_PowerTopology_CleanUp",
+        "MaterialOverhaul.Patches.Patch_PowerTopology_Rebuild",
+        "MaterialOverhaul.Patches.Patch_PowerInfoCard_WireCount"
+    };
+    private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
+
+    private static void Check(bool condition, string message)
+    {
+        checks++;
+        if (!condition) throw new InvalidDataException(message);
+    }
+
+    private static int Main(string[] args)
+    {
+        try
+        {
+            Check(args.Length > 0 && args.Length % 2 == 0, "用法：ProfileChecks <Industrial|Power|Combined> <包目录> [更多模式与目录]");
+            var profiles = new Dictionary<string, Snapshot>();
+            for (int i = 0; i < args.Length; i += 2) profiles.Add(args[i], Inspect(args[i], args[i + 1]));
+            if (profiles.TryGetValue("Combined", out var combined)
+                && profiles.TryGetValue("Industrial", out var industrial) && profiles.TryGetValue("Power", out var power))
+            {
+                var union = new HashSet<string>(industrial.Patches); union.UnionWith(power.Patches);
+                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于两个独立版补丁的并集。");
+                Check(!industrial.Patches.Overlaps(power.Patches), "两个独立版不得包含同一个功能补丁。");
+            }
+            Console.WriteLine($"隔离程序集与验证包检查 {checks} 项，全部通过。");
+            return 0;
+        }
+        catch (Exception e) { Console.Error.WriteLine("[失败] " + e.Message); return 1; }
+    }
+
+    private static Snapshot Inspect(string profile, string directory)
+    {
+        Check(profile is "Industrial" or "Power" or "Combined", "未知构建模式：" + profile);
+        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
+        JsonElement root = manifest.RootElement;
+        Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
+        Check(root.GetProperty("industrialEnabled").GetBoolean() == (profile != "Power"), "清单工业开关不符。");
+        Check(root.GetProperty("powerEnabled").GetBoolean() == (profile != "Industrial"), "清单电力开关不符。");
+        foreach (JsonProperty file in root.GetProperty("files").EnumerateObject())
+        {
+            string path = Path.GetFullPath(Path.Combine(directory, file.Name));
+            Check(path.StartsWith(Path.GetFullPath(directory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase), "清单文件越出包目录。");
+            Check(File.Exists(path), "验证包缺少文件：" + file.Name);
+            Check(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))) == file.Value.GetString(), "验证包文件哈希不符：" + file.Name);
+        }
+        foreach (string required in new[] { "MaterialOverhaul.dll", "MaterialOverhaul.pdb", "mod.yaml", "mod_info.yaml", "strings/zh.po" })
+            Check(root.GetProperty("files").TryGetProperty(required, out _), "清单缺少必要文件：" + required);
+        Check(Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories).Select(Path.GetFileName)
+            .SequenceEqual(new[] { "MaterialOverhaul.dll" }), "验证包只能包含Mod本体DLL。");
+        string modYaml = File.ReadAllText(Path.Combine(directory, "mod.yaml"));
+        Check(modYaml.Contains("staticID: \"MaterialOverhaul\"", StringComparison.Ordinal), "所有模式必须使用同一个Mod ID，互相替换安装。");
+
+        using var stream = File.OpenRead(Path.Combine(directory, "MaterialOverhaul.dll"));
+        using var pe = new PEReader(stream);
+        MetadataReader metadata = pe.GetMetadataReader();
+        string? embeddedProfile = null;
+        foreach (CustomAttributeHandle handle in metadata.GetAssemblyDefinition().GetCustomAttributes())
+        {
+            var attribute = metadata.GetCustomAttribute(handle);
+            if (AttributeType(metadata, attribute) != "System.Reflection.AssemblyMetadataAttribute") continue;
+            var blob = metadata.GetBlobReader(attribute.Value); blob.ReadUInt16();
+            string? key = blob.ReadSerializedString(); string? value = blob.ReadSerializedString();
+            if (key == "MaterialOverhaul.SystemProfile") embeddedProfile = value;
+        }
+        Check(embeddedProfile == profile, "DLL内嵌模式与验证包不符。");
+        var types = new HashSet<string>(StringComparer.Ordinal);
+        var patches = new HashSet<string>(StringComparer.Ordinal);
+        var textKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (TypeDefinitionHandle handle in metadata.TypeDefinitions)
+        {
+            TypeDefinition type = metadata.GetTypeDefinition(handle);
+            string name = TypeName(metadata, handle); types.Add(name);
+            foreach (CustomAttributeHandle attr in type.GetCustomAttributes())
+                if (AttributeType(metadata, metadata.GetCustomAttribute(attr)) == "HarmonyLib.HarmonyPatch") patches.Add(name);
+            if (name == "MaterialOverhaul.Core.BuildProfile")
+            {
+                foreach (FieldDefinitionHandle fieldHandle in type.GetFields())
+                {
+                    FieldDefinition field = metadata.GetFieldDefinition(fieldHandle);
+                    var constantHandle = field.GetDefaultValue();
+                    if (constantHandle.IsNil) continue;
+                    byte[] bytes = metadata.GetBlobBytes(metadata.GetConstant(constantHandle).Value);
+                    switch (metadata.GetString(field.Name))
+                    {
+                        case "Name": Check(Encoding.Unicode.GetString(bytes) == profile, "入口构建名称不符。"); break;
+                        case "IndustrialEnabled": Check((bytes[0] != 0) == (profile != "Power"), "DLL工业开关不符。"); break;
+                        case "PowerEnabled": Check((bytes[0] != 0) == (profile != "Industrial"), "DLL电力开关不符。"); break;
+                    }
+                }
+            }
+            const string textPrefix = "MaterialOverhaul.Game.ModStrings+";
+            if (name.StartsWith(textPrefix, StringComparison.Ordinal))
+                foreach (FieldDefinitionHandle field in type.GetFields())
+                    textKeys.Add("STRINGS." + name[textPrefix.Length..].Replace('+', '.').ToUpperInvariant()
+                        + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
+        }
+        Check(types.Contains("MaterialOverhaul.Core.BuildProfile"), "缺少构建身份。");
+        if (profile == "Power")
+        {
+            Check(patches.SetEquals(PowerPatches), "电力独立版只应包含明确的4个电力补丁。");
+            foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders." })
+                Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "电力独立版混入工业判断层：" + forbidden);
+            foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist" })
+                Check(!types.Any(t => t.Split('+')[0].EndsWith("." + forbidden, StringComparison.Ordinal)), "电力独立版混入工业组件：" + forbidden);
+        }
+        else
+        {
+            foreach (string required in new[] { "Patch_Db_Initialize", "Patch_ElementLoader_Load", "Patch_LegacyModMain_ConfigElements", "Patch_IndustrialGeneration", "Patch_EnergyConsumer_WattsUsed", "Patch_ComplexFabricator_UpdateChore" })
+                Check(patches.Contains("MaterialOverhaul.Patches." + required), "工业功能缺少补丁：" + required);
+            Check(types.Contains("MaterialOverhaul.Game.MaterialOverhaulFab"), "工业版缺少建筑组件。");
+            if (profile == "Industrial")
+            {
+                Check(!patches.Overlaps(PowerPatches), "工业独立版包含电力补丁。");
+                Check(!types.Any(t => t.StartsWith("MaterialOverhaul.Power.", StringComparison.Ordinal)), "工业独立版包含电力计算层。");
+                Check(!types.Contains("MaterialOverhaul.Game.PowerTopologyMonitor") && !types.Contains("MaterialOverhaul.Game.PowerWireCount"), "工业独立版包含电力服务。");
+            }
+            else Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
+        }
+        int expectedKeys = profile == "Power" ? 3 : profile == "Industrial" ? 88 : 91;
+        var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
+            .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
+            .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();
+        Check(textKeys.Count == expectedKeys, "DLL本地化字段数不符。");
+        Check(poKeys.Count == expectedKeys && textKeys.SetEquals(poKeys), "PO与此模式的真实字段不一致。");
+        Console.WriteLine($"{profile}: {patches.Count}个补丁，{textKeys.Count}条文本；DLL与包一致。");
+        return new Snapshot(types, patches);
+    }
+
+    private static string TypeName(MetadataReader reader, TypeDefinitionHandle handle)
+    {
+        var type = reader.GetTypeDefinition(handle);
+        var parent = type.GetDeclaringType();
+        return parent.IsNil ? reader.GetString(type.Namespace) + "." + reader.GetString(type.Name)
+            : TypeName(reader, parent) + "+" + reader.GetString(type.Name);
+    }
+    private static string AttributeType(MetadataReader reader, CustomAttribute attribute)
+    {
+        EntityHandle typeHandle = attribute.Constructor.Kind == HandleKind.MemberReference
+            ? reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor).Parent
+            : reader.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor).GetDeclaringType();
+        if (typeHandle.Kind == HandleKind.TypeDefinition) return TypeName(reader, (TypeDefinitionHandle)typeHandle);
+        if (typeHandle.Kind != HandleKind.TypeReference) return string.Empty;
+        var type = reader.GetTypeReference((TypeReferenceHandle)typeHandle);
+        return reader.GetString(type.Namespace) + "." + reader.GetString(type.Name);
+    }
+}

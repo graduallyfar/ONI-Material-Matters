@@ -15,10 +15,10 @@ namespace MaterialOverhaul.Game
     /// 字段默认值直接给中文：即使没有 .po，界面也能显示正确文本。
     /// 必须在 `Localization.Initialize` 之后注册（本 Mod 的 OnLoad 满足这一点）。
     /// </summary>
-    public static class ModStrings
+    public static partial class ModStrings
     {
         // STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.*
-        public static class UI
+        public static partial class UI
         {
             public static class USERMENUACTIONS
             {
@@ -37,9 +37,9 @@ namespace MaterialOverhaul.Game
             }
 
             // STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.*
-            public static class UISIDESCREENS
+            public static partial class UISIDESCREENS
             {
-                public static class MATERIALOVERHAUL
+                public static partial class MATERIALOVERHAUL
                 {
 
                     /// <summary>
@@ -48,10 +48,6 @@ namespace MaterialOverhaul.Game
                     /// </summary>
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
                     public static LocString RECIPE_TEMP_RANGE_TOOLTIP = "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。";
-
-                    public static LocString POWER_WIRE_COUNT = "电线数量：{0}";
-                    public static LocString POWER_WIRE_COUNT_PENDING = "电线数量：统计中";
-                    public static LocString POWER_WIRE_COUNT_TOOLTIP = "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。";
 
                     public static class HEATING_POWER
                     {

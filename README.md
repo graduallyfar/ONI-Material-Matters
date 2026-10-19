@@ -7,6 +7,18 @@
 > [!WARNING]
 > 温控、订单与磨损在代码中已覆盖 **29 栋工业建筑**：原六栋（金属精炼器、岩石粉碎机、玻璃熔炉、分子熔炉、化学精炼厂、窑炉）已经过游戏内运行，第三批 23 栋（批次加工、连续转换、燃料发电、油井、矿石洗涤器）**已完成源码级回归，2026-10-17 已部署到本地 mod 目录（DLL 0.2.2.0），尚未在游戏内验收**。材料过热百分比、深渊晶石矿物原料分类与精炼金属建材扩展适用于全局。数值仍属初值，未上传 Steam 创意工坊。
 
+## 独立验证版本
+
+同一工程提供三种构建，版本号仍为0.2.2：
+
+| 模式 | 功能 |
+| --- | --- |
+| Industrial | 仅工业温控、加热、订单、磨损与材料改造；电力输配电保持原版 |
+| Power | 仅电力基础功能与当前电网电线数；工业及材料机制保持原版，线路损耗尚未启用 |
+| Combined | 工业与电力整合验证 |
+
+验证包分别位于 `_dist/validation/<模式>/MaterialOverhaul/`，另有同名ZIP。三种包使用同一个Mod ID，切换时替换安装并重启游戏，每次只启用一份，分别使用专门测试存档。详细边界与验证记录见[系统隔离验证记录](docs/开发计划/系统隔离验证记录.md)。下列工业功能适用于Industrial和Combined。
+
 ## 它做了什么
 
 - **工作温区**：建筑最低工作温度由建筑类型决定；最高工作温度 = 过热阈值 = **主建造材料熔点 × 0.75 × 材料过热倍率**（按 K 计算）。配方另有自己的最佳温区，切换配方不改变建筑上下限。窑炉、铀素离心机、乙醇蒸馏器、藻类蒸馏器与氧石精炼炉保留原版过热豁免，材料上限只限制工作。
@@ -37,6 +49,7 @@
 ├─ MaterialOverhaul.dll
 ├─ mod.yaml
 ├─ mod_info.yaml
+├─ build_profile.json
 └─ strings\zh.po
 ```
 
@@ -48,16 +61,17 @@
 
 ## 从源码构建
 
-需要 .NET SDK 和本机安装的《缺氧》。在工作区根目录执行：
+需要 .NET SDK、PowerShell 7（Codex终端已提供）和本机安装的《缺氧》。在工作区根目录执行：
 
 ```powershell
 copy MaterialOverhaul\local.props.example MaterialOverhaul\local.props   # 填入自己的 GameDir
 dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release
 dotnet run --project tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj -c Release
-powershell -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\deploy.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\build-profiles.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\deploy.ps1 -Profile Power
 ```
 
-`deploy.ps1` 只写 `mods\local\MaterialOverhaul`，不触碰订阅目录与存档；构建时的 `MSB3277` 属预期警告。
+直接dotnet构建默认Combined，产物在 `_build/profiles/Combined/`。`build-profiles.ps1`生成并检查三种包；`deploy.ps1`必须明确选择Industrial、Power或Combined，校验后只写 `mods\local\MaterialOverhaul`，切换前备份旧文件，不触碰订阅目录与存档。构建时的 `MSB3277` 属预期警告。
 
 ## 文档
 

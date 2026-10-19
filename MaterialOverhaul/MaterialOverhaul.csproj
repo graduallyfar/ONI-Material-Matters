@@ -4,6 +4,11 @@
   <Import Project="local.props" Condition="Exists('local.props')" />
 
   <PropertyGroup>
+    <!-- 默认维持完整构建；独立验证使用 -p:SystemProfile=Industrial 或 Power。 -->
+    <SystemProfile Condition="'$(SystemProfile)' == ''">Combined</SystemProfile>
+    <DefineConstants Condition="'$(SystemProfile)' == 'Power'">$(DefineConstants);MATERIAL_OVERHAUL_POWER_ONLY</DefineConstants>
+    <DefineConstants Condition="'$(SystemProfile)' == 'Industrial'">$(DefineConstants);MATERIAL_OVERHAUL_INDUSTRIAL_ONLY</DefineConstants>
+    <IntermediateOutputPath>obj\$(SystemProfile)\$(Configuration)\</IntermediateOutputPath>
     <!-- 目标框架由游戏程序集核实：OxygenNotIncluded_Data\Managed\netstandard.dll 为 2.1.0.0 -->
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>MaterialOverhaul</AssemblyName>
@@ -18,13 +23,31 @@
     <DebugType>portable</DebugType>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
     <!-- 构建产物统一放到工作区 _build，不进入工程目录 -->
-    <OutputPath>..\_build\</OutputPath>
+    <OutputPath>..\_build\profiles\$(SystemProfile)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- Unity/游戏程序集与 netstandard 引用程序集之间存在版本告警，属预期 -->
     <NoWarn>$(NoWarn);CS1701;CS1702;CS0436</NoWarn>
     <!-- 游戏程序集与 netstandard2.1 引用程序集之间的版本冲突提示，属预期，降级为消息 -->
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="MaterialOverhaul.SystemProfile" Value="$(SystemProfile)" />
+  </ItemGroup>
+
+  <!-- 真正排除另一系统的组件、判断层与补丁，而非只在运行期跳过。 -->
+  <ItemGroup Condition="'$(SystemProfile)' == 'Power'">
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SystemProfile)' == 'Industrial'">
+    <Compile Remove="Power\**\*.cs;Game\PowerStrings.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs" />
+  </ItemGroup>
+
+  <Target Name="CheckSystemProfile" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(SystemProfile)' != 'Industrial' and '$(SystemProfile)' != 'Power' and '$(SystemProfile)' != 'Combined'"
+           Text="未知SystemProfile：$(SystemProfile)。只支持Industrial、Power、Combined。" />
+  </Target>
 
   <PropertyGroup>
     <ManagedDir Condition="'$(GameDir)' != ''">$(GameDir)\OxygenNotIncluded_Data\Managed</ManagedDir>

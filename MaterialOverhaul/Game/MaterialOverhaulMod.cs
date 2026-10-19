@@ -2,8 +2,10 @@ using System;
 using HarmonyLib;
 using KMod;
 using MaterialOverhaul.Core;
+#if !MATERIAL_OVERHAUL_POWER_ONLY
 using MaterialOverhaul.Hardness;
 using MaterialOverhaul.Zones;
+#endif
 
 namespace MaterialOverhaul
 {
@@ -26,13 +28,22 @@ namespace MaterialOverhaul
                 throw;
             }
 
+#if !MATERIAL_OVERHAUL_POWER_ONLY
             Core.DebugValues.Initialize(path);
+#endif
 
             // 注册本 Mod 的本地化键树。原版 OverloadStrings 只能覆盖已存在的 LocString 字段、
             // 无法新增键，所以必须在这里显式建键，否则界面会显示 MISSING.STRINGS.*。
             RegisterStrings();
             LoadModStrings();
 
+            ModLog.Info("v" + Core.ModInfo.Version + "；构建模式：" + BuildProfile.DisplayName
+                + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled + "。");
+#if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+            ModLog.Info("电力基础版：物理线路拓扑、路径与公式准备，电力信息卡显示当前电网电线数量；线路损耗扣电尚未启用。");
+#endif
+
+#if !MATERIAL_OVERHAUL_POWER_ONLY
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count
@@ -48,8 +59,13 @@ namespace MaterialOverhaul
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
             ModLog.Info("v0.2.0 首发三建筑已接入：全量配方温区、独立效率与磨损、交集回差、注热倍率100；粉碎机无内置加热。");
             ModLog.Info("v0.2.1 界面修订：风险／损坏文本使用完整键读取；模式与运行项仅显示状态栏，不绘制无制作队列的世界图标。");
+#else
+            ModLog.Info("工业温控、预热补热、订单、磨损、材料分类及过热改造未编入此验证版；工业建筑沿用原版机制。");
+            ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
+#endif
         }
 
+#if !MATERIAL_OVERHAUL_POWER_ONLY
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
         private static void LogBalanceSummary()
         {
@@ -82,6 +98,7 @@ namespace MaterialOverhaul
 
             return ids.Count == 0 ? "（空）" : string.Join("、", ids.ToArray());
         }
+#endif
 
         /// <summary>
         /// 把 <see cref="Game.ModStrings"/> 的各分支注册成键。
@@ -91,8 +108,10 @@ namespace MaterialOverhaul
         private static void RegisterStrings()
         {
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.UI), "STRINGS.");
+#if !MATERIAL_OVERHAUL_POWER_ONLY
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDING), "STRINGS.");
+#endif
         }
 
         /// <summary>
