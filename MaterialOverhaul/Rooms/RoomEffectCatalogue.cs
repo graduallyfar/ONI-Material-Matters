@@ -41,7 +41,7 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.HospitalRecovery,
                 StringToken = "HOSPITAL_RECOVERY",
-                HealthRecoveryPercent = 20f,
+                HealthRecoveryPercent = 25f,
                 DurationSeconds = 0f
             },
             new RoomEffectSpec
@@ -55,7 +55,7 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.CaregiverBoost,
                 StringToken = "CAREGIVER_BOOST",
-                HealthRecoveryPercent = 50f,
+                HealthRecoveryPercent = 25f,
                 DurationSeconds = 0f,
                 AttachedToRoom = false
             },
@@ -63,10 +63,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitSuperstar,
                 StringToken = "TRAIT_SUPERSTAR",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "Athletics",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -74,10 +74,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitEsports,
                 StringToken = "TRAIT_ESPORTS",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "Machinery",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -85,10 +85,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitBeach,
                 StringToken = "TRAIT_BEACH",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "Digging",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -96,10 +96,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitAdventurer,
                 StringToken = "TRAIT_ADVENTURER",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "Construction",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -107,10 +107,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitArtist,
                 StringToken = "TRAIT_ARTIST",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "Art",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -118,10 +118,10 @@ namespace MaterialOverhaul.Rooms
             {
                 Id = RoomEffectIds.TraitRocket,
                 StringToken = "TRAIT_ROCKET",
-                Morale = 5f,
-                StressReductionPercent = 30f,
+                Morale = 4f,
+                StressReductionPercent = 20f,
                 AttributeId = "SpaceNavigation",
-                AttributeBonus = 6f,
+                AttributeBonus = 3f,
                 DurationSeconds = DefaultDurationSeconds,
                 AttachedToRoom = false
             },
@@ -165,7 +165,7 @@ namespace MaterialOverhaul.Rooms
                 Id = RoomEffectIds.SpaMorale,
                 StringToken = "SPA_MORALE",
                 Morale = 2f,
-                StressReductionPercent = 50f,
+                StressReductionPercent = 40f,
                 DurationSeconds = DefaultDurationSeconds
             },
             new RoomEffectSpec

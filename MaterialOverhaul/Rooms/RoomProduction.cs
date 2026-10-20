@@ -3,10 +3,11 @@ namespace MaterialOverhaul.Rooms
     /// <summary>
     /// 房间生产效率加成的纯判定。
     ///
-    /// 设计值：工业区与数据机房各 +20%。工作口径（D09 未确认前）：
+    /// 设计值：工业区与数据机房各 +20%；任务控制中心、地热调谐实验室 +20%（2026-10-20 指定的工作初值）。
     /// - 工业区只作用于 <see cref="RoomBuildingCatalogue"/> 工业建筑名单内的建筑；
     /// - 数据机房只作用于数据挖掘中心；
-    /// - 批次建筑通过工作速度／无人进度结算，连续转换设备尚未接入；
+    /// - 任务控制中心只作用于航天指挥站（两种），地热调谐实验室只作用于地质调谐仪，按工作速度结算；
+    /// - 批次建筑通过工作速度／无人进度结算，连续转换设备按速度倍率结算；
     /// - 不改变配方投入产出比例、能耗、暂停、缺料、断电或损坏条件。
     /// </summary>
     public static class RoomProduction
@@ -14,6 +15,10 @@ namespace MaterialOverhaul.Rooms
         public const float IndustrialAreaMultiplier = 1.2f;
 
         public const float DataCenterMultiplier = 1.2f;
+
+        public const float MissionControlMultiplier = 1.2f;
+
+        public const float GeoTunerLabMultiplier = 1.2f;
 
         /// <summary>按房间类型返回展示用加成倍率；不是生产加成房间时返回 1。</summary>
         public static float MultiplierForRoom(string roomTypeId)
@@ -26,6 +31,16 @@ namespace MaterialOverhaul.Rooms
             if (string.Equals(roomTypeId, RoomCatalogue.DataCenterId, System.StringComparison.Ordinal))
             {
                 return DataCenterMultiplier;
+            }
+
+            if (string.Equals(roomTypeId, RoomCatalogue.MissionControlId, System.StringComparison.Ordinal))
+            {
+                return MissionControlMultiplier;
+            }
+
+            if (string.Equals(roomTypeId, RoomCatalogue.GeoTunerLabId, System.StringComparison.Ordinal))
+            {
+                return GeoTunerLabMultiplier;
             }
 
             return 1f;
@@ -49,6 +64,19 @@ namespace MaterialOverhaul.Rooms
                 && string.Equals(prefabId, RoomBuildingCatalogue.DataMiner, System.StringComparison.Ordinal))
             {
                 return DataCenterMultiplier;
+            }
+
+            if (string.Equals(roomTypeId, RoomCatalogue.MissionControlId, System.StringComparison.Ordinal)
+                && (string.Equals(prefabId, RoomBuildingCatalogue.MissionControl, System.StringComparison.Ordinal)
+                    || string.Equals(prefabId, RoomBuildingCatalogue.MissionControlCluster, System.StringComparison.Ordinal)))
+            {
+                return MissionControlMultiplier;
+            }
+
+            if (string.Equals(roomTypeId, RoomCatalogue.GeoTunerLabId, System.StringComparison.Ordinal)
+                && string.Equals(prefabId, RoomBuildingCatalogue.GeoTuner, System.StringComparison.Ordinal))
+            {
+                return GeoTunerLabMultiplier;
             }
 
             return 1f;

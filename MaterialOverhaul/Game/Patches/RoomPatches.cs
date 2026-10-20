@@ -189,19 +189,31 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
-    /// 工业区内工业建筑的批次生产速度 +20%。
+    /// 工业区内工业建筑的批次生产速度 +20%；任务控制中心、地热调谐实验室内对应设施的工作速度 +20%。
     ///
-    /// 有人操作的批次建筑由 <c>ComplexFabricatorWorkable</c> 的工作速度决定；只对这类
-    /// 设施乘算，避免把修理、清洁等其它工作也算成生产加成。配方投入产出比例不变。
+    /// 有人操作的批次建筑由 <c>ComplexFabricatorWorkable</c> 的工作速度决定；航天指挥站与
+    /// 地质调谐仪按其自身工作组件结算。只对这几类设施乘算，避免把修理、清洁等其它工作也算成
+    /// 生产加成；具体倍率仍由房间与 prefab 共同决定。配方投入产出比例不变。
     /// </summary>
     [HarmonyPatch(typeof(Workable), "GetEfficiencyMultiplier")]
     internal static class Patch_Room_Workable_GetEfficiencyMultiplier
     {
+        // 按类型名匹配，避免对未加载 DLC 的工作组件产生编译期依赖。
+        private static readonly System.Collections.Generic.HashSet<string> RoomBonusWorkables =
+            new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal)
+            {
+                "MissionControlWorkable",
+                "MissionControlClusterWorkable",
+                "GeoTunerWorkable"
+            };
+
         private static void Postfix(Workable __instance, ref float __result)
         {
             try
             {
-                if (__result <= 0f || !(__instance is ComplexFabricatorWorkable))
+                if (__result <= 0f
+                    || __instance == null
+                    || !(__instance is ComplexFabricatorWorkable || RoomBonusWorkables.Contains(__instance.GetType().Name)))
                 {
                     return;
                 }
@@ -266,6 +278,70 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("房间生产加成（连续转换）失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 本 Mod 房间顶替原版房间后，原版要求该房间的设施仍视为位于正确房间。
+    ///
+    /// 航天指挥站与地质调谐仪的 <c>RoomTracker</c> 要求「实验室」（<c>Requirement.Required</c>），
+    /// 并以 <c>IsInCorrectRoom</c> 决定能否运作；任务控制中心、地热调谐实验室、数据机房会顶替
+    /// 实验室，若不放行这些设施会停工。只放行 <see cref="RoomDefinition.Beats"/> 明列的原版房间。
+    /// </summary>
+    [HarmonyPatch(typeof(RoomTracker), "IsInCorrectRoom")]
+    internal static class Patch_Room_RoomTracker_IsInCorrectRoom
+    {
+        private static void Postfix(RoomTracker __instance, ref bool __result)
+        {
+            try
+            {
+                if (!__result
+                    && __instance != null
+                    && RoomRegistration.CountsAsRoom(__instance.room, __instance.requiredRoomType))
+                {
+                    __result = true;
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间顶替判定（IsInCorrectRoom）失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 与 <see cref="Patch_Room_RoomTracker_IsInCorrectRoom"/> 配套：原版 <c>OnUpdateRoom</c> 按房间 id
+    /// 直接比较并挂上「不在所需房间」状态；顶替房间内移除这条状态，避免显示与实际运作不一致。
+    /// </summary>
+    [HarmonyPatch(typeof(RoomTracker), "OnUpdateRoom")]
+    internal static class Patch_Room_RoomTracker_OnUpdateRoom
+    {
+        private static readonly AccessTools.FieldRef<RoomTracker, Guid> StatusItemGuid =
+            AccessTools.FieldRefAccess<RoomTracker, Guid>("statusItemGuid");
+
+        private static void Postfix(RoomTracker __instance)
+        {
+            try
+            {
+                if (__instance == null
+                    || !RoomRegistration.CountsAsRoom(__instance.room, __instance.requiredRoomType))
+                {
+                    return;
+                }
+
+                KSelectable selectable = __instance.GetComponent<KSelectable>();
+                if (selectable == null)
+                {
+                    return;
+                }
+
+                ref Guid guid = ref StatusItemGuid(__instance);
+                guid = selectable.RemoveStatusItem(guid);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("房间顶替状态（OnUpdateRoom）失败：" + e);
             }
         }
     }

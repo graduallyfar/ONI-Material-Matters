@@ -229,7 +229,7 @@ namespace MaterialOverhaul.Game
                     public static class HOSPITAL_RECOVERY
                     {
                         public static LocString NAME = "医院护理";
-                        public static LocString TOOLTIP = "正在医院接受治疗，生命值回复速度 +20%。";
+                        public static LocString TOOLTIP = "正在医院接受治疗，生命值回复速度 +25%。";
                     }
 
                     public static class MEDICAL_CENTER_RECOVERY
@@ -241,43 +241,43 @@ namespace MaterialOverhaul.Game
                     public static class CAREGIVER_BOOST
                     {
                         public static LocString NAME = "护理员照料";
-                        public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 +50%。";
+                        public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 +25%。";
                     }
 
                     public static class TRAIT_SUPERSTAR
                     {
                         public static LocString NAME = "舞台焦点";
-                        public static LocString TOOLTIP = "在舞厅舒展天赋：士气 +5、压力缓解 −30%、运动 +6。";
+                        public static LocString TOOLTIP = "在舞厅舒展天赋：士气 +4、压力缓解 −20%、运动 +3。";
                     }
 
                     public static class TRAIT_ESPORTS
                     {
                         public static LocString NAME = "竞技状态";
-                        public static LocString TOOLTIP = "在街机厅舒展天赋：士气 +5、压力缓解 −30%、机械 +6。";
+                        public static LocString TOOLTIP = "在街机厅舒展天赋：士气 +4、压力缓解 −20%、机械 +3。";
                     }
 
                     public static class TRAIT_BEACH
                     {
                         public static LocString NAME = "海滨放松";
-                        public static LocString TOOLTIP = "在海滨乐园放松：士气 +5、压力缓解 −30%、挖掘 +6。";
+                        public static LocString TOOLTIP = "在海滨乐园放松：士气 +4、压力缓解 −20%、挖掘 +3。";
                     }
 
                     public static class TRAIT_ADVENTURER
                     {
                         public static LocString NAME = "冲浪冒险";
-                        public static LocString TOOLTIP = "在海滨乐园冲浪：士气 +5、压力缓解 −30%、建造 +6。";
+                        public static LocString TOOLTIP = "在海滨乐园冲浪：士气 +4、压力缓解 −20%、建造 +3。";
                     }
 
                     public static class TRAIT_ARTIST
                     {
                         public static LocString NAME = "艺术灵感";
-                        public static LocString TOOLTIP = "在展览馆放松：士气 +5、压力缓解 −30%、艺术 +6。";
+                        public static LocString TOOLTIP = "在展览馆放松：士气 +4、压力缓解 −20%、艺术 +3。";
                     }
 
                     public static class TRAIT_ROCKET
                     {
                         public static LocString NAME = "风洞训练";
-                        public static LocString TOOLTIP = "在风洞训练：士气 +5、压力缓解 −30%、驾驶 +6。";
+                        public static LocString TOOLTIP = "在风洞训练：士气 +4、压力缓解 −20%、驾驶 +3。";
                     }
 
                     public static class DANCE_HALL_MORALE
@@ -313,7 +313,7 @@ namespace MaterialOverhaul.Game
                     public static class SPA_MORALE
                     {
                         public static LocString NAME = "水疗放松";
-                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力缓解 −50%。";
+                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力缓解 −40%。";
                     }
 
                     public static class TEA_ROOM_MORALE

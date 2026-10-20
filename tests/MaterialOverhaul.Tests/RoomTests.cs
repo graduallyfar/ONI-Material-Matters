@@ -14,9 +14,11 @@ namespace MaterialOverhaul.Tests
             AverageEnvironment();
             SizeAndCounts();
             EnvironmentThresholds();
+            RetainMargins();
             PrefabRequirements();
             CategoryRequirements();
             Arbitration();
+            RetainArbitration();
             CatalogueIntegrity();
             Production();
             MaterialDecor();
@@ -97,6 +99,52 @@ namespace MaterialOverhaul.Tests
             snapshot.AverageTemperatureK = float.NaN;
             TestRunner.Check(!RoomEvaluator.IsSatisfied(RoomRequirement.TemperatureRange(20f, 26f), snapshot), "无温度采样 → 温区不通过");
             TestRunner.Check(!RoomEvaluator.IsSatisfied(RoomRequirement.TemperatureBelow(20f), snapshot), "无温度采样 → 低温条件不通过");
+        }
+
+        private static void RetainMargins()
+        {
+            TestRunner.Section("保持回差：已是该房间时放宽环境阈值");
+
+            TestRunner.CheckClose(5f, RoomEvaluator.DecorRetainMargin, 0.0001f, "装饰度回差 5 点");
+            TestRunner.CheckClose(1f, RoomEvaluator.TemperatureRetainMargin, 0.0001f, "温度回差两端各 1 ℃");
+
+            RoomDefinition dance = Find("MO_DanceHall");
+            RoomRequirement decor = RoomRequirement.MinimumDecor(80f);
+            RoomSnapshot snapshot = Snapshot(20);
+
+            snapshot.AverageDecor = 75f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, decor, snapshot, false), "新判定：装饰度 +75 不满足 +80");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, decor, snapshot, true), "保持：装饰度 +75 仍满足 +80（含回差端点）");
+            snapshot.AverageDecor = 74.9f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, decor, snapshot, true), "保持：装饰度 +74.9 超出回差");
+            snapshot.AverageDecor = float.NaN;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, decor, snapshot, true), "保持：无装饰采样仍不通过");
+
+            RoomRequirement range = RoomRequirement.TemperatureRange(20f, 26f);
+            snapshot.AverageTemperatureK = 299.15f + 0.9f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, range, snapshot, false), "新判定：26.9 ℃ 超出 20–26 ℃");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, range, snapshot, true), "保持：26.9 ℃ 在上限回差内");
+            snapshot.AverageTemperatureK = 299.15f + 1.1f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, range, snapshot, true), "保持：27.1 ℃ 超出上限回差");
+            snapshot.AverageTemperatureK = 293.15f - 0.9f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, range, snapshot, false), "新判定：19.1 ℃ 低于 20–26 ℃");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, range, snapshot, true), "保持：19.1 ℃ 在下限回差内");
+            snapshot.AverageTemperatureK = 293.15f - 1.1f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, range, snapshot, true), "保持：18.9 ℃ 超出下限回差");
+
+            RoomRequirement below = RoomRequirement.TemperatureBelow(20f);
+            snapshot.AverageTemperatureK = 293.15f + 0.5f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, below, snapshot, false), "新判定：20.5 ℃ 不满足「低于 20」");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, below, snapshot, true), "保持：20.5 ℃ 在「低于 20」回差内");
+            snapshot.AverageTemperatureK = 293.15f + 1f;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, below, snapshot, true), "保持：恰好 21 ℃ 仍按严格小于判定");
+            snapshot.AverageTemperatureK = float.NaN;
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, below, snapshot, true), "保持：无温度采样仍不通过");
+
+            snapshot.AverageTemperatureK = 293.15f;
+            TestRunner.Check(
+                RoomEvaluator.IsSatisfied(dance, below, snapshot, false) == RoomEvaluator.IsSatisfied(dance, below, snapshot),
+                "三参数重载等同 retain=false");
         }
 
         private static void PrefabRequirements()
@@ -198,6 +246,55 @@ namespace MaterialOverhaul.Tests
             snapshot.AverageDecor = 50f;
             chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
             TestRunner.Check(chosen == null, "条件不再满足时不由仲裁强留");
+        }
+
+        private static void RetainArbitration()
+        {
+            TestRunner.Section("保持回差：仲裁只对当前房间放宽");
+
+            List<RoomDefinition> definitions = new List<RoomDefinition>(RoomCatalogue.NewRooms);
+            RoomDefinition dance = Find("MO_DanceHall");
+
+            // 舞厅要求平均装饰度 ≥ +100、温度 20–26 ℃。
+            RoomSnapshot snapshot = Snapshot(40);
+            snapshot.PrefabIds.Add(RoomBuildingCatalogue.Phonobox);
+            snapshot.PrefabIds.Add(RoomBuildingCatalogue.ParkSign);
+            snapshot.HasDecoration = true;
+            snapshot.AverageDecor = 97f;
+            snapshot.AverageTemperatureK = 296.15f;
+
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, snapshot), "新判定：装饰度 +97 不满足舞厅");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, snapshot, true), "保持：装饰度 +97 仍满足舞厅");
+            TestRunner.Check(RoomEvaluator.Missing(dance, snapshot, true).Count == 0, "保持：没有缺失条件");
+            TestRunner.CheckEqual(1, RoomEvaluator.Missing(dance, snapshot).Count, "新判定：只缺装饰度一项");
+
+            RoomDefinition chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
+            TestRunner.CheckEqual("MO_DanceHall", chosen == null ? null : chosen.Id, "当前是舞厅时按回差保持");
+
+            chosen = RoomEvaluator.Choose(definitions, snapshot, "RecRoom");
+            TestRunner.Check(chosen == null, "原版娱乐室不因回差升级为舞厅");
+
+            chosen = RoomEvaluator.Choose(definitions, snapshot, "Neutral");
+            TestRunner.Check(chosen == null, "中立房间不因回差升级为舞厅");
+
+            snapshot.AverageDecor = 120f;
+            snapshot.AverageTemperatureK = 299.15f + 0.5f;
+            chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
+            TestRunner.CheckEqual("MO_DanceHall", chosen == null ? null : chosen.Id, "温度 26.5 ℃ 时按回差保持舞厅");
+            chosen = RoomEvaluator.Choose(definitions, snapshot, "RecRoom");
+            TestRunner.Check(chosen == null, "温度 26.5 ℃ 时不新判为舞厅");
+
+            snapshot.AverageTemperatureK = 296.15f;
+            snapshot.AverageDecor = 94f;
+            chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
+            TestRunner.Check(chosen == null, "装饰度 +94 超出回差，不再保持");
+
+            // 顶替关系：RoomTracker 放行的依据（CountsAsRoom 本身依赖游戏 Room 对象，见游戏验收）。
+            TestRunner.Check(RoomEvaluator.Beats(Find(RoomCatalogue.MissionControlId), "Laboratory"), "任务控制中心顶替实验室");
+            TestRunner.Check(RoomEvaluator.Beats(Find(RoomCatalogue.GeoTunerLabId), "Laboratory"), "地热调谐实验室顶替实验室");
+            TestRunner.Check(RoomEvaluator.Beats(Find(RoomCatalogue.DataCenterId), "Laboratory"), "数据机房顶替实验室");
+            TestRunner.Check(!RoomEvaluator.Beats(Find(RoomCatalogue.MissionControlId), "RecRoom"), "任务控制中心不顶替娱乐室");
+            TestRunner.Check(!RoomEvaluator.Beats(dance, "Laboratory"), "舞厅不顶替实验室");
         }
 
         private static void CatalogueIntegrity()
@@ -356,8 +453,8 @@ namespace MaterialOverhaul.Tests
                 "淋浴间：压力缓解 −10%");
 
             RoomEffectSpec spa = RoomEffectCatalogue.Get(RoomEffectIds.SpaMorale);
-            TestRunner.Check(spa != null && spa.Morale == 2f && spa.StressReductionPercent == 50f,
-                "水疗室：士气 +2，压力缓解 −50%");
+            TestRunner.Check(spa != null && spa.Morale == 2f && spa.StressReductionPercent == 40f,
+                "水疗室：士气 +2，压力缓解 −40%");
 
             RoomEffectSpec tea = RoomEffectCatalogue.Get(RoomEffectIds.TeaRoomMorale);
             TestRunner.Check(tea != null && tea.Morale == 2f && tea.StressReductionPercent == 30f,
@@ -371,18 +468,18 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(gallery != null && gallery.Morale == 2f, "展览馆：士气 +2");
 
             RoomEffectSpec hospital = RoomEffectCatalogue.Get(RoomEffectIds.HospitalRecovery);
-            TestRunner.Check(hospital != null && hospital.HealthRecoveryPercent == 20f
+            TestRunner.Check(hospital != null && hospital.HealthRecoveryPercent == 25f
                 && !hospital.HasMorale && !hospital.HasStressReduction,
-                "医院：生命回复 +20%，不附带士气或压力");
+                "医院：生命回复 +25%，不附带士气或压力");
 
             RoomEffectSpec medicalCenter = RoomEffectCatalogue.Get(RoomEffectIds.MedicalCenterRecovery);
             TestRunner.Check(medicalCenter != null && medicalCenter.HealthRecoveryPercent == 50f,
                 "医疗中心：生命回复 +50%");
 
             RoomEffectSpec caregiver = RoomEffectCatalogue.Get(RoomEffectIds.CaregiverBoost);
-            TestRunner.Check(caregiver != null && caregiver.HealthRecoveryPercent == 50f
+            TestRunner.Check(caregiver != null && caregiver.HealthRecoveryPercent == 25f
                 && !caregiver.AttachedToRoom,
-                "护理员特质：治疗期间再 +50%，不挂房间类型");
+                "护理员特质：治疗期间再 +25%，不挂房间类型");
 
             RoomEffectSpec[] specs = RoomEffectCatalogue.All;
             for (int i = 0; i < specs.Length; i++)
@@ -472,16 +569,16 @@ namespace MaterialOverhaul.Tests
             }
 
             RoomEffectSpec superstar = RoomEffectCatalogue.Get(RoomEffectIds.TraitSuperstar);
-            TestRunner.Check(superstar != null && superstar.Morale == 5f
-                && superstar.StressReductionPercent == 30f
+            TestRunner.Check(superstar != null && superstar.Morale == 4f
+                && superstar.StressReductionPercent == 20f
                 && superstar.AttributeId == "Athletics"
-                && superstar.AttributeBonus == 6f
+                && superstar.AttributeBonus == 3f
                 && !superstar.AttachedToRoom,
-                "超级明星：士气 +5、压力 −30%、运动 +6，不挂房间类型");
+                "超级明星：士气 +4、压力 −20%、运动 +3，不挂房间类型");
 
             RoomEffectSpec rocket = RoomEffectCatalogue.Get(RoomEffectIds.TraitRocket);
             TestRunner.Check(rocket != null && rocket.AttributeId == "SpaceNavigation",
-                "火箭专家：驾驶（SpaceNavigation）+6");
+                "火箭专家：驾驶（SpaceNavigation）+3");
 
             for (int i = 0; i < specs.Length; i++)
             {
@@ -492,8 +589,10 @@ namespace MaterialOverhaul.Tests
                     continue;
                 }
 
-                TestRunner.Check(effect.HasAttributeBonus && effect.AttributeBonus == 6f,
-                    specs[i].EffectId + " 有 +6 属性");
+                TestRunner.Check(effect.Morale == 4f && effect.StressReductionPercent == 20f,
+                    specs[i].EffectId + " 士气 +4、压力缓解 −20%");
+                TestRunner.Check(effect.HasAttributeBonus && effect.AttributeBonus == 3f,
+                    specs[i].EffectId + " 有 +3 属性");
                 TestRunner.Check(effect.DurationSeconds == RoomEffectCatalogue.DefaultDurationSeconds,
                     specs[i].EffectId + " 使用 1 周期工作初值");
             }
@@ -541,6 +640,56 @@ namespace MaterialOverhaul.Tests
                 RoomProduction.Multiplier(RoomCatalogue.IndustrialAreaId, null),
                 0.0001f,
                 "无 prefab 时无加成");
+
+            TestRunner.CheckClose(1.2f, RoomProduction.MissionControlMultiplier, 0.0001f, "任务控制中心 +20%");
+            TestRunner.CheckClose(1.2f, RoomProduction.GeoTunerLabMultiplier, 0.0001f, "地热调谐实验室 +20%");
+            TestRunner.CheckClose(
+                1.2f,
+                RoomProduction.Multiplier(RoomCatalogue.MissionControlId, RoomBuildingCatalogue.MissionControl),
+                0.0001f,
+                "任务控制中心作用于航天指挥站");
+            TestRunner.CheckClose(
+                1.2f,
+                RoomProduction.Multiplier(RoomCatalogue.MissionControlId, RoomBuildingCatalogue.MissionControlCluster),
+                0.0001f,
+                "任务控制中心作用于星际航天指挥站");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.MissionControlId, RoomBuildingCatalogue.GeoTuner),
+                0.0001f,
+                "任务控制中心不作用于地质调谐仪");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.MissionControlId, "MetalRefinery"),
+                0.0001f,
+                "任务控制中心不作用于工业建筑");
+            TestRunner.CheckClose(
+                1.2f,
+                RoomProduction.Multiplier(RoomCatalogue.GeoTunerLabId, RoomBuildingCatalogue.GeoTuner),
+                0.0001f,
+                "地热调谐实验室作用于地质调谐仪");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.GeoTunerLabId, RoomBuildingCatalogue.MissionControl),
+                0.0001f,
+                "地热调谐实验室不作用于航天指挥站");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.GeoTunerLabId, "MetalRefinery"),
+                0.0001f,
+                "地热调谐实验室不作用于工业建筑");
+            TestRunner.CheckClose(
+                1f,
+                RoomProduction.Multiplier(RoomCatalogue.DataCenterId, RoomBuildingCatalogue.GeoTuner),
+                0.0001f,
+                "数据机房不作用于地质调谐仪");
+
+            TestRunner.CheckClose(1.2f, RoomProduction.MultiplierForRoom(RoomCatalogue.MissionControlId), 0.0001f,
+                "任务控制中心展示倍率 1.2");
+            TestRunner.CheckClose(1.2f, RoomProduction.MultiplierForRoom(RoomCatalogue.GeoTunerLabId), 0.0001f,
+                "地热调谐实验室展示倍率 1.2");
+            TestRunner.CheckClose(1f, RoomProduction.MultiplierForRoom("MO_DanceHall"), 0.0001f,
+                "非生产房间展示倍率 1");
         }
 
         private static bool HasFallback(string existingRoomId, string fallbackRoomId)

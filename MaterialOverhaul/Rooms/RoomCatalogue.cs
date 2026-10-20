@@ -18,6 +18,8 @@ namespace MaterialOverhaul.Rooms
         public const string IndustrialAreaId = "MO_IndustrialArea";
         public const string DataCenterId = "MO_DataCenter";
         public const string MedicalCenterId = "MO_MedicalCenter";
+        public const string MissionControlId = "MO_MissionControl";
+        public const string GeoTunerLabId = "MO_GeoTunerLab";
 
         private const string Prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.";
 
@@ -296,7 +298,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_MissionControl",
+                Id = MissionControlId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Science",
                 NameKey = Prefix + "MISSION_CONTROL.NAME",
@@ -322,7 +324,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_GeoTunerLab",
+                Id = GeoTunerLabId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Science",
                 NameKey = Prefix + "GEO_TUNER_LAB.NAME",

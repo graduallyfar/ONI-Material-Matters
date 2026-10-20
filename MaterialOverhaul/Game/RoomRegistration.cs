@@ -262,7 +262,7 @@ namespace MaterialOverhaul.Game
             }
 
             RoomSnapshot snapshot = RoomSnapshotCache.Get(room);
-            RoomType mine = SelectModRoom(snapshot);
+            RoomType mine = SelectModRoom(snapshot, PreviousRoomId(room));
             bool currentIsMine = current != null && IsModRoomId(current.Id);
 
             if (currentIsMine)
@@ -341,13 +341,15 @@ namespace MaterialOverhaul.Game
             return types.Neutral;
         }
 
-        private static RoomType SelectModRoom(RoomSnapshot snapshot)
+        /// <param name="previousRoomId">房间重判前的类型 id；与候选相同时按保持回差判定。</param>
+        private static RoomType SelectModRoom(RoomSnapshot snapshot, string previousRoomId)
         {
             RoomDefinition best = null;
             for (int i = 0; i < ActiveRoomsValue.Count; i++)
             {
                 RoomDefinition definition = ActiveRoomsValue[i];
-                if (!RoomEvaluator.IsSatisfied(definition, snapshot))
+                bool retain = string.Equals(definition.Id, previousRoomId, StringComparison.Ordinal);
+                if (!RoomEvaluator.IsSatisfied(definition, snapshot, retain))
                 {
                     continue;
                 }
@@ -361,6 +363,32 @@ namespace MaterialOverhaul.Game
             }
 
             return best == null ? null : FindRoomType(best.Id);
+        }
+
+        /// <summary>房间重判前的类型 id；新建房间对象尚无类型时为 null。</summary>
+        private static string PreviousRoomId(Room room)
+        {
+            return room == null || room.roomType == null ? null : room.roomType.Id;
+        }
+
+        /// <summary>
+        /// 房间是否可视为给定原版房间：本身就是，或是本 Mod 明确顶替（<see cref="RoomDefinition.Beats"/>）该房间的新房间。
+        /// 供原版 <c>RoomTracker</c> 的「所需房间」判定放行。
+        /// </summary>
+        public static bool CountsAsRoom(Room room, string requiredRoomId)
+        {
+            if (room == null || room.roomType == null || string.IsNullOrEmpty(requiredRoomId))
+            {
+                return false;
+            }
+
+            if (string.Equals(room.roomType.Id, requiredRoomId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            RoomDefinition definition = DefinitionOf(room.roomType.Id);
+            return definition != null && RoomEvaluator.Beats(definition, requiredRoomId);
         }
 
         private static RoomDefinition DefinitionOf(string roomId)
@@ -404,7 +432,8 @@ namespace MaterialOverhaul.Game
                 return result;
             }
 
-            List<RoomRequirement> missing = RoomEvaluator.Missing(modification, RoomSnapshotCache.Get(room));
+            bool retain = string.Equals(PreviousRoomId(room), roomType.Id, StringComparison.Ordinal);
+            List<RoomRequirement> missing = RoomEvaluator.Missing(modification, RoomSnapshotCache.Get(room), retain);
             if (missing.Count > 0)
             {
                 return RoomType.RoomIdentificationResult.primary_satisfied;
@@ -435,7 +464,8 @@ namespace MaterialOverhaul.Game
                     room_criteria: (Room room) => RoomEvaluator.IsSatisfied(
                         definition,
                         requirement,
-                        RoomSnapshotCache.Get(room)),
+                            RoomSnapshotCache.Get(room),
+                            string.Equals(PreviousRoomId(room), definition.Id, StringComparison.Ordinal)),
                     times_required: 1,
                     name: RoomText.RequirementName(definition, requirement),
                     description: RoomText.RequirementName(definition, requirement));

@@ -65,8 +65,8 @@ namespace MaterialOverhaul
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
 #endif
 #if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
-            ModLog.Info("房间系统：16 个新增房间、2 项原版改造、平均装饰度／温度条件与独立模式已编入；"
-                + "士气、压力、生产效率、医疗、科研与航天效果尚未接入，游戏验收待执行。");
+            ModLog.Info("房间系统：16 个新增房间、3 项原版改造、平均装饰度／温度条件（含保持回差）与独立模式已编入；"
+                + "士气、压力、医疗、特质与生产效率效果已接入，太空港与货运站暂无效果；数值为工作初值，游戏验收待执行。");
 #endif
         }
 
