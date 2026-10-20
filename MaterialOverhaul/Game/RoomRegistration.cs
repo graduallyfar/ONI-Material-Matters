@@ -502,10 +502,14 @@ namespace MaterialOverhaul.Game
                 details.Add(RoomDetails.EFFECTS);
             }
 
-            if (definition.Id == RoomCatalogue.IndustrialAreaId
-                || definition.Id == RoomCatalogue.DataCenterId)
+            if (RoomProduction.MultiplierForRoom(definition.Id) > 1f)
             {
                 details.Add(new RoomDetails.Detail(room => RoomText.ProductionLine(room)));
+            }
+
+            if (RoomText.HasSpecialEffectLine(definition.Id))
+            {
+                details.Add(new RoomDetails.Detail(room => RoomText.SpecialEffectLine(room)));
             }
 
             return new RoomType(

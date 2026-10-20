@@ -175,6 +175,18 @@ namespace MaterialOverhaul.Rooms
                 Morale = 2f,
                 StressReductionPercent = 30f,
                 DurationSeconds = DefaultDurationSeconds
+            },
+            new RoomEffectSpec
+            {
+                // 医疗中心辐射拯救者的永久后遗症（D12 工作口径）：持续到被移除，随存档保存。
+                Id = RoomEffectIds.RadiationScar,
+                StringToken = "RADIATION_SCAR",
+                AttributeId = "Athletics",
+                AttributeBonus = -6f,
+                DurationSeconds = 0f,
+                Permanent = true,
+                IsBad = true,
+                AttachedToRoom = false
             }
         };
 

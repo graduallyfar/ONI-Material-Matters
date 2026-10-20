@@ -147,6 +147,69 @@ namespace MaterialOverhaul.Game
                 ((multiplier - 1f) * 100f).ToString("0"));
         }
 
+        /// <summary>具有专项效果的房间（科研、航天、货运、医疗中心）是否显示专项说明行。</summary>
+        public static bool HasSpecialEffectLine(string roomTypeId)
+        {
+            return roomTypeId == RoomCatalogue.MissionControlId
+                || roomTypeId == RoomCatalogue.GeoTunerLabId
+                || roomTypeId == RoomCatalogue.SpaceportId
+                || roomTypeId == RoomCatalogue.CargoStationId
+                || roomTypeId == RoomCatalogue.MedicalCenterId;
+        }
+
+        /// <summary>专项效果说明行，数值取自 <see cref="RoomAdvancedEffects"/>；其它房间返回空字符串。</summary>
+        public static string SpecialEffectLine(Room room)
+        {
+            string id = room == null || room.roomType == null ? null : room.roomType.Id;
+            const string prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.";
+            if (id == RoomCatalogue.MissionControlId)
+            {
+                return string.Format(
+                    Strings.Get(prefix + "MISSION_CONTROL_BONUS"),
+                    Percent(RoomAdvancedEffects.MissionControlSpeedBonus),
+                    RoomAdvancedEffects.MissionControlRangeBonus,
+                    RoomAdvancedEffects.ScienceThreshold.ToString("0"));
+            }
+
+            if (id == RoomCatalogue.GeoTunerLabId)
+            {
+                return string.Format(
+                    Strings.Get(prefix + "GEOTUNER_LAB_BONUS"),
+                    Percent(RoomAdvancedEffects.GeoTunerLabMassBonus),
+                    RoomAdvancedEffects.GeoTunerLabExtraTuners,
+                    RoomAdvancedEffects.ScienceThreshold.ToString("0"));
+            }
+
+            if (id == RoomCatalogue.SpaceportId)
+            {
+                return string.Format(
+                    Strings.Get(prefix + "SPACEPORT_BONUS"),
+                    Percent(RoomAdvancedEffects.SpaceportSpeedBonus),
+                    Percent(1f - RoomAdvancedEffects.SpaceportFuelFactor));
+            }
+
+            if (id == RoomCatalogue.CargoStationId)
+            {
+                return string.Format(
+                    Strings.Get(prefix + "CARGO_STATION_BONUS"),
+                    Percent(RoomAdvancedEffects.CargoPayloadSpeedFactor - 1f),
+                    RoomAdvancedEffects.VanillaLaunchesPerCooldown + RoomAdvancedEffects.CargoExtraLaunches,
+                    Percent(RoomAdvancedEffects.CargoCooldownSpeedFactor - 1f));
+            }
+
+            if (id == RoomCatalogue.MedicalCenterId)
+            {
+                return Strings.Get(prefix + "MEDICAL_CENTER_BONUS");
+            }
+
+            return string.Empty;
+        }
+
+        private static string Percent(float fraction)
+        {
+            return (fraction * 100f).ToString("0");
+        }
+
         private static string Criteria(string fieldName)
         {
             return Strings.Get(CriteriaPrefix + fieldName);

@@ -34,7 +34,30 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_Clinic_StartEffect",
         "MaterialOverhaul.Patches.Patch_Room_Clinic_StopEffect",
         "MaterialOverhaul.Patches.Patch_Room_Caregiver_CompleteWork",
-        "MaterialOverhaul.Patches.Patch_Room_CavityInfo_OnEnter"
+        "MaterialOverhaul.Patches.Patch_Room_CavityInfo_OnEnter",
+        "MaterialOverhaul.Patches.Patch_Room_RoomTracker_IsInCorrectRoom",
+        "MaterialOverhaul.Patches.Patch_Room_RoomTracker_OnUpdateRoom",
+        "MaterialOverhaul.Patches.Patch_RoomAdvanced_Game_OnCleanUp",
+        "MaterialOverhaul.Patches.Patch_Room_Assignables_AutoAssignSlot",
+        "MaterialOverhaul.Patches.Patch_Room_MissionControl_OnCompleteWork",
+        "MaterialOverhaul.Patches.Patch_Room_Spacecraft_ProgressMission",
+        "MaterialOverhaul.Patches.Patch_Room_MissionControlCluster_OnCompleteWork",
+        "MaterialOverhaul.Patches.Patch_Room_Clustercraft_Speed",
+        "MaterialOverhaul.Patches.Patch_Room_MissionControlCluster_UpdateRange",
+        "MaterialOverhaul.Patches.Patch_Room_MissionControlCluster_OnWorkTick",
+        "MaterialOverhaul.Patches.Patch_Room_MissionControlCluster_IsRocketInRange",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTunerResearch_CompleteWork",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTuner_ApplyTuning",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTuner_RemoveTuning",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTunerSideScreen_SetRow",
+        "MaterialOverhaul.Patches.Patch_Room_Clustercraft_Launch",
+        "MaterialOverhaul.Patches.Patch_Room_Clustercraft_SetCraftStatus",
+        "MaterialOverhaul.Patches.Patch_Room_Clustercraft_FuelPerDistance",
+        "MaterialOverhaul.Patches.Patch_Room_Clustercraft_BurnFromTank",
+        "MaterialOverhaul.Patches.Patch_Room_RailGun_LaunchProjectile",
+        "MaterialOverhaul.Patches.Patch_Room_RailGunPayload_Launch",
+        "MaterialOverhaul.Patches.Patch_Room_BallisticClusterGridEntity_GetSpeed",
+        "MaterialOverhaul.Patches.Patch_Room_RailGun_Sim200ms"
     };
     private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
 
@@ -181,7 +204,7 @@ internal static partial class Program
         }
         else if (profile == "Room")
         {
-            Check(patches.SetEquals(RoomPatches), "房间独立版只应包含明确的7个房间补丁。");
+            Check(patches.SetEquals(RoomPatches), "房间独立版只应包含明确列出的房间补丁。");
             foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders.", "MaterialOverhaul.Power." })
                 Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "房间独立版混入其他系统判断层：" + forbidden);
             foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist", "PowerTopologyMonitor", "PowerWireCount" })
@@ -207,7 +230,7 @@ internal static partial class Program
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 122 : 224;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 130 : 232;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

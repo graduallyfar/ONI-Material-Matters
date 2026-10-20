@@ -32,6 +32,12 @@ namespace MaterialOverhaul.Rooms
         /// <summary>效果持续时间（秒）。</summary>
         public float DurationSeconds;
 
+        /// <summary>永久效果：持续时间为 0 且不随状态移除，发放时按存档保存。</summary>
+        public bool Permanent;
+
+        /// <summary>负面效果，界面按原版负面效果显示。</summary>
+        public bool IsBad;
+
         public bool HasMorale
         {
             get { return Morale != 0f; }

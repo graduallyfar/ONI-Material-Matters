@@ -25,5 +25,6 @@ namespace MaterialOverhaul.Rooms
         public const string WindTunnelMorale = "MO_RoomWindTunnelMorale";
         public const string SpaMorale = "MO_RoomSpaMorale";
         public const string TeaRoomMorale = "MO_RoomTeaRoomMorale";
+        public const string RadiationScar = "MO_RoomRadiationScar";
     }
 }

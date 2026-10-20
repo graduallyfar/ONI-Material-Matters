@@ -24,6 +24,57 @@ namespace MaterialOverhaul.Game
             {
                 AddEffect(specs[i]);
             }
+
+            ApplyBanquetMorale();
+        }
+
+        /// <summary>
+        /// 宴会厅士气 +6（D08 工作口径）：把原版 <c>RoomBanquetHall</c> 效果的 QualityOfLife 加算修正
+        /// 统一为设计值。该效果只由宴会厅发放；原值已相同时不改，找不到时只记录警告。
+        /// </summary>
+        private static void ApplyBanquetMorale()
+        {
+            Effect effect = Db.Get().effects.TryGet(RoomAdvancedEffects.BanquetEffectId);
+            if (effect == null || effect.SelfModifiers == null)
+            {
+                ModLog.WarnOnce("room|banquet|effect", "宴会厅士气：找不到原版效果 "
+                    + RoomAdvancedEffects.BanquetEffectId + "，士气 +6 未生效。");
+                return;
+            }
+
+            string morale = Db.Get().Attributes.QualityOfLife.Id;
+            AttributeModifier first = null;
+            float total = 0f;
+            for (int i = 0; i < effect.SelfModifiers.Count; i++)
+            {
+                AttributeModifier modifier = effect.SelfModifiers[i];
+                if (modifier == null || modifier.IsMultiplier || modifier.AttributeId != morale)
+                {
+                    continue;
+                }
+
+                if (first == null)
+                {
+                    first = modifier;
+                }
+
+                total += modifier.Value;
+            }
+
+            if (first == null)
+            {
+                ModLog.WarnOnce("room|banquet|modifier", "宴会厅士气：原版效果没有士气修正，士气 +6 未生效。");
+                return;
+            }
+
+            if (total == RoomAdvancedEffects.BanquetMorale)
+            {
+                ModLog.Info("宴会厅士气：原版已为 " + Signed(total) + "，保持不变。");
+                return;
+            }
+
+            first.SetValue(first.Value + RoomAdvancedEffects.BanquetMorale - total);
+            ModLog.Info("宴会厅士气：原版 " + Signed(total) + " 调整为 " + Signed(RoomAdvancedEffects.BanquetMorale) + "。");
         }
 
         private static void AddEffect(RoomEffectSpec spec)
@@ -47,7 +98,7 @@ namespace MaterialOverhaul.Game
                 spec.DurationSeconds,
                 true,
                 false,
-                false);
+                spec.IsBad);
 
             if (spec.HasMorale)
             {
@@ -81,8 +132,9 @@ namespace MaterialOverhaul.Game
             ModLog.Info("房间效果：" + spec.Id + "（" + name + "）士气 " + Signed(spec.Morale)
                 + "、压力缓解 " + Stress(spec.StressReductionPercent)
                 + "、生命回复 " + Health(spec.HealthRecoveryPercent)
-                + (spec.HasAttributeBonus ? "、" + spec.AttributeId + " +" + spec.AttributeBonus.ToString("0") : string.Empty)
-                + "，持续 " + spec.DurationSeconds.ToString("0") + " 秒（工作初值，D08／D10／D13 未确认）。");
+                + (spec.HasAttributeBonus ? "、" + spec.AttributeId + " " + Signed(spec.AttributeBonus) : string.Empty)
+                + (spec.Permanent ? "，永久" : "，持续 " + spec.DurationSeconds.ToString("0") + " 秒")
+                + "（工作初值，平衡待验收）。");
         }
 
         private static string Signed(float value)

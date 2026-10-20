@@ -36,6 +36,7 @@ namespace MaterialOverhaul.Tests
             Run("电力0.0.2：实际IL转接和原版回退源码", PowerPatchCallsTests.Run);
             Run("电力0.0.2：预算内取电、充放电、变压器、损耗显示与回退", PowerSettlementTests.Run);
             Run("房间系统：平均环境、构成条件与覆盖规则", RoomTests.Run);
+            Run("房间系统：科研、航天、货运与医疗中心效果", RoomAdvancedEffectsTests.Run);
             Run("房间文本：字段树键与中文 PO 一致", RoomLocalizationTests.Run);
 
             Console.WriteLine();

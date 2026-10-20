@@ -86,11 +86,44 @@ internal static partial class Program
         Method("Clinic+ClinicSM+Instance", "StopEffect", "Void(String)");
         Method("CavityInfo", "OnEnter", "Void(Object)");
         Method("ModifierSet", "CreateTrait", "Trait(String,String,String,String,Boolean,ChoreGroup[],Boolean,Boolean)");
+        Method("RoomTracker", "IsInCorrectRoom", "Boolean()");
+        Method("RoomTracker", "OnUpdateRoom", "Void(Object)");
+        Method("Game", "OnCleanUp", "Void()");
+
+        // §4.9 剩余房间效果的补丁目标。
+        Method("Assignables", "AutoAssignSlot", "Assignable(AssignableSlot)");
+        Method("MissionControlWorkable", "OnCompleteWork", "Void(WorkerBase)");
+        Method("MissionControlWorkable", "get_TargetSpacecraft", "Spacecraft()");
+        Method("Spacecraft", "ProgressMission", "Void(Single)");
+        Method("MissionControlClusterWorkable", "OnCompleteWork", "Void(WorkerBase)");
+        Method("MissionControlClusterWorkable", "OnWorkTick", "Boolean(WorkerBase,Single)");
+        Method("MissionControlClusterWorkable", "IsRocketInRange", "Boolean(AxialI,AxialI)");
+        Method("MissionControlClusterWorkable", "get_TargetClustercraft", "Clustercraft()");
+        Method("MissionControlCluster+Instance", "UpdateWorkableRocketsInRange", "Void(Object)");
+        Method("MissionControlCluster+Instance", "CanBeBoosted", "Boolean(Clustercraft)");
+        Method("MissionControlCluster+Instance", "IsOwnWorld", "Boolean(Clustercraft)");
+        Method("Clustercraft", "get_Speed", "Single()");
+        Method("Clustercraft", "get_FuelPerDistance", "Single()");
+        Method("Clustercraft", "Launch", "Void(Boolean)");
+        Method("Clustercraft", "SetCraftStatus", "Void(CraftStatus)");
+        Method("Clustercraft", "BurnFromTank", "Single(Single,RocketEngineCluster,Tag,IStorage,Single&)");
+        Method("GeoTuner", "ApplyTuning", "Void(Instance)");
+        Method("GeoTuner", "RemoveTuning", "Void(Instance)");
+        Method("GeoTunerSideScreen", "SetRow", "Void(Int32,String,Sprite,Geyser,Boolean)");
+        Method("GeoTunerSideScreen", "RefreshOptions", "Void(Object)");
+        Method("RailGun", "LaunchProjectile", "Void()");
+        Method("RailGun", "Sim200ms", "Void(Single)");
+        Method("RailGunPayload+StatesInstance", "Launch", "Void(AxialI,AxialI)");
+        Method("BallisticClusterGridEntity", "GetSpeed", "Single()");
 
         // 反射追加条件／效果使用的私有自动属性字段。
         Field("RoomType", "<additional_constraints>k__BackingField", "Constraint[]");
         Field("RoomType", "<effects>k__BackingField", "String[]");
         Field("RoomType", "<display_details>k__BackingField", "Detail[]");
+        Field("RoomTracker", "statusItemGuid", "Guid");
+        Field("Spacecraft", "missionElapsed", "Single");
+        Field("MissionControlCluster+Instance", "boostableClustercraft", "List<Clustercraft>");
+        Field("GeoTunerSideScreen", "targetGeotuner", "Instance");
 
         // 房间效果引用的原版类型。
         Check(types.ContainsKey("Klei.AI.Effect"), "原版类型缺失：Klei.AI.Effect");

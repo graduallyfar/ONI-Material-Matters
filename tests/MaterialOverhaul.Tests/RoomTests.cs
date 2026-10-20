@@ -484,20 +484,27 @@ namespace MaterialOverhaul.Tests
             RoomEffectSpec[] specs = RoomEffectCatalogue.All;
             for (int i = 0; i < specs.Length; i++)
             {
-                // 治疗恢复效果按治疗状态存续，离开时移除，因此持续时间 0（永久直到移除）；
+                // 治疗恢复效果按治疗状态存续，离开时移除；永久效果持续到被移除；二者持续时间均为 0。
                 // 其余士气／压力效果使用 1 周期工作初值。
-                float expectedDuration = specs[i].HasHealthRecovery
+                float expectedDuration = specs[i].HasHealthRecovery || specs[i].Permanent
                     ? 0f
                     : RoomEffectCatalogue.DefaultDurationSeconds;
                 TestRunner.Check(specs[i].DurationSeconds == expectedDuration,
                     specs[i].Id + " 持续时间符合效果类型");
-                TestRunner.Check(specs[i].HasMorale || specs[i].HasStressReduction || specs[i].HasHealthRecovery,
+                TestRunner.Check(specs[i].HasMorale || specs[i].HasStressReduction || specs[i].HasHealthRecovery
+                    || specs[i].HasAttributeBonus,
                     specs[i].Id + " 至少有一项修正");
                 TestRunner.Check(!string.IsNullOrEmpty(specs[i].StringToken),
                     specs[i].Id + " 有本地化键片段");
             }
 
             TestRunner.CheckEqual(600f, RoomEffectCatalogue.DefaultDurationSeconds, "工作初值持续 1 周期");
+
+            RoomEffectSpec scar = RoomEffectCatalogue.Get(RoomEffectIds.RadiationScar);
+            TestRunner.Check(scar != null && scar.Permanent && scar.IsBad && !scar.AttachedToRoom
+                && scar.AttributeId == "Athletics" && scar.AttributeBonus == -6f
+                && !scar.HasMorale && !scar.HasStressReduction && !scar.HasHealthRecovery,
+                "辐射后遗症：永久负面效果，运动 −6，不挂房间类型");
         }
 
         private static void CheckEffectIds(RoomDefinition[] definitions, HashSet<string> effectIds)

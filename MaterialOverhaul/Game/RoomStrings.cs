@@ -200,6 +200,12 @@ namespace MaterialOverhaul.Game
                     public static LocString AVERAGE_DECOR = "平均装饰度：{0}";
                     public static LocString AVERAGE_TEMPERATURE = "平均温度：{0}";
                     public static LocString PRODUCTION_BONUS = "生产效率：+{0}%";
+                    public static LocString MISSION_CONTROL_BONUS = "指挥站助推：火箭速度再 +{0}%，群星指挥站范围 +{1} 格；操作者科学大于 {2} 时翻倍";
+                    public static LocString GEOTUNER_LAB_BONUS = "地质调谐：喷发量再 +{0}%，每座喷泉可多 {1} 台调谐仪；研究者科学大于 {2} 时翻倍";
+                    public static LocString SPACEPORT_BONUS = "发射加成：从本房间平台发射的火箭本次飞行速度 +{0}%，燃料消耗 −{1}%";
+                    public static LocString CARGO_STATION_BONUS = "星际物流：载荷速度 +{0}%，每轮可连续发射 {1} 次，冷却速度 +{2}%";
+                    public static LocString MEDICAL_CENTER_BONUS = "医疗中心：患者优先入院；致命辐射剂量在开始治疗时清除，留下永久后遗症";
+                    public static LocString GEOTUNER_EXTRA_SLOT = "该喷泉已有 {0} 台调谐仪；本调谐仪位于地质研究室，最多允许 {1} 台。";
                 }
 
                 /// <summary>
@@ -320,6 +326,12 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString NAME = "茶歇时光";
                         public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2，压力缓解 −30%。";
+                    }
+
+                    public static class RADIATION_SCAR
+                    {
+                        public static LocString NAME = "辐射后遗症";
+                        public static LocString TOOLTIP = "曾在医疗中心从致命辐射病中获救，运动 −6（永久）。";
                     }
                 }
             }

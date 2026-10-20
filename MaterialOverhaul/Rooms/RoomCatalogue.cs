@@ -20,6 +20,8 @@ namespace MaterialOverhaul.Rooms
         public const string MedicalCenterId = "MO_MedicalCenter";
         public const string MissionControlId = "MO_MissionControl";
         public const string GeoTunerLabId = "MO_GeoTunerLab";
+        public const string SpaceportId = "MO_Spaceport";
+        public const string CargoStationId = "MO_CargoStation";
 
         private const string Prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.";
 
@@ -346,7 +348,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_Spaceport",
+                Id = SpaceportId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Industrial",
                 NameKey = Prefix + "SPACEPORT.NAME",
@@ -365,7 +367,7 @@ namespace MaterialOverhaul.Rooms
             },
             new RoomDefinition
             {
-                Id = "MO_CargoStation",
+                Id = CargoStationId,
                 Tier = RoomTier.Advanced,
                 CategoryKey = "Industrial",
                 NameKey = Prefix + "CARGO_STATION.NAME",

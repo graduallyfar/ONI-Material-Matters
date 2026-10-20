@@ -66,7 +66,7 @@ namespace MaterialOverhaul
 #endif
 #if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
             ModLog.Info("房间系统：16 个新增房间、3 项原版改造、平均装饰度／温度条件（含保持回差）与独立模式已编入；"
-                + "士气、压力、医疗、特质与生产效率效果已接入，太空港与货运站暂无效果；数值为工作初值，游戏验收待执行。");
+                + "士气、压力、医疗（含优先入院与辐射拯救者）、特质、生产效率、科研、航天发射场与星际货运站效果已接入；数值为工作初值，游戏验收待执行。");
 #endif
         }
 

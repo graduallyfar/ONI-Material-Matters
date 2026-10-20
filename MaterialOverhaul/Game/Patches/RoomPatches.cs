@@ -349,7 +349,7 @@ namespace MaterialOverhaul.Patches
     /// <summary>
     /// 患者进入诊疗床治疗状态时追加生命回复效果。
     /// 原版 <c>Clinic</c> 在治疗状态进入时对患者调用 <c>StartEffect</c>；这里按诊疗床所在
-    /// 房间类型追加医院／医疗中心效果。离开治疗状态时在 <c>StopEffect</c> 移除。
+    /// 房间类型追加医院／医疗中心效果，并在医疗中心结算辐射拯救者。离开治疗状态时在 <c>StopEffect</c> 移除。
     /// </summary>
     [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StartEffect")]
     internal static class Patch_Room_Clinic_StartEffect
@@ -364,7 +364,12 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                string id = RoomRecoveryEffect.ForRoomType(RoomTypeIdOf(clinic.gameObject));
+                string roomTypeId = RoomTypeIdOf(clinic.gameObject);
+
+                // 医疗中心辐射拯救者（D12）：开始治疗时一次性结算，与生命回复效果相互独立。
+                RoomMedicalEffects.TryRescueRadiation(clinic.worker.gameObject, roomTypeId);
+
+                string id = RoomRecoveryEffect.ForRoomType(roomTypeId);
                 if (id == null)
                 {
                     return;
