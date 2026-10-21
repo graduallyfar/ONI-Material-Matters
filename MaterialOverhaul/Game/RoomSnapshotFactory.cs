@@ -35,6 +35,7 @@ namespace MaterialOverhaul.Game
             CellSamples.Clear();
             if (cells != null)
             {
+                bool includeLightDecor = LightDecorReady();
                 for (int i = 0; i < cells.Count; i++)
                 {
                     int cell = cells[i];
@@ -48,7 +49,7 @@ namespace MaterialOverhaul.Game
                     CellSamples.Add(new RoomCellSample
                     {
                         TemperatureK = Grid.Temperature[cell],
-                        Decor = GameUtil.GetDecorAtCell(cell),
+                        Decor = GameUtil.GetDecorAtCell(cell, includeLightDecor),
                         HasElement = hasElement
                     });
                 }
@@ -57,6 +58,16 @@ namespace MaterialOverhaul.Game
             snapshot.AverageTemperatureK = RoomEnvironment.AverageTemperature(CellSamples);
             snapshot.AverageDecor = RoomEnvironment.AverageDecor(CellSamples);
             CellSamples.Clear();
+        }
+
+        /// <summary>
+        /// 光照装饰加成经 <c>Grid.LightIntensity</c> 读取，需要 <see cref="ClusterManager"/> 已就绪。
+        /// 读档时原版在 <c>Game.OnPrefabInit</c> 里构造 <c>RoomProber</c> 并立即判定一轮房间，
+        /// 此时 ClusterManager 尚未建立；这一轮先不计光照，环境抽查随后按完整装饰度补判。
+        /// </summary>
+        private static bool LightDecorReady()
+        {
+            return global::Game.Instance != null && ClusterManager.Instance != null;
         }
 
         private static void SampleBuildings(List<KPrefabID> entities, RoomSnapshot snapshot, bool isPlant)

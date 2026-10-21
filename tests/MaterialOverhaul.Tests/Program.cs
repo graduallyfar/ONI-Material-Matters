@@ -38,6 +38,7 @@ namespace MaterialOverhaul.Tests
             Run("房间系统：平均环境、构成条件与覆盖规则", RoomTests.Run);
             Run("房间系统：科研、航天、货运与医疗中心效果", RoomAdvancedEffectsTests.Run);
             Run("房间补丁：V1.0.0 查错修复的源码结构", RoomPatchFixTests.Run);
+            Run("房间采样：读档顺序与光照装饰", RoomSamplingTests.Run);
             Run("房间文本：字段树键与中文 PO 一致", RoomLocalizationTests.Run);
 
             Console.WriteLine();
