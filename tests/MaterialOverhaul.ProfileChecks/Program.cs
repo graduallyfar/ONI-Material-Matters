@@ -55,6 +55,7 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_Clustercraft_SetCraftStatus",
         "MaterialOverhaul.Patches.Patch_Room_Clustercraft_FuelPerDistance",
         "MaterialOverhaul.Patches.Patch_Room_Clustercraft_BurnFromTank",
+        "MaterialOverhaul.Patches.Patch_Room_CraftModuleInterface_FuelRange",
         "MaterialOverhaul.Patches.Patch_Room_RailGun_LaunchProjectile",
         "MaterialOverhaul.Patches.Patch_Room_RailGunPayload_Launch",
         "MaterialOverhaul.Patches.Patch_Room_BallisticClusterGridEntity_GetSpeed",

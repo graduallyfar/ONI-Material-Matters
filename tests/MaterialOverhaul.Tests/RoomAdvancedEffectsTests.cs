@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Tests
             GeoTunerLab();
             Spaceport();
             SpaceportPersistence();
+            SpaceportRangeDisplay();
             CargoStation();
             MedicalCenter();
         }
@@ -163,6 +164,51 @@ namespace MaterialOverhaul.Tests
             string landing = Region(patches, "class Patch_Room_Clustercraft_SetCraftStatus", "class Patch_Room_Clustercraft_FuelPerDistance");
             TestRunner.Check(landing.Contains("CraftStatus.Grounded") && landing.Contains("RoomSpaceEffects.EndFlight("),
                 "火箭落地（Grounded）时清除标记");
+        }
+
+        /// <summary>
+        /// 航程显示与目的地可达判定同步燃料折扣。只核对源码结构；转接是否装上以游戏日志与
+        /// ProfileChecks 的 IL 调用数契约为准，实际界面数值需游戏内验收（G26）。
+        /// </summary>
+        private static void SpaceportRangeDisplay()
+        {
+            TestRunner.Section("航天发射场：航程显示同步燃料折扣");
+
+            string root = FindRepoRoot();
+            TestRunner.Check(root != null, "能找到仓库根目录以读取航程显示源码");
+            if (root == null)
+            {
+                return;
+            }
+
+            string effects = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceEffects.cs"));
+            string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RoomAdvancedPatches.cs"));
+
+            string range = Region(patches, "class Patch_Room_CraftModuleInterface_FuelRange", "// ---------------- 星际货运站");
+            TestRunner.Check(range.Contains("nameof(CraftModuleInterface.Range)")
+                && range.Contains("nameof(CraftModuleInterface.MaxRange)")
+                && range.Contains("nameof(CraftModuleInterface.FuelPerHex)"),
+                "转接剩余航程、最大航程与每格耗量三个属性");
+            TestRunner.Check(range.Contains("nameof(RocketModulePerformance.FuelKilogramPerDistance)")
+                && range.Contains("codes[i].Calls(FuelGetter)"),
+                "只替换对引擎每格耗量的读取，不改动数据盘航程等其他项");
+            TestRunner.Check(range.Contains("count != 1") && range.Contains("return codes;"),
+                "读取处数不为 1 时保留原版指令，不半途替换");
+            TestRunner.Check(range.Contains("OpCodes.Ldarg_0") && range.Contains("new CodeInstruction(OpCodes.Call, ScaledGetter)"),
+                "补入 this 后改调换算方法");
+            TestRunner.Check(range.Contains("RoomSpaceEffects.FuelFactor(craftInterface)"),
+                "航程换算与实际扣除使用同一燃料系数");
+            TestRunner.Check(!range.Contains("throw "), "转接失败不抛异常，避免中断其他补丁装载");
+
+            string fuel = Region(effects, "public static float FuelFactor(Clustercraft craft)", "public static float FuelFactor(CraftModuleInterface");
+            TestRunner.Check(fuel.Contains("IsSpaceportFlight(craft)") && fuel.Contains("IsGroundedOnSpaceport(craft)"),
+                "燃料系数：飞行中读存档标记，停在平台上按平台房间预判");
+            string grounded = Region(effects, "private static bool IsGroundedOnSpaceport", "private static bool IsSpaceportFlight");
+            TestRunner.Check(grounded.Contains("CraftStatus.Grounded") && grounded.Contains("CurrentPad"),
+                "起飞前预判只在 Grounded 状态按当前平台判断");
+            string speed = Region(effects, "public static float ClustercraftSpeedBonus", "public static void RememberStationScience");
+            TestRunner.Check(speed.Contains("IsSpaceportFlight(craft)") && !speed.Contains("IsGroundedOnSpaceport"),
+                "速度加成不做起飞前预判，仍只在飞行中生效");
         }
 
         private static string Region(string text, string start, string end)

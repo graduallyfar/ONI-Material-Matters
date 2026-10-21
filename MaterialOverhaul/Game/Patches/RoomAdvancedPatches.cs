@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Game;
@@ -514,6 +515,82 @@ namespace MaterialOverhaul.Patches
             if (__state < 1f)
             {
                 __result = RoomAdvancedEffects.FuelTravelled(__result, __state);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 航程显示与目的地可达判定同步燃料折扣。
+    ///
+    /// <c>CraftModuleInterface</c> 的 <c>Range</c>（剩余航程，供 <c>CheckDesinationInRange</c>）、<c>MaxRange</c>
+    /// 与 <c>FuelPerHex</c>（每格耗量显示）直接读取引擎 <c>performanceStats.FuelKilogramPerDistance</c>，
+    /// 不经 <c>Clustercraft.FuelPerDistance</c>。把这一处读取替换为乘燃料系数后的值；机器人驾驶的
+    /// 数据盘航程上限不受影响。每个方法应恰有 1 处读取，不符时保留原版指令并记录日志，不半途替换。
+    /// </summary>
+    [HarmonyPatch]
+    internal static class Patch_Room_CraftModuleInterface_FuelRange
+    {
+        private static readonly MethodInfo FuelGetter =
+            AccessTools.PropertyGetter(typeof(RocketModulePerformance), nameof(RocketModulePerformance.FuelKilogramPerDistance));
+
+        private static readonly MethodInfo ScaledGetter =
+            AccessTools.Method(typeof(Patch_Room_CraftModuleInterface_FuelRange), nameof(ScaledFuelPerDistance));
+
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            yield return AccessTools.PropertyGetter(typeof(CraftModuleInterface), nameof(CraftModuleInterface.Range));
+            yield return AccessTools.PropertyGetter(typeof(CraftModuleInterface), nameof(CraftModuleInterface.MaxRange));
+            yield return AccessTools.PropertyGetter(typeof(CraftModuleInterface), nameof(CraftModuleInterface.FuelPerHex));
+        }
+
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase original)
+        {
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+            int site = -1;
+            int count = 0;
+            if (FuelGetter != null)
+            {
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].Calls(FuelGetter))
+                    {
+                        site = i;
+                        count++;
+                    }
+                }
+            }
+
+            string name = original == null ? "?" : original.Name;
+            if (count != 1 || ScaledGetter == null)
+            {
+                ModLog.Error("航天发射场航程显示：CraftModuleInterface." + name + " 中每格耗量读取有 " + count
+                    + " 处（应为 1），保留原版指令，该项显示不同步燃料折扣。");
+                return codes;
+            }
+
+            // 栈上已有 performanceStats：补入 this（CraftModuleInterface），改调换算方法。
+            codes[site].opcode = OpCodes.Ldarg_0;
+            codes[site].operand = null;
+            codes.Insert(site + 1, new CodeInstruction(OpCodes.Call, ScaledGetter));
+            ModLog.InfoOnce("room|spaceport|range|" + name, "航天发射场航程显示：已接入 CraftModuleInterface." + name + "。");
+            return codes;
+        }
+
+        private static float ScaledFuelPerDistance(RocketModulePerformance stats, CraftModuleInterface craftInterface)
+        {
+            float value = stats.FuelKilogramPerDistance;
+            try
+            {
+                return value * RoomSpaceEffects.FuelFactor(craftInterface);
+            }
+            catch (Exception e)
+            {
+                if (ModLog.InfoOnce("room|spaceport|range|error", "航天发射场航程显示换算失败，按原版耗量显示。"))
+                {
+                    ModLog.Error("航天发射场航程显示换算失败：" + e);
+                }
+
+                return value;
             }
         }
     }

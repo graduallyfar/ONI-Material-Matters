@@ -195,10 +195,31 @@ namespace MaterialOverhaul.Game
             }
         }
 
-        /// <summary>本次飞行的单位距离燃料系数；无加成时为 1。</summary>
+        /// <summary>
+        /// 单位距离燃料系数；无加成时为 1。飞行中按存档的飞行标记；停在平台上（<c>Grounded</c>）时按
+        /// 平台当前所在房间预判，使起飞前的航程显示与目的地可达判定和起飞后的实际扣除一致。
+        /// 速度加成不做此预判，仍只在飞行中生效。
+        /// </summary>
         public static float FuelFactor(Clustercraft craft)
         {
-            return IsSpaceportFlight(craft) ? RoomAdvancedEffects.SpaceportFuelFactor : 1f;
+            return IsSpaceportFlight(craft) || IsGroundedOnSpaceport(craft) ? RoomAdvancedEffects.SpaceportFuelFactor : 1f;
+        }
+
+        /// <summary>按火箭模块接口查询燃料系数（航程与每格耗量显示使用）。</summary>
+        public static float FuelFactor(CraftModuleInterface craftInterface)
+        {
+            return craftInterface == null ? 1f : FuelFactor(craftInterface.GetComponent<Clustercraft>());
+        }
+
+        private static bool IsGroundedOnSpaceport(Clustercraft craft)
+        {
+            if (craft == null || craft.Status != Clustercraft.CraftStatus.Grounded || craft.ModuleInterface == null)
+            {
+                return false;
+            }
+
+            LaunchPad pad = craft.ModuleInterface.CurrentPad;
+            return pad != null && RoomAdvancedEffects.IsSpaceport(RoomQuery.RoomTypeIdOf(pad));
         }
 
         private static bool IsSpaceportFlight(Clustercraft craft)
