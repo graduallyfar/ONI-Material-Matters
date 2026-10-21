@@ -18,6 +18,7 @@ public static class GameTags
 public sealed class Element
 {
     public SimHashes id;
+    public float thermalConductivity;
     public Tag[] oreTags = Array.Empty<Tag>();
     public readonly List<AttributeModifier> attributeModifiers = new List<AttributeModifier>();
     public bool HasTag(Tag tag) { return Array.Exists(oreTags, t => t.ToString() == tag.ToString()); }

@@ -24,6 +24,24 @@ namespace MaterialOverhaul.Game
             ModLog.Info("深渊晶石已加入 BuildableRaw，所有接受矿物原料的建筑均可选用。");
         }
 
+        /// <summary>
+        /// 深渊晶石导热系数改为 <see cref="Balance.AbyssaliteThermalConductivity"/>。
+        /// 在元素加载后、进入游戏建立模拟元素表之前写入，模拟与界面读到同一个值。
+        /// </summary>
+        public static void SetAbyssaliteConductivity()
+        {
+            Element element = ElementLoader.FindElementByHash(SimHashes.Katairite);
+            if (element == null)
+            {
+                ModLog.WarnOnce("material|missing-katairite-conductivity", "找不到 Katairite，深渊晶石导热系数保持原版。");
+                return;
+            }
+
+            float original = element.thermalConductivity;
+            element.thermalConductivity = Balance.AbyssaliteThermalConductivity;
+            ModLog.Info("深渊晶石导热系数：" + original + " → " + element.thermalConductivity + "。");
+        }
+
         public static void ConvertOverheatBonuses()
         {
             string id = Db.Get().BuildingAttributes.OverheatTemperature.Id;

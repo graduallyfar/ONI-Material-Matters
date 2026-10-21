@@ -24,7 +24,6 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_RoomType_IsSatisfactory",
         "MaterialOverhaul.Patches.Patch_RoomProber_Refresh",
         "MaterialOverhaul.Patches.Patch_RoomProber_Sim1000ms",
-        "MaterialOverhaul.Patches.Patch_RoomConstraints_RoomCriteriaString",
         "MaterialOverhaul.Patches.Patch_RoomDetails_RoomDetailString",
         "MaterialOverhaul.Patches.Patch_Workable_CompleteWork",
         "MaterialOverhaul.Patches.Patch_Room_Workable_GetEfficiencyMultiplier",
@@ -34,6 +33,7 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_Clinic_StartEffect",
         "MaterialOverhaul.Patches.Patch_Room_Clinic_OnStopWork",
         "MaterialOverhaul.Patches.Patch_Room_RoomProber_ClearRoom",
+        "MaterialOverhaul.Patches.Patch_Room_RoomProber_CreateRoom",
         "MaterialOverhaul.Patches.Patch_Room_RoomProber_UpdateRoom",
         "MaterialOverhaul.Patches.Patch_Room_Workable_OnUpdateRoom",
         "MaterialOverhaul.Patches.Patch_Room_MingleCellTracker_Sim1000ms",
@@ -53,6 +53,7 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_GeoTunerResearch_CompleteWork",
         "MaterialOverhaul.Patches.Patch_Room_GeoTuner_ApplyTuning",
         "MaterialOverhaul.Patches.Patch_Room_GeoTuner_RemoveTuning",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTuner_InitializeStates",
         "MaterialOverhaul.Patches.Patch_Room_GeoTunerSideScreen_SetRow",
         "MaterialOverhaul.Patches.Patch_Room_ClustercraftConfig_CreatePrefab",
         "MaterialOverhaul.Patches.Patch_Room_CraftModuleInterface_DoLaunch",
@@ -116,7 +117,7 @@ internal static partial class Program
         Check(profile is "Industrial" or "Power" or "Room" or "Combined", "未知构建模式：" + profile);
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
         JsonElement root = manifest.RootElement;
-        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.0", _ => "0.2.2" };
+        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.1", _ => "0.2.2" };
         Check(root.GetProperty("version").GetString() == expectedVersion, "包版本与系统专属版本不符。");
         Check(File.ReadAllText(Path.Combine(directory, "mod_info.yaml")).Contains("version: \"" + expectedVersion + "\""), "模组元数据版本不符。");
         Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
@@ -236,7 +237,7 @@ internal static partial class Program
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 88 : profile == "Room" ? 130 : 232;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : 266;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

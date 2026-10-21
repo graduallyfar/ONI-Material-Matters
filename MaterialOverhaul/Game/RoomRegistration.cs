@@ -84,6 +84,7 @@ namespace MaterialOverhaul.Game
 
             registered = true;
             AppendModifications(types);
+            AppendAverageDecor(types);
             ModLog.Info("房间类型登记完成：新增 " + added + "，活动 " + ActiveRoomsValue.Count
                 + "，因 DLC 跳过 " + skippedDlc + "；原版房间改造 " + RoomCatalogue.ModificationCount + " 项。");
         }
@@ -194,8 +195,30 @@ namespace MaterialOverhaul.Game
             ModLog.Info("房间改造：" + definition.ExistingRoomId + " 追加 " + added + " 项效果。");
         }
 
-        /// <summary>把一条房间详情追加到原版房间类型；已存在同一实例时跳过。</summary>
-        private static void AppendDisplayDetail(RoomType type, RoomDetails.Detail detail)
+        /// <summary>所有房间共用的平均装饰度详情行；同一实例便于去重。</summary>
+        private static readonly RoomDetails.Detail AverageDecorDetail =
+            new RoomDetails.Detail(room => RoomText.AverageDecorLine(room));
+
+        /// <summary>
+        /// 给全部房间类型（原版、改造与新增）的信息卡追加平均装饰度。
+        /// 新增房间在创建时已带这一行（同一实例），这里跳过。
+        /// </summary>
+        private static void AppendAverageDecor(Database.RoomTypes types)
+        {
+            int added = 0;
+            foreach (RoomType type in types.resources)
+            {
+                if (type != null && AppendDisplayDetail(type, AverageDecorDetail))
+                {
+                    added++;
+                }
+            }
+
+            ModLog.Info("房间信息卡：" + added + " 种房间追加平均装饰度。");
+        }
+
+        /// <summary>把一条房间详情追加到原版房间类型；已存在同一实例时跳过。返回是否追加。</summary>
+        private static bool AppendDisplayDetail(RoomType type, RoomDetails.Detail detail)
         {
             FieldInfo field = typeof(RoomType).GetField(
                 "<display_details>k__BackingField",
@@ -203,8 +226,8 @@ namespace MaterialOverhaul.Game
             if (field == null)
             {
                 ModLog.WarnOnce("room|mod|details-field",
-                    "房间改造：无法访问 RoomType.display_details 的私有字段，效果不会显示在房间详情。");
-                return;
+                    "房间：无法访问 RoomType.display_details 的私有字段，新增效果与平均装饰度不会显示在房间详情。");
+                return false;
             }
 
             RoomDetails.Detail[] current = (RoomDetails.Detail[])field.GetValue(type);
@@ -214,7 +237,7 @@ namespace MaterialOverhaul.Game
                 {
                     if (ReferenceEquals(current[i], detail))
                     {
-                        return;
+                        return false;
                     }
                 }
             }
@@ -228,6 +251,7 @@ namespace MaterialOverhaul.Game
 
             merged[merged.Length - 1] = detail;
             field.SetValue(type, merged);
+            return true;
         }
 
         /// <summary>
@@ -497,11 +521,11 @@ namespace MaterialOverhaul.Game
             {
                 RoomDetails.SIZE,
                 RoomDetails.BUILDING_COUNT,
-                RoomDetails.PLANT_COUNT
+                RoomDetails.PLANT_COUNT,
+                AverageDecorDetail
             };
             if (definition.UsesEnvironment)
             {
-                details.Add(new RoomDetails.Detail(room => RoomText.AverageDecorLine(room)));
                 details.Add(new RoomDetails.Detail(room => RoomText.AverageTemperatureLine(room)));
             }
 
@@ -525,7 +549,7 @@ namespace MaterialOverhaul.Game
                 RoomText.RoomName(definition),
                 RoomText.RoomDescription(definition),
                 RoomText.RoomTooltip(definition),
-                string.Empty,
+                RoomText.RoomEffect(definition),
                 Category(definition.CategoryKey),
                 primary,
                 additional,

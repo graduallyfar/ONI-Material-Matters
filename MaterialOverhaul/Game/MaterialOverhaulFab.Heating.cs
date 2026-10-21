@@ -422,6 +422,8 @@ namespace MaterialOverhaul.Game
         /// </summary>
         private void UpdateRunStatusItem()
         {
+            UpdatePendingWorkStatus();
+
             if (selectable == null || RunStatusItem.Item == null || RunStatusItem.Category == null)
             {
                 return;
@@ -441,6 +443,45 @@ namespace MaterialOverhaul.Game
 
             // SetStatusItem 会先移除同类别里的旧条目再按新条目重建，因此状态项文本随最新状态刷新。
             selectable.SetStatusItem(RunStatusItem.Category, shouldShow ? RunStatusItem.Item : null, this);
+        }
+
+        /// <summary>
+        /// 温度不允许生产时，操作任务已被撤销，原版配方建筑状态机却仍停在「等待操作」并显示
+        /// 「操作任务」（PendingWork，红字），看起来像在等复制人。暂停期间摘下这一条；恢复后让
+        /// 原版状态机重新进入等待操作状态，由它自己挂回并管理这条状态。
+        /// </summary>
+        private void UpdatePendingWorkStatus()
+        {
+            if (selectable == null || fabricator == null || !fabricator.duplicantOperated)
+            {
+                return;
+            }
+
+            StatusItem pending = Db.Get().BuildingStatusItems.PendingWork;
+            if (productionPausedByTemperature && HasLockedBatch)
+            {
+                if (selectable.HasStatusItem(pending))
+                {
+                    selectable.RemoveStatusItem(pending);
+                    pendingWorkHidden = true;
+                }
+
+                return;
+            }
+
+            if (!pendingWorkHidden)
+            {
+                return;
+            }
+
+            pendingWorkHidden = false;
+            ComplexFabricatorSM machine = GetComponent<ComplexFabricatorSM>();
+            ComplexFabricatorSM.StatesInstance smi = machine == null ? null : machine.smi;
+            if (smi != null && smi.IsInsideState(smi.sm.idle.waitingForWorker))
+            {
+                smi.GoTo(smi.sm.idle.waitingForMaterial);
+                fabricator.Trigger((int)GameHashes.FabricatorOrdersUpdated);
+            }
         }
 
         /// <summary>

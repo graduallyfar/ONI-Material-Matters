@@ -178,6 +178,15 @@ namespace MaterialOverhaul.Game
 
             RunStatusKind kind = Classify(fab);
             string text = MainText(kind);
+
+            // 还没到开工温度时写出目标，避免把「温度已经很高」误读成「已经可以生产」。
+            if ((kind == RunStatusKind.Preheat || kind == RunStatusKind.WaitingHeat)
+                && fab.ZoneConfigured && !fab.Policy.Forced)
+            {
+                text = text + string.Format(Localized("TARGET_SUFFIX", "（目标 {0}）"),
+                    GameUtil.GetFormattedTemperature(StartThreshold.Start(fab.CurrentZone, fab.Policy)));
+            }
+
             string heatingSuffix = HeatingSuffix(fab, kind);
 
             if (!string.IsNullOrEmpty(heatingSuffix))
@@ -267,8 +276,8 @@ namespace MaterialOverhaul.Game
                 text = text + "\n" + string.Format(
                     fab.SupportsBuiltInHeating
                         ? Localized("ZONE_UNREACHABLE_DETAIL",
-                            "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产，加热到上限后停止。\n可改用默认模式，或换用熔点更高的建造材料。")
-                        : Localized("ZONE_UNREACHABLE_NO_HEATING", "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产。\n可改用默认模式，或换用熔点更高的建造材料。"),
+                            "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。")
+                        : Localized("ZONE_UNREACHABLE_NO_HEATING", "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.Max));
             }
@@ -276,7 +285,7 @@ namespace MaterialOverhaul.Game
             {
                 text = text + "\n" + string.Format(
                     Localized("ZONE_LIMITED_DETAIL",
-                        "控制模式的可用温度：{0} - {1}（配方最佳上限：{2}）\n建造材料无法支持整个最佳温区；强制运行可以越过这个限制。\n默认模式仍可在{3} - {4}内生产。"),
+                        "控制模式可用温度：{0} - {1}（配方最佳上限：{2}）\n默认模式可在{3} - {4}内生产，强制运行可越过限制。"),
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.ControlMax),
                     GameUtil.GetFormattedTemperature(zone.BestMax),

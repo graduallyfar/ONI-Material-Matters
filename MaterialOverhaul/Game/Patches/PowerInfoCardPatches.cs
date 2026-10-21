@@ -24,7 +24,7 @@ namespace MaterialOverhaul.Patches
                     ? string.Format(Localized(Key, "电线数量：{0}"), count)
                     : Localized(Key + "_PENDING", "电线数量：统计中");
                 targetPanel.SetLabel(LabelId, text, Localized(Key + "_TOOLTIP",
-                    "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。"));
+                    "选中对象所在电路已建成的电线格数，不计电桥本体"));
                 ShowLoss(targetPanel, targetEntity);
             }
             catch (Exception e) { ModLog.WarnOnce("power-count-card", "电线数量信息卡显示失败：" + e); }

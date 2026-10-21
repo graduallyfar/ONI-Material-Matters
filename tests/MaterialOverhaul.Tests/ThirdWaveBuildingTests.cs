@@ -740,7 +740,7 @@ namespace MaterialOverhaul.Tests
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(102, Strings.Values.Count, "字段树登记102条（电力14条）");
+            TestRunner.CheckEqual(103, Strings.Values.Count, "字段树登记103条（电力14条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -764,10 +764,10 @@ namespace MaterialOverhaul.Tests
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
             // 房间系统的 69 条键与工业/电力共用同一个 zh.po，由 ProfileChecks 按构建模式
-            // 分别校验；这里只核对工业与电力共用的 102 条，避免把房间包差异算成工业回归。
+            // 分别校验；这里只核对工业与电力共用的 103 条，避免把房间包差异算成工业回归。
             foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(roomKey);
-            TestRunner.CheckEqual(102, po.Count, "zh.po有102条工业/电力msgctxt");
+            TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;

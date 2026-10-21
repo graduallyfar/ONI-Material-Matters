@@ -91,7 +91,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireIndustrialBuilding(),
                     RoomRequirement.RequireStorage(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(60f),
+                    RoomRequirement.MinimumDecor(20f),
                     RoomRequirement.MinimumSize(32),
                     RoomRequirement.MaximumSize(1000)
                 },
@@ -117,7 +117,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireToilet(),
                     RoomRequirement.RequireDiningTable(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(50f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(24),
@@ -141,7 +141,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(100f),
+                    RoomRequirement.MinimumDecor(65f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
@@ -165,7 +165,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(100f),
+                    RoomRequirement.MinimumDecor(65f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
@@ -191,7 +191,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireDecoration(),
                     RoomRequirement.RequireLight(),
                     RoomRequirement.RequirePrefab(RoomBuildingCatalogue.MechanicalSurfboard),
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(50f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(96)
@@ -216,7 +216,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireMasterpiece(),
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(120f),
+                    RoomRequirement.MinimumDecor(80f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(18),
@@ -241,7 +241,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(50f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumSize(36),
                     RoomRequirement.MaximumSize(96)
@@ -264,7 +264,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(50f),
                     RoomRequirement.TemperatureRange(26f, 50f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(16),
@@ -288,7 +288,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.RequirePrefab(RoomBuildingCatalogue.WaterCooler),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumDecor(100f),
+                    RoomRequirement.MinimumDecor(65f),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(64)
@@ -315,7 +315,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherScienceBuilding(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(60f),
+                    RoomRequirement.MinimumDecor(20f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(64)
@@ -337,7 +337,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherScienceBuilding(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(60f),
+                    RoomRequirement.MinimumDecor(20f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(64)
@@ -418,7 +418,7 @@ namespace MaterialOverhaul.Rooms
                 ExistingRoomId = "Private Bedroom",
                 Additional = new[]
                 {
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(50f),
                     RoomRequirement.TemperatureRange(10f, 40f)
                 },
                 FallbackRoomIds = new[] { "Bedroom" },
@@ -433,7 +433,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.RequireLight(),
                     RoomRequirement.TemperatureRange(20f, 26f),
-                    RoomRequirement.MinimumDecor(120f)
+                    RoomRequirement.MinimumDecor(80f)
                 },
                 EffectIds = new[] { RoomEffectIds.BanquetRelief },
                 FallbackRoomIds = new[] { "GreatHall", "MessHall" },

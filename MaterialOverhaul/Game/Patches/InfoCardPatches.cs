@@ -76,7 +76,7 @@ namespace MaterialOverhaul.Patches
 
                 string tooltip = MaterialOverhaulFab.LocalizedOr(
                     "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_TOOLTIP",
-                    "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。");
+                    "建筑温度在这个范围内时，配方的温度效率为100%。");
                 __result.Add(new Descriptor(text, tooltip, Descriptor.DescriptorType.Effect));
             }
             catch (Exception e)
@@ -158,7 +158,7 @@ namespace MaterialOverhaul.Patches
                 ? "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP" : KeyTempZoneTooltip);
             if (immune && BuildingProfiles.TryGet(prefabId,out BuildingProfile profile) && profile.BuiltInHeating)
                 tooltipTemplate = MaterialOverhaulFab.LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP",
-                    "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。");
+                    "保留原版过热豁免，不会受过热损伤；内置加热仍受工作温区和供电限制。");
             string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
 
             descriptors.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));

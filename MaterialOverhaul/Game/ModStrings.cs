@@ -29,9 +29,9 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString ENABLE = "启用强制运行";
                         public static LocString DISABLE = "禁用强制运行";
-                        public static LocString TOOLTIP_ENABLE = "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。";
-                        public static LocString TOOLTIP_DISABLE = "恢复这个建筑的温度限制。\n当前生产进度会保留。";
-                        public static LocString TOOLTIP_NO_HEATING = "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。";
+                        public static LocString TOOLTIP_ENABLE = "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复；自动化信号仍能暂停生产。";
+                        public static LocString TOOLTIP_DISABLE = "恢复温区限制，保留当前生产进度。";
+                        public static LocString TOOLTIP_NO_HEATING = "忽略温区限制继续生产。\n这个建筑没有内置加热，需要靠生产热量或外部热源升温。";
                     }
                 }
             }
@@ -47,12 +47,12 @@ namespace MaterialOverhaul.Game
                     /// {0} 最佳温区下限、{1} 最佳温区上限。
                     /// </summary>
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
-                    public static LocString RECIPE_TEMP_RANGE_TOOLTIP = "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。";
+                    public static LocString RECIPE_TEMP_RANGE_TOOLTIP = "建筑温度在这个范围内时，配方的温度效率为100%。";
 
                     public static class HEATING_POWER
                     {
                         public static LocString TITLE = "加热功率";
-                        public static LocString TOOLTIP = "内置加热耗电：<b>{0} W</b>\n用于预热、维持温度和强制运行时的持续加热。\n生产耗电另计。";
+                        public static LocString TOOLTIP = "内置加热耗电：<b>{0} W</b>\n用于预热和维持温度，生产耗电另计。";
                     }
 
                 }
@@ -69,17 +69,17 @@ namespace MaterialOverhaul.Game
                     /// </summary>
                     public static LocString TEMPZONE_LINE = "工作<link=\"HEAT\">温度</link>：{0} - {1}";
                     public static LocString PROCESS_BEST = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
-                    public static LocString PROCESS_BEST_TOOLTIP = "建筑本体处于此范围时温度效率为100%。\n温度效率影响每秒处理量，实际运行仍需满足原版条件。";
+                    public static LocString PROCESS_BEST_TOOLTIP = "建筑温度在这个范围内时，温度效率为100%。";
                     public static LocString INDUSTRIAL_STATUS = "建筑温度：{0}\n温度效率：{1}\n耗电：{2}（需求：{3}）";
                     public static LocString GENERATION_STATUS = "额定发电：{0} · 当前发电：{1}";
-                    public static LocString IMMUNE_HEATING_TOOLTIP = "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。\n内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。";
+                    public static LocString IMMUNE_HEATING_TOOLTIP = "保留原版过热豁免，不会受过热损伤；内置加热仍受工作温区和供电限制。";
 
                     /// <summary>
                     /// 工作温区行的提示。只说明规则来源与模式选择；过热阈值的推导明细由原版
                     /// 「过热温度」行的属性明细承担，配方最佳温区引导到配方详情。
                     /// </summary>
-                    public static LocString TEMPZONE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度等于建造材料决定的过热温度。\n各配方的最佳温度见配方详情。";
-                    public static LocString TEMPZONE_IMMUNE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度按主材料熔点的75%及材料百分比修正计算。\n保留原版过热豁免，越过工作上限不会造成过热伤害；材料相变仍按原版处理。\n没有内置加热，各配方的最佳温度见配方详情。";
+                    public static LocString TEMPZONE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最高温度由建造材料决定，各配方的最佳温度见配方详情。";
+                    public static LocString TEMPZONE_IMMUNE_TOOLTIP = "这个建筑正常生产所需的温度范围。\n最高温度为主材料熔点的75%；保留原版过热豁免，没有内置加热。";
 
                     public static LocString HEAT_PREHEAT = "预热中";
 
@@ -104,7 +104,7 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString ZONE_START = "启动温度：{0}\n这个建筑没有内置加热。";
                         public static LocString ZONE_START_CAPPED = "启动温度：{1}（原目标：{0}，受建造材料限制）\n这个建筑没有内置加热。";
-                        public static LocString ZONE_UNREACHABLE_NO_HEATING = "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产。\n可改用默认模式，或换用熔点更高的建造材料。";
+                        public static LocString ZONE_UNREACHABLE_NO_HEATING = "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。";
                         public static LocString NO_TASK = "无制作队列";
 
                         public static LocString WAITING_MATERIALS = "等待材料";
@@ -138,6 +138,9 @@ namespace MaterialOverhaul.Game
                         /// <summary>需要升温但没有实际注热：不假称为预热中（V0.1.2 §4.2）。</summary>
                         public static LocString WAITING_HEAT = "等待升温";
 
+                        /// <summary>预热中／等待升温后附带的开工温度：{0} 实际目标。</summary>
+                        public static LocString TARGET_SUFFIX = "（目标 {0}）";
+
                         /// <summary>最佳温区不可达且已停在受限目标：温度受限 · 生产暂停。</summary>
                         public static LocString TEMP_LIMITED = "生产暂停：温区受限";
 
@@ -160,10 +163,10 @@ namespace MaterialOverhaul.Game
                         public static LocString ZONE_TARGET_CAPPED = "加热目标：{1}（原目标：{0}，受建造材料限制）";
 
                         /// <summary>不可达时的完整说明：{0} 配方最佳下限、{1} 建筑上限。</summary>
-                        public static LocString ZONE_UNREACHABLE_DETAIL = "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产，加热到上限后停止。\n可改用默认模式，或换用熔点更高的建造材料。";
+                        public static LocString ZONE_UNREACHABLE_DETAIL = "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。";
 
                         /// <summary>受限时的完整说明：{0}B₁、{1}可用上限、{2}B₂、{3}L、{4}U。</summary>
-                        public static LocString ZONE_LIMITED_DETAIL = "控制模式的可用温度：{0} - {1}（配方最佳上限：{2}）\n建造材料无法支持整个最佳温区；强制运行可以越过这个限制。\n默认模式仍可在{3} - {4}内生产。";
+                        public static LocString ZONE_LIMITED_DETAIL = "控制模式可用温度：{0} - {1}（配方最佳上限：{2}）\n默认模式可在{3} - {4}内生产，强制运行可越过限制。";
                     }
                 }
             }
@@ -193,24 +196,24 @@ namespace MaterialOverhaul.Game
                         public static LocString DEFAULT = "默认模式";
                         public static LocString CONTROL = "控制模式";
                         public static LocString PENDING = "等待自动化连接";
-                        public static LocString DEFAULT_TOOLTIP = "这个建筑可以在工作温区内生产。\n连接温区信号输出后切换为控制模式。";
-                        public static LocString CONTROL_TOOLTIP = "这个建筑只在工作温区内的配方最佳温区中生产。\n断开温区信号输出后切换为默认模式。";
-                        public static LocString PENDING_TOOLTIP = "正在确认温区信号输出的连接状态。\n确认前暂不生产或加热。";
+                        public static LocString DEFAULT_TOOLTIP = "在工作温区内生产。\n连接温区信号输出后切换为控制模式。";
+                        public static LocString CONTROL_TOOLTIP = "只在配方最佳温区内生产。\n断开温区信号输出后切换为默认模式。";
+                        public static LocString PENDING_TOOLTIP = "正在确认温区信号输出的连接，确认前不生产也不加热。";
                         public static LocString FORCED = "强制运行";
-                        public static LocString FORCED_TOOLTIP = "强制运行允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n自动化信号仍能暂停生产。";
-                        public static LocString FORCED_NO_HEATING_TOOLTIP = "强制运行允许这个建筑忽略温区限制继续生产。\n没有内置加热，需要依靠生产热量或外部热源升温。\n自动化信号仍能暂停生产。";
+                        public static LocString FORCED_TOOLTIP = "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复。";
+                        public static LocString FORCED_NO_HEATING_TOOLTIP = "忽略温区限制继续生产。\n没有内置加热，需要靠生产热量或外部热源升温。";
                     }
 
                     public static class WEARRISK
                     {
                         public static LocString NAME = "硬度不足";
-                        public static LocString TOOLTIP = "建造材料的硬度低于要求。\n工作时会损失生命值，预热和待机时不会磨损。";
+                        public static LocString TOOLTIP = "建造材料硬度低于要求，工作时会磨损。";
                     }
 
                     public static class HEATRISK
                     {
                         public static LocString NAME = "过热";
-                        public static LocString TOOLTIP = "建筑温度已超过过热温度，可能受到过热损伤。\n停止生产无法阻止环境热量造成的损伤。";
+                        public static LocString TOOLTIP = "建筑温度超过过热温度，可能受到损伤。";
                     }
 
                     /// <summary>
@@ -220,7 +223,7 @@ namespace MaterialOverhaul.Game
                     public static class ZONELIMIT
                     {
                         public static LocString NAME = "温区受限";
-                        public static LocString TOOLTIP = "配方的最佳温区超出建造材料的工作范围。\n使用控制模式时，需限制在重合的温区内，或启用强制运行。";
+                        public static LocString TOOLTIP = "配方的最佳温区超出建造材料的工作范围。\n控制模式只能在重合部分生产，或启用强制运行。";
                     }
 
                     public static class MECHANICAL
@@ -273,10 +276,10 @@ namespace MaterialOverhaul.Game
                     public static class TEMPERATURE_ZONE
                     {
                         public static LocString DESCRIPTION = "最佳温度信号";
-                        public static LocString ACTIVE = "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后，建筑使用控制模式。信号只表示温度，不表示建筑正在生产。";
-                        public static LocString INACTIVE = "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。";
-                        public static LocString INDUSTRIAL_ACTIVE = "存在原料齐备的加工、发电或清洗任务，且建筑温度处于其最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后使用控制模式；信号只表示温度，不保证正在生产。";
-                        public static LocString INDUSTRIAL_INACTIVE = "没有可执行工艺、燃料或清洗任务，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时使用默认模式。";
+                        public static LocString ACTIVE = "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。";
+                        public static LocString INACTIVE = "温度不在最佳温区，或配方没有温度要求时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。";
+                        public static LocString INDUSTRIAL_ACTIVE = "有可执行的工艺且建筑温度处于最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。";
+                        public static LocString INDUSTRIAL_INACTIVE = "没有可执行的工艺，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。";
                     }
 
                     /// <summary>
@@ -287,9 +290,9 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString DESCRIPTION = "生产控制";
 
-                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足这个建筑的其他运行条件。未连接自动化线时允许生产。";
+                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。未连接时允许生产。";
 
-                        public static LocString INACTIVE = "<b><style=\"logic_off\">红色信号</style></b>：暂停生产。\n仍会准备当前配方；如有内置加热，预热和维持温度不受影响。";
+                        public static LocString INACTIVE = "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和维持温度不受影响。";
                     }
                 }
             }
@@ -302,7 +305,7 @@ namespace MaterialOverhaul.Game
                 {
                     public static class OVERHEAT
                     {
-                        public static LocString DESCRIPTION = "基础工作上限：建造材料熔点的75%（按绝对温度计算，另计材料百分比修正）";
+                        public static LocString DESCRIPTION = "基础工作上限：建造材料熔点的75%（另计材料修正）";
                     }
                 }
             }

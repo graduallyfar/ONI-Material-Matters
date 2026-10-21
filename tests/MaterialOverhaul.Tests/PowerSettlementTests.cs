@@ -61,10 +61,10 @@ namespace MaterialOverhaul.Tests
                 TestRunner.Check(item.Value > 0 && !double.IsNaN(item.Value) && !double.IsInfinity(item.Value), "positive conductivity " + item.Key);
             var cases = new[]
             {
-                ("Copper", 1000, 20, 120, .453), ("Copper", 1000, 100, 1000, 36.761),
-                ("Copper", 1000, 300, 1000, 408.937), ("Cuprite", 1000, 100, 1000, 54.389),
-                ("IronOre", 1000, 100, 1000, 93.760), ("Copper", 50000, 100, 120, 13.136),
-                ("Copper", 50000, 100, 20000, 249.013)
+                ("Copper", 1000, 20, 120, 2.150), ("Copper", 1000, 100, 1000, 84.761),
+                ("Copper", 1000, 300, 1000, 552.937), ("Cuprite", 1000, 100, 1000, 125.943),
+                ("IronOre", 1000, 100, 1000, 232.324), ("Copper", 50000, 100, 120, 65.548),
+                ("Copper", 50000, 100, 20000, 1133.846)
             };
             var values = (IReadOnlyDictionary<string, double>)PowerBalance.Conductivities;
             foreach (var entry in cases)

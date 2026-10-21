@@ -335,6 +335,52 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
+    /// 补回调谐仪切换喷泉的音效路径。
+    ///
+    /// 原版三个音效路径是 <c>GeoTuner</c> 的静态字段，类初始化时按 <c>GlobalAssets.GetSound</c> 取值。
+    /// 本 Mod 在加载阶段给 <c>GeoTuner</c> 打补丁会提前触发这次初始化，此时音效表尚未载入，
+    /// 三个路径都是 null，切换喷泉播放音效时 FMOD 抛空引用。状态机在进入游戏后才初始化，
+    /// 届时音效表已就绪，这里只补回仍为空的路径。
+    /// </summary>
+    [HarmonyPatch(typeof(GeoTuner), "InitializeStates")]
+    internal static class Patch_Room_GeoTuner_InitializeStates
+    {
+        private static void Postfix()
+        {
+            try
+            {
+                int restored = 0;
+                if (string.IsNullOrEmpty(GeoTuner.liquidGeyserTuningSoundPath))
+                {
+                    GeoTuner.liquidGeyserTuningSoundPath = GlobalAssets.GetSound("GeoTuner_Tuning_Geyser");
+                    restored++;
+                }
+
+                if (string.IsNullOrEmpty(GeoTuner.gasGeyserTuningSoundPath))
+                {
+                    GeoTuner.gasGeyserTuningSoundPath = GlobalAssets.GetSound("GeoTuner_Tuning_Vent");
+                    restored++;
+                }
+
+                if (string.IsNullOrEmpty(GeoTuner.metalGeyserTuningSoundPath))
+                {
+                    GeoTuner.metalGeyserTuningSoundPath = GlobalAssets.GetSound("GeoTuner_Tuning_Volcano");
+                    restored++;
+                }
+
+                if (restored > 0)
+                {
+                    ModLog.Info("地质调谐仪：补回 " + restored + " 个切换喷泉音效路径。");
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("地质调谐仪音效路径补回失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
     /// 调谐仪侧栏：位于地质研究室的调谐仪按扩展上限判定能否再指向一座喷泉。
     /// 原版上限是点击回调与提示里的字面量 5；这里只替换有喷泉的行，空行（「无」）保持原版。
     /// </summary>

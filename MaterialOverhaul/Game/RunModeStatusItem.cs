@@ -34,13 +34,13 @@ namespace MaterialOverhaul.Game
         private static string Tooltip(MaterialOverhaulFab fab)
         {
             if (fab == null || !fab.ModeConnectionReady)
-                return Text("PENDING_TOOLTIP", "正在确认温区信号输出的连接状态。\n确认前暂不生产或加热。");
+                return Text("PENDING_TOOLTIP", "正在确认温区信号输出的连接，确认前不生产也不加热。");
             string text = fab.Policy.ControlMode
-                ? Text("CONTROL_TOOLTIP", "这个建筑只在工作温区内的配方最佳温区中生产。\n断开温区信号输出后切换为默认模式。")
-                : Text("DEFAULT_TOOLTIP", "这个建筑可以在工作温区内生产。\n连接温区信号输出后切换为控制模式。");
+                ? Text("CONTROL_TOOLTIP", "只在配方最佳温区内生产。\n断开温区信号输出后切换为默认模式。")
+                : Text("DEFAULT_TOOLTIP", "在工作温区内生产。\n连接温区信号输出后切换为控制模式。");
             if (fab.Policy.Forced) text += "\n" + (fab.SupportsBuiltInHeating
-                ? Text("FORCED_TOOLTIP", "强制运行允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n自动化信号仍能暂停生产。")
-                : Text("FORCED_NO_HEATING_TOOLTIP", "强制运行允许这个建筑忽略温区限制继续生产。\n没有内置加热，需要依靠生产热量或外部热源升温。\n自动化信号仍能暂停生产。"));
+                ? Text("FORCED_TOOLTIP", "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复。")
+                : Text("FORCED_NO_HEATING_TOOLTIP", "忽略温区限制继续生产。\n没有内置加热，需要靠生产热量或外部热源升温。"));
             return text;
         }
 

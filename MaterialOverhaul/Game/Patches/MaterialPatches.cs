@@ -24,6 +24,8 @@ namespace MaterialOverhaul.Patches
         {
             try { MaterialRegistration.AddAbyssaliteBuildingTag(); }
             catch (Exception e) { ModLog.Error("深渊晶石建材登记失败：" + e); }
+            try { MaterialRegistration.SetAbyssaliteConductivity(); }
+            catch (Exception e) { ModLog.Error("深渊晶石导热系数设置失败：" + e); }
         }
     }
 

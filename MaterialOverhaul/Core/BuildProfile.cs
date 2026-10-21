@@ -23,7 +23,7 @@ namespace MaterialOverhaul.Core
         public const bool RoomEnabled = true;
 #else
         public const string Name = "Combined";
-        public const string DisplayName = "V1.0.0 三系统整合版";
+        public const string DisplayName = "V1.0.1 三系统整合版";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = true;
         public const bool RoomEnabled = true;

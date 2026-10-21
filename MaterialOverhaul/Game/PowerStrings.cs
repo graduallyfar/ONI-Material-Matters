@@ -11,10 +11,10 @@ namespace MaterialOverhaul.Game
                 {
                     public static LocString POWER_WIRE_COUNT = "电线数量：{0}";
                     public static LocString POWER_WIRE_COUNT_PENDING = "电线数量：统计中";
-                    public static LocString POWER_WIRE_COUNT_TOOLTIP = "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。";
+                    public static LocString POWER_WIRE_COUNT_TOOLTIP = "选中对象所在电路已建成的电线格数，不计电桥本体";
                     public static LocString POWER_LOSS = "线路损耗：{0:0.##} W";
                     public static LocString POWER_DELIVERED = "实际输送：{0:0.##} W";
-                    public static LocString POWER_LOSS_TOOLTIP = "最近一次0.2秒结算的实际线路损耗与交付功率，包含设备用电、电池充电和变压器输入。\n损耗由实际供电端支付，不计入原版过载功率，也不额外产生热量。数值为首轮测试初值。";
+                    public static LocString POWER_LOSS_TOOLTIP = "输电时电线上损失的功率，以及实际送到用电设备、电池和变压器的功率\n线路越长、导线越差，损耗越大";
                     public static LocString POWER_LOSS_PENDING = "线路损耗：等待结算";
                     public static LocString POWER_LOSS_FALLBACK = "线路损耗：原版结算";
                     public static LocString POWER_LOSS_REPORT = "线路损耗";

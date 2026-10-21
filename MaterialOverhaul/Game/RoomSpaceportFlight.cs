@@ -19,5 +19,15 @@ namespace MaterialOverhaul.Game
             get { return fromSpaceport; }
             set { fromSpaceport = value; }
         }
+
+        /// <summary>读档后按保留的飞行标记恢复火箭状态栏的房间加成条目。</summary>
+        protected override void OnSpawn()
+        {
+            base.OnSpawn();
+            if (fromSpaceport)
+            {
+                RoomBonusStatus.RefreshRocket(GetComponent<Clustercraft>());
+            }
+        }
     }
 }

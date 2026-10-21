@@ -5,7 +5,8 @@ namespace MaterialOverhaul.Game
     /// 由 <c>LocString.CreateLocStringKeys(typeof(RoomStrings.ROOMS), "STRINGS.")</c> 建立。
     ///
     /// 字段默认值直接给中文：即使没有 .po，界面也能显示正确文本。
-    /// 描述只写已实现的构成与环境条件；效果尚未接入，因此不在文本里承诺效果。
+    /// 房间的 DESC／EFFECT／TOOLTIP 与原版房间同一写法：说明、图例简述、一句效果提示；
+    /// 构成条件由条件列表显示，不在提示里重复。
     /// </summary>
     public static class RoomStrings
     {
@@ -16,113 +17,129 @@ namespace MaterialOverhaul.Game
                 public static class SHOWER_ROOM
                 {
                     public static LocString NAME = "淋浴间";
-                    public static LocString DESC = "一个专门的淋浴空间。";
-                    public static LocString TOOLTIP = "需要至少一个淋浴间、没有工业机械，大小 12–64 格。";
+                    public static LocString DESC = "一个独立的淋浴空间。\n\n在淋浴间洗澡能缓解复制人的压力。";
+                    public static LocString EFFECT = "- 压力缓解";
+                    public static LocString TOOLTIP = "在淋浴间洗澡能缓解复制人的压力";
                 }
 
                 public static class ARTIFICIAL_PARK
                 {
                     public static LocString NAME = "人造公园";
-                    public static LocString DESC = "在室内布置绿植与公园标识形成的休憩空间。";
-                    public static LocString TOOLTIP = "需要至少 4 株植物、一个公园标识、没有工业机械，大小 12–64 格。";
+                    public static LocString DESC = "用绿植和公园标识布置的室内休憩空间。\n\n经过人造公园能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "经过人造公园能提升复制人的士气";
                 }
 
                 public static class INDUSTRIAL_AREA
                 {
                     public static LocString NAME = "工业区";
-                    public static LocString DESC = "集中布置工业生产设备的大型房间。";
-                    public static LocString TOOLTIP = "需要至少 1 栋工业建筑、1 个存储设备和 1 个光照设备，平均装饰度至少 +60，大小 32–1000 格。";
+                    public static LocString DESC = "集中布置工业设备的大型厂房。\n\n工业区内的工业建筑生产更快。";
+                    public static LocString EFFECT = "- 生产加速";
+                    public static LocString TOOLTIP = "工业区内的工业建筑生产更快";
                 }
 
                 public static class MEDICAL_CENTER
                 {
                     public static LocString NAME = "医疗中心";
-                    public static LocString DESC = "配备完整医疗设施的隔离治疗区。";
-                    public static LocString TOOLTIP = "需要分诊床、医务站、配药桌和病诊站各至少一个，以及厕所、餐桌和光照设备；平均装饰度至少 +80，平均温度 20–26 ℃，没有工业机械，大小 24–108 格。";
+                    public static LocString DESC = "配齐各类医疗设施的大型医院。\n\n患病的复制人会优先送到这里，治疗期间生命回复更快。";
+                    public static LocString EFFECT = "- 治疗加成";
+                    public static LocString TOOLTIP = "患病的复制人优先送到这里，治疗期间生命回复更快";
                 }
 
                 public static class DANCE_HALL
                 {
                     public static LocString NAME = "舞厅";
-                    public static LocString DESC = "以点唱机器人为中心的娱乐空间。";
-                    public static LocString TOOLTIP = "需要至少一个点唱机器人，不能有其他高级娱乐建筑；至少一个装饰建筑，平均装饰度至少 +100，平均温度 20–26 ℃，没有工业机械，大小 12–96 格。";
+                    public static LocString DESC = "以点唱机器人为中心的娱乐空间。\n\n在舞厅放松能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "在舞厅放松能提升复制人的士气";
                 }
 
                 public static class ARCADE_HALL
                 {
                     public static LocString NAME = "街机厅";
-                    public static LocString DESC = "以游戏机台为中心的娱乐空间。";
-                    public static LocString TOOLTIP = "需要至少一个游戏机台，不能有其他高级娱乐建筑；至少一个装饰建筑，平均装饰度至少 +100，平均温度 20–26 ℃，没有工业机械，大小 12–96 格。";
+                    public static LocString DESC = "以游戏机台为中心的娱乐空间。\n\n在街机厅游玩能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "在街机厅游玩能提升复制人的士气";
                 }
 
                 public static class BEACH_PARADISE
                 {
                     public static LocString NAME = "海滨乐园";
-                    public static LocString DESC = "模拟海边氛围的娱乐空间。";
-                    public static LocString TOOLTIP = "需要沙滩椅、机械冲浪板、光照设备和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，没有工业机械，大小 12–96 格。";
+                    public static LocString DESC = "模拟海边氛围的娱乐空间。\n\n在海滨乐园放松能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "在海滨乐园放松能提升复制人的士气";
                 }
 
                 public static class GALLERY
                 {
                     public static LocString NAME = "展览馆";
-                    public static LocString DESC = "展示藏品与杰出艺术品的展馆。";
-                    public static LocString TOOLTIP = "需要基座展示藏品、至少一件杰出艺术品、光照设备，不能有其他高级娱乐建筑；平均装饰度至少 +120，平均温度 20–26 ℃，没有工业机械，大小 18–96 格。";
+                    public static LocString DESC = "展示藏品与杰出艺术品的展馆。\n\n参观展览馆能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "参观展览馆能提升复制人的士气";
                 }
 
                 public static class WIND_TUNNEL
                 {
                     public static LocString NAME = "风洞训练室";
-                    public static LocString DESC = "以垂直风洞为核心的训练空间。";
-                    public static LocString TOOLTIP = "需要至少一个垂直风洞和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，平均温度 20–26 ℃，没有工业机械，大小 36–96 格。";
+                    public static LocString DESC = "以垂直风洞为核心的训练空间。\n\n在风洞训练室活动能提升复制人的士气。";
+                    public static LocString EFFECT = "- 士气加成";
+                    public static LocString TOOLTIP = "在风洞训练室活动能提升复制人的士气";
                 }
 
                 public static class SPA
                 {
                     public static LocString NAME = "水疗室";
-                    public static LocString DESC = "以桑拿浴室或热水浴缸为核心的放松空间。";
-                    public static LocString TOOLTIP = "需要至少一个桑拿浴室或热水浴缸和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，平均温度 26–50 ℃，没有工业机械，大小 16–64 格。";
+                    public static LocString DESC = "以桑拿浴室或热水浴缸为核心的放松空间。\n\n在水疗室放松能提升士气并缓解压力。";
+                    public static LocString EFFECT = "- 士气加成、压力缓解";
+                    public static LocString TOOLTIP = "在水疗室放松能提升士气并缓解压力";
                 }
 
                 public static class TEA_ROOM
                 {
                     public static LocString NAME = "茶歇室";
-                    public static LocString DESC = "提供饮品与饮水的休息空间。";
-                    public static LocString TOOLTIP = "需要至少一个饮品娱乐设施和一台饮水机，没有工业机械；平均装饰度至少 +100，平均温度 20–26 ℃，大小 12–64 格。";
+                    public static LocString DESC = "提供饮品与饮水的休息空间。\n\n在茶歇室休息能提升士气并缓解压力。";
+                    public static LocString EFFECT = "- 士气加成、压力缓解";
+                    public static LocString TOOLTIP = "在茶歇室休息能提升士气并缓解压力";
                 }
 
                 public static class MISSION_CONTROL
                 {
                     public static LocString NAME = "任务控制室";
-                    public static LocString DESC = "集中布置航天指挥设施的科研空间。";
-                    public static LocString TOOLTIP = "需要至少一个航天指挥站，不能有其他科学建筑；至少一个光照设备，平均装饰度至少 +60，没有工业机械，大小 12–64 格。";
+                    public static LocString DESC = "集中布置航天指挥站的科研空间。\n\n这里的航天指挥站工作更快，助推的火箭飞得更快。";
+                    public static LocString EFFECT = "- 火箭加速";
+                    public static LocString TOOLTIP = "这里的航天指挥站工作更快，助推的火箭飞得更快";
                 }
 
                 public static class GEO_TUNER_LAB
                 {
                     public static LocString NAME = "地质研究室";
-                    public static LocString DESC = "围绕地质调谐仪布置的科研空间。";
-                    public static LocString TOOLTIP = "需要至少一个地质调谐仪，不能有其他科学建筑；至少一个光照设备，平均装饰度至少 +60，没有工业机械，大小 12–64 格。";
+                    public static LocString DESC = "围绕地质调谐仪布置的科研空间。\n\n这里的地质调谐仪研究更快，调谐效果更强。";
+                    public static LocString EFFECT = "- 调谐加成";
+                    public static LocString TOOLTIP = "这里的地质调谐仪研究更快，调谐效果更强";
                 }
 
                 public static class SPACEPORT
                 {
                     public static LocString NAME = "航天发射场";
-                    public static LocString DESC = "集中停放与发射火箭的开阔场地。";
-                    public static LocString TOOLTIP = "需要至少一个火箭发射平台，不能有生活建筑，大小 64–2400 格。";
+                    public static LocString DESC = "集中停放与发射火箭的开阔场地。\n\n从这里发射的火箭飞得更快、更省燃料。";
+                    public static LocString EFFECT = "- 火箭加速、节省燃料";
+                    public static LocString TOOLTIP = "从这里发射的火箭飞得更快、更省燃料";
                 }
 
                 public static class CARGO_STATION
                 {
                     public static LocString NAME = "星际货运站";
-                    public static LocString DESC = "集中布置星际发射与货物拆包设施的房间。";
-                    public static LocString TOOLTIP = "需要至少一个星际物流发射器、一个载货拆包器、一个信号播报器和一个信号接收器，大小 32–360 格。";
+                    public static LocString DESC = "集中布置星际物流设施的房间。\n\n这里的星际物流发射器发射更快、连发次数更多。";
+                    public static LocString EFFECT = "- 物流加速";
+                    public static LocString TOOLTIP = "这里的星际物流发射器发射更快、连发次数更多";
                 }
 
                 public static class DATA_CENTER
                 {
                     public static LocString NAME = "数据机房";
-                    public static LocString DESC = "为数据挖掘中心提供低温环境的房间。";
-                    public static LocString TOOLTIP = "需要至少一个数据挖掘中心，平均温度低于 20 ℃，大小 12–96 格。";
+                    public static LocString DESC = "为数据挖掘中心提供低温环境的房间。\n\n这里的数据挖掘中心生产更快。";
+                    public static LocString EFFECT = "- 生产加速";
+                    public static LocString TOOLTIP = "这里的数据挖掘中心生产更快";
                 }
 
                 /// <summary>
@@ -171,7 +188,8 @@ namespace MaterialOverhaul.Game
                 /// <summary>房间条件文本模板。与 <c>RoomText</c> 的格式化一一对应。</summary>
                 public static class CRITERIA
                 {
-                    public static LocString PRIMARY = "需要{0}";
+                    public static LocString PRIMARY = "至少 1 个{0}";
+                    public static LocString PRIMARY_OR = "或";
                     public static LocString MIN_SIZE = "房间至少 {0} 格";
                     public static LocString MAX_SIZE = "房间不超过 {0} 格";
                     public static LocString MIN_PLANTS = "至少 {0} 株植物";
@@ -199,13 +217,42 @@ namespace MaterialOverhaul.Game
                 {
                     public static LocString AVERAGE_DECOR = "平均装饰度：{0}";
                     public static LocString AVERAGE_TEMPERATURE = "平均温度：{0}";
-                    public static LocString PRODUCTION_BONUS = "生产效率：+{0}%";
-                    public static LocString MISSION_CONTROL_BONUS = "指挥站助推：火箭速度再 +{0}%，群星指挥站范围 +{1} 格；操作者科学大于 {2} 时翻倍";
-                    public static LocString GEOTUNER_LAB_BONUS = "地质调谐：喷发量再 +{0}%，每座喷泉可多 {1} 台调谐仪；研究者科学大于 {2} 时翻倍";
-                    public static LocString SPACEPORT_BONUS = "发射加成：从本房间平台发射的火箭本次飞行速度 +{0}%，燃料消耗 −{1}%";
-                    public static LocString CARGO_STATION_BONUS = "星际物流：载荷速度 +{0}%，每轮可连续发射 {1} 次，冷却速度 +{2}%";
-                    public static LocString MEDICAL_CENTER_BONUS = "医疗中心：患者优先入院；致命辐射剂量在开始治疗时清除，留下永久后遗症";
-                    public static LocString GEOTUNER_EXTRA_SLOT = "该喷泉已有 {0} 台调谐仪；本调谐仪位于地质研究室，最多允许 {1} 台。";
+                    public static LocString PRODUCTION_BONUS = "工作效率：+{0}%";
+                    public static LocString MISSION_CONTROL_BONUS = "火箭助推：速度 +{0}%";
+                    public static LocString MISSION_CONTROL_RANGE = "，指挥范围 +{0} 格";
+                    public static LocString GEOTUNER_LAB_BONUS = "地质调谐：喷发量 +{0}%，每座喷泉多接 {1} 台调谐仪";
+                    public static LocString SPACEPORT_BONUS = "发射的火箭：速度 +{0}%，燃料消耗 −{1}%";
+                    public static LocString CARGO_STATION_BONUS = "星际物流：载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%";
+                    public static LocString MEDICAL_CENTER_BONUS = "患者优先入院，可救治致命辐射病";
+                    public static LocString GEOTUNER_EXTRA_SLOT = "该喷泉已有 {0} 台调谐仪，地质研究室内最多 {1} 台。";
+                }
+
+                /// <summary>建筑与火箭状态栏里的房间加成条目。只写公开的基础加成，不写科学翻倍等隐藏机制。</summary>
+                public static class STATUS
+                {
+                    public static class BUILDING_BONUS
+                    {
+                        public static LocString NAME = "{0}：{1}";
+                        public static LocString TOOLTIP = "这个建筑位于{0}，获得加成：\n{1}";
+                    }
+
+                    public static class ROCKET_BONUS
+                    {
+                        public static LocString NAME = "房间加成：速度 +{0}%";
+                        public static LocString TOOLTIP = "这枚火箭本次飞行获得房间加成：\n{0}";
+                    }
+
+                    public static LocString SEPARATOR = "，";
+                    public static LocString PRODUCTION = "生产速度 +{0}%";
+                    public static LocString WORK = "工作速度 +{0}%";
+                    public static LocString MISSION_CONTROL = "助推的火箭速度 +{0}%";
+                    public static LocString MISSION_CONTROL_RANGE = "指挥范围 +{0} 格";
+                    public static LocString GEOTUNER = "喷发量 +{0}%，调谐仪上限 +{1}";
+                    public static LocString SPACEPORT = "发射的火箭速度 +{0}%，燃料消耗 −{1}%";
+                    public static LocString CARGO = "载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%";
+                    public static LocString RECOVERY = "患者生命回复 +{0}%";
+                    public static LocString ROCKET_MISSION_CONTROL = "任务控制室助推：速度 +{0}%";
+                    public static LocString ROCKET_SPACEPORT = "航天发射场发射：速度 +{0}%，燃料消耗 −{1}%";
                 }
 
                 /// <summary>

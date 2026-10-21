@@ -3,12 +3,15 @@ using System.Collections.ObjectModel;
 
 namespace MaterialOverhaul.Power
 {
-    /// <summary>电力0.0.2首轮测试初值；相对电导率是游戏参数，不代表原版属性或实测物性。</summary>
+    /// <summary>
+    /// 电力0.0.2首轮测试初值；相对电导率是游戏参数，不代表原版属性或实测物性。
+    /// V1.0.1 按用户决定把基础损耗系数 a0、a1 放大 5 倍（原 0.008、0.012），其余参数不变。
+    /// </summary>
     public static class PowerBalance
     {
         public static readonly LineLossParameters Parameters = new LineLossParameters(
             pc: 500, l0: 100, powerReference: 1000, conductivityReference: 1,
-            a0: .008, a1: .012, nu: .6, gamma: .5, alpha: .6, beta: .5,
+            a0: .04, a1: .06, nu: .6, gamma: .5, alpha: .6, beta: .5,
             lambdaMin: .03, deltaLambda: 1.2, k: 1, a: .15);
 
         public static readonly IDictionary<string, double> Conductivities =

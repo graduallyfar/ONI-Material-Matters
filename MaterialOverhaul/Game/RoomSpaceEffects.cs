@@ -97,6 +97,20 @@ namespace MaterialOverhaul.Game
             {
                 ClustercraftBoost.Remove(id);
             }
+
+            RoomBonusStatus.RefreshRocket(craft);
+        }
+
+        /// <summary>火箭当前仍有效的任务控制室新增速度；没有或已到期为 0。</summary>
+        public static float MissionControlBoostOf(Clustercraft craft)
+        {
+            return craft != null && craft.controlStationBuffTimeRemaining > 0f
+                && ClustercraftBoost.TryGetValue(craft.GetInstanceID(), out float boost) ? boost : 0f;
+        }
+
+        public static bool IsFromSpaceport(Clustercraft craft)
+        {
+            return IsSpaceportFlight(craft);
         }
 
         /// <summary>群星火箭当前的房间新增速度比例（指挥站 + 航天发射场）。</summary>
@@ -118,6 +132,12 @@ namespace MaterialOverhaul.Game
                 else
                 {
                     ClustercraftBoost.Remove(id);
+                    // 本方法也被状态文字回调调用，不能在显示途中增删状态项，推迟到下一帧刷新。
+                    if (GameScheduler.Instance != null)
+                    {
+                        GameScheduler.Instance.Schedule("MaterialOverhaulRocketRoomBonus", 0f,
+                            data => RoomBonusStatus.RefreshRocket(data as Clustercraft), craft);
+                    }
                 }
             }
 
@@ -178,6 +198,7 @@ namespace MaterialOverhaul.Game
 
             bool fromSpaceport = pad != null && RoomAdvancedEffects.IsSpaceport(RoomQuery.RoomTypeIdOf(pad));
             flight.FromSpaceport = fromSpaceport;
+            RoomBonusStatus.RefreshRocket(craft);
             if (fromSpaceport)
             {
                 ModLog.InfoOnce("room|spaceport|first", "航天发射场：火箭 " + craft.Name + " 从发射场平台发射，本次飞行速度 +"
@@ -193,6 +214,8 @@ namespace MaterialOverhaul.Game
             {
                 flight.FromSpaceport = false;
             }
+
+            RoomBonusStatus.RefreshRocket(craft);
         }
 
         /// <summary>

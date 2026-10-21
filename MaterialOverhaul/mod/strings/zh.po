@@ -21,12 +21,12 @@ msgstr "禁用强制运行"
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE"
 msgid "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required."
-msgstr "允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。"
+msgstr "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复；自动化信号仍能暂停生产。"
 
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE"
 msgid "Turning it off re-evaluates production permission from the output port wiring at that moment and keeps the current batch."
-msgstr "恢复这个建筑的温度限制。\n当前生产进度会保留。"
+msgstr "恢复温区限制，保留当前生产进度。"
 
 #. 机械磨损的伤害来源
 #. STRINGS.BUILDINGS.DAMAGESOURCES.MATERIALOVERHAUL.MECHANICAL_WEAR
@@ -76,18 +76,18 @@ msgstr "最佳温度信号"
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"
 msgid "Recipe locked and temperature inside its best range; wiring selects control mode, and green does not mean producing."
-msgstr "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后，建筑使用控制模式。信号只表示温度，不表示建筑正在生产。"
+msgstr "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
 msgid "No locked recipe, or temperature outside the best range; unconnected wiring selects the default mode."
-msgstr "没有当前配方、配方没有温度要求，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时，建筑使用默认模式。"
+msgstr "温度不在最佳温区，或配方没有温度要求时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。"
 
 #. 基础上限来源；v0.2.2 起最终值另计主材料百分比
 #. STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
 msgctxt "STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION"
 msgid "Base working ceiling: 75% of the primary material melting point in kelvin, before the material percentage modifier"
-msgstr "基础工作上限：建造材料熔点的75%（按绝对温度计算，另计材料百分比修正）"
+msgstr "基础工作上限：建造材料熔点的75%（另计材料修正）"
 
 #. 配方详情「效果」里的温度行（{0} 最佳温区下限、{1} 最佳温区上限）
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_DETAIL
@@ -105,7 +105,7 @@ msgstr "工作<link=\"HEAT\">温度</link>：{0} - {1}"
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP"
 msgid "The minimum working temperature comes from the building type; the maximum equals the overheat threshold (75% of the primary material melting point, with its percentage modifier). A wired output port selects control mode, otherwise the default mode applies; recipe best ranges appear in the recipe details."
-msgstr "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度等于建造材料决定的过热温度。\n各配方的最佳温度见配方详情。"
+msgstr "这个建筑正常生产所需的温度范围。\n最高温度由建造材料决定，各配方的最佳温度见配方详情。"
 
 #. 损坏原因状态项：来源未知的旧损伤（迁移）
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.UNKNOWN.NAME
@@ -290,13 +290,13 @@ msgstr "加热目标：{1}（原目标：{0}，受建造材料限制）"
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_DETAIL
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_DETAIL"
 msgid "Control mode needs a best-range minimum of {0}, but the building limit is only {1}: no usable band, so heating stops at the limit and production stays paused without skipping the order. Use the default mode or a material with a higher melting point."
-msgstr "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产，加热到上限后停止。\n可改用默认模式，或换用熔点更高的建造材料。"
+msgstr "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。"
 
 #. V0.1.2：受限时的完整说明（{0}B₁、{1}可用上限、{2}B₂、{3}L、{4}U）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED_DETAIL
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_LIMITED_DETAIL"
 msgid "Control mode can use {0} ~ {1} (capped by the material limit; best range maximum {2}); default mode still produces across {3} ~ {4} at reduced efficiency."
-msgstr "控制模式的可用温度：{0} - {1}（配方最佳上限：{2}）\n建造材料无法支持整个最佳温区；强制运行可以越过这个限制。\n默认模式仍可在{3} - {4}内生产。"
+msgstr "控制模式可用温度：{0} - {1}（配方最佳上限：{2}）\n默认模式可在{3} - {4}内生产，强制运行可越过限制。"
 
 #. V0.1.2：独立温区限制状态项（不冒充损坏）
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.NAME
@@ -307,7 +307,7 @@ msgstr "温区受限"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.ZONELIMIT.TOOLTIP"
 msgid "The recipe best range exceeds the building's usable range; the limit applies to control mode. Default mode still produces at reduced efficiency, and forced run may work past the limit."
-msgstr "配方的最佳温区超出建造材料的工作范围。\n使用控制模式时，需限制在重合的温区内，或启用强制运行。"
+msgstr "配方的最佳温区超出建造材料的工作范围。\n控制模式只能在重合部分生产，或启用强制运行。"
 
 #. 「允许／暂停生产」自动化输入端口（复用原版逻辑控制端口，由本 Mod 改写说明文本）
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION
@@ -318,13 +318,12 @@ msgstr "生产控制"
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"
 msgid "Green: production allowed (materials, power and start conditions still required); unconnected defaults to allowed"
-msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。\n仍需满足这个建筑的其他运行条件。未连接自动化线时允许生产。"
+msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。未连接时允许生产。"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"
 msgid "Red: production paused; recipe preparation, preheating and top-up heating are unaffected"
-msgstr "<b><style=\"logic_off\">红色信号</style></b>：暂停生产。\n仍会准备当前配方；如有内置加热，预热和维持温度不受影响。"
-
+msgstr "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和维持温度不受影响。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT"
@@ -344,17 +343,17 @@ msgstr "等待自动化连接"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_TOOLTIP"
 msgid "Output port unconnected: produces across the whole working band. Input wiring and signal colours do not select the mode."
-msgstr "这个建筑可以在工作温区内生产。\n连接温区信号输出后切换为控制模式。"
+msgstr "在工作温区内生产。\n连接温区信号输出后切换为控制模式。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP"
 msgid "Output port connected: produces only inside the best range. Signal colours do not select the mode; green does not mean producing."
-msgstr "这个建筑只在工作温区内的配方最佳温区中生产。\n断开温区信号输出后切换为默认模式。"
+msgstr "只在配方最佳温区内生产。\n断开温区信号输出后切换为默认模式。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.PENDING_TOOLTIP"
 msgid "Automation network not ready: stored mode and temperature hysteresis are kept; no production or heating yet."
-msgstr "正在确认温区信号输出的连接状态。\n确认前暂不生产或加热。"
+msgstr "正在确认温区信号输出的连接，确认前不生产也不加热。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED"
@@ -364,7 +363,7 @@ msgstr "强制运行"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_TOOLTIP"
 msgid "Overrides the temperature stop; after overheat damage built-in heating stops until fully repaired. Turning it off re-evaluates from the current wiring. Materials, power, automation permission, labour and building health are still required."
-msgstr "强制运行允许这个建筑忽略温区限制继续生产，并持续加热。\n因过热受损后，内置加热会停止，完全修复后恢复。\n自动化信号仍能暂停生产。"
+msgstr "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.NAME"
@@ -374,7 +373,7 @@ msgstr "硬度不足"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.WEARRISK.TOOLTIP"
 msgid "Hardness is short: actual production accumulates mechanical wear. Preheating, idle time and pausing do not."
-msgstr "建造材料的硬度低于要求。\n工作时会损失生命值，预热和待机时不会磨损。"
+msgstr "建造材料硬度低于要求，工作时会磨损。"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.NAME
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.NAME"
@@ -384,7 +383,7 @@ msgstr "过热"
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP"
 msgid "Above the overheat threshold: damage risk. Stopping on temperature gives no heat protection."
-msgstr "建筑温度已超过过热温度，可能受到过热损伤。\n停止生产无法阻止环境热量造成的损伤。"
+msgstr "建筑温度超过过热温度，可能受到损伤。"
 
 #. 配置卡：配方下方的共用加热功率滑条
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TITLE"
@@ -393,15 +392,15 @@ msgstr "加热功率"
 
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TOOLTIP"
 msgid "{0} W: shared by preheating, top-up and forced sustained heating (20-4000 W). Production power is separate; total draw is the sum. Stored per building."
-msgstr "内置加热耗电：<b>{0} W</b>\n用于预热、维持温度和强制运行时的持续加热。\n生产耗电另计。"
+msgstr "内置加热耗电：<b>{0} W</b>\n用于预热和维持温度，生产耗电另计。"
 
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_NO_HEATING"
 msgid "解除温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。原料、供电、自动化许可与建筑完好仍需满足。"
-msgstr "允许这个建筑忽略温区限制继续生产。\n这个建筑没有内置加热，需要依靠生产热量或外部热源升温。\n仍需满足这个建筑的材料和运行条件，自动化信号仍能暂停生产。"
+msgstr "忽略温区限制继续生产。\n这个建筑没有内置加热，需要靠生产热量或外部热源升温。"
 
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.FORCED_NO_HEATING_TOOLTIP"
 msgid "覆盖温区停机限制；本建筑无内置加热，升温依靠生产自热或外部热源。关闭后按当时接线重判；材料、供电、自动化许可、操作与建筑完好仍需满足。"
-msgstr "强制运行允许这个建筑忽略温区限制继续生产。\n没有内置加热，需要依靠生产热量或外部热源升温。\n自动化信号仍能暂停生产。"
+msgstr "忽略温区限制继续生产。\n没有内置加热，需要靠生产热量或外部热源升温。"
 
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_START"
 msgid "启动温度 {0}（无内置加热）"
@@ -413,11 +412,16 @@ msgstr "启动温度：{1}（原目标：{0}，受建造材料限制）\n这个�
 
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.ZONE_UNREACHABLE_NO_HEATING"
 msgid "控制模式需要最佳下限 {0}，但建筑上限只有 {1}：无可用温区，暂停生产，不自动跳单。本建筑无内置加热。改用默认模式或熔点更高的建材。"
-msgstr "配方的最佳温度至少为{0}，但建造材料的工作上限为{1}。\n未启用强制运行时，控制模式无法生产。\n可改用默认模式，或换用熔点更高的建造材料。"
+msgstr "配方的最佳温度至少为{0}，超过建造材料的工作上限{1}。\n控制模式无法生产，可改用默认模式或熔点更高的建造材料。"
+
+#. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.TARGET_SUFFIX
+msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.STATUS.TARGET_SUFFIX"
+msgid "TARGET_SUFFIX"
+msgstr "（目标 {0}）"
 
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.RECIPE_TEMP_RANGE_TOOLTIP"
 msgid "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。"
-msgstr "建筑温度处于这个范围时，配方的温度效率为100%。\n实际生产速度还受复制人的操作能力影响。"
+msgstr "建筑温度在这个范围内时，配方的温度效率为100%。"
 
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.OVERHEAT.HEATING_STOPPED_TOOLTIP"
 msgid "内置加热已停止，完全修复后才能恢复。"
@@ -426,7 +430,7 @@ msgstr "内置加热已停止，完全修复后才能恢复。"
 #. 原版免疫过热建筑的工作范围说明
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_IMMUNE_TOOLTIP"
 msgid "Working range for buildings with vanilla overheat immunity"
-msgstr "这个建筑正常生产所需的温度范围。\n最低温度由建筑类型决定，最高温度按主材料熔点的75%及材料百分比修正计算。\n保留原版过热豁免，越过工作上限不会造成过热伤害；材料相变仍按原版处理。\n没有内置加热，各配方的最佳温度见配方详情。"
+msgstr "这个建筑正常生产所需的温度范围。\n最高温度为主材料熔点的75%；保留原版过热豁免，没有内置加热。"
 
 #. 非批次工业建筑：工艺最佳温区（建筑效果区）
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST
@@ -437,7 +441,7 @@ msgstr "最佳<link=\"HEAT\">温度</link>：{0} - {1}"
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST_TOOLTIP
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.PROCESS_BEST_TOOLTIP"
 msgid "Inside this range the temperature efficiency is 100%. Temperature efficiency scales the throughput per second; vanilla conditions still apply."
-msgstr "建筑本体处于此范围时温度效率为100%。\n温度效率影响每秒处理量，实际运行仍需满足原版条件。"
+msgstr "建筑温度在这个范围内时，温度效率为100%。"
 
 #. 非批次工业建筑：状态栏温度／效率／功率
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.INDUSTRIAL_STATUS
@@ -455,18 +459,18 @@ msgstr "额定发电：{0} · 当前发电：{1}"
 #. STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP
 msgctxt "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.IMMUNE_HEATING_TOOLTIP"
 msgid "The main construction material sets the working ceiling; vanilla overheat immunity is kept, so no overheat damage. Built-in heating still obeys the working range, power and run conditions. Materials can still change phase."
-msgstr "主建造材料决定最高工作温度；保留原版过热豁免，不产生过热伤害。\n内置加热仍受工作温区、供电和运行条件限制。材料仍可发生相变。"
+msgstr "保留原版过热豁免，不会受过热损伤；内置加热仍受工作温区和供电限制。"
 
 #. 非批次工业建筑的温区输出端口说明
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE"
 msgid "Green when a conversion, generation or scrubbing task has its inputs ready and the building is inside its best range. Wiring this output selects control mode; the signal only reports temperature, not that it is producing."
-msgstr "存在原料齐备的加工、发电或清洗任务，且建筑温度处于其最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接这个输出后使用控制模式；信号只表示温度，不保证正在生产。"
+msgstr "有可执行的工艺且建筑温度处于最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE"
 msgid "Red when there is no runnable process, fuel or scrubbing task, or the temperature is outside the best range. Control mode is off while this output stays unwired."
-msgstr "没有可执行工艺、燃料或清洗任务，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接这个输出时使用默认模式。"
+msgstr "没有可执行的工艺，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。"
 
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT"
@@ -481,7 +485,7 @@ msgstr "电线数量：统计中"
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT_TOOLTIP
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT_TOOLTIP"
 msgid "Built wire cells on the selected object's independent circuit. Planned wires, bridges and buildings are excluded. Disconnected objects show zero."
-msgstr "选中对象所在独立电网中已建成的电线格数。\n不计规划线路、电桥本体和建筑；未连接电网时为0。"
+msgstr "选中对象所在电路已建成的电线格数，不计电桥本体"
 
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS"
 msgid "Line loss: {0:0.##} W"
@@ -493,7 +497,7 @@ msgstr "实际输送：{0:0.##} W"
 
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_TOOLTIP"
 msgid "Actual loss and delivered power in the last 0.2 second step, including consumers, battery charging and transformer input. The source pays the loss; it is excluded from vanilla overload power and creates no extra heat. Initial test balance."
-msgstr "最近一次0.2秒结算的实际线路损耗与交付功率，包含设备用电、电池充电和变压器输入。\n损耗由实际供电端支付，不计入原版过载功率，也不额外产生热量。数值为首轮测试初值。"
+msgstr "输电时电线上损失的功率，以及实际送到用电设备、电池和变压器的功率\n线路越长、导线越差，损耗越大"
 
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_LOSS_PENDING"
 msgid "Line loss: awaiting settlement"
@@ -533,11 +537,16 @@ msgstr "淋浴间"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SHOWER_ROOM.DESC"
 msgid "SHOWER_ROOM.DESC"
-msgstr "一个专门的淋浴空间。"
+msgstr "一个独立的淋浴空间。\n\n在淋浴间洗澡能缓解复制人的压力。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SHOWER_ROOM.TOOLTIP"
 msgid "SHOWER_ROOM.TOOLTIP"
-msgstr "需要至少一个淋浴间、没有工业机械，大小 12–64 格。"
+msgstr "在淋浴间洗澡能缓解复制人的压力"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.SHOWER_ROOM.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SHOWER_ROOM.EFFECT"
+msgid "SHOWER_ROOM.EFFECT"
+msgstr "- 压力缓解"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARTIFICIAL_PARK.NAME"
 msgid "ARTIFICIAL_PARK.NAME"
@@ -545,11 +554,16 @@ msgstr "人造公园"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARTIFICIAL_PARK.DESC"
 msgid "ARTIFICIAL_PARK.DESC"
-msgstr "在室内布置绿植与公园标识形成的休憩空间。"
+msgstr "用绿植和公园标识布置的室内休憩空间。\n\n经过人造公园能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARTIFICIAL_PARK.TOOLTIP"
 msgid "ARTIFICIAL_PARK.TOOLTIP"
-msgstr "需要至少 4 株植物、一个公园标识、没有工业机械，大小 12–64 格。"
+msgstr "经过人造公园能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.ARTIFICIAL_PARK.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARTIFICIAL_PARK.EFFECT"
+msgid "ARTIFICIAL_PARK.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.INDUSTRIAL_AREA.NAME"
 msgid "INDUSTRIAL_AREA.NAME"
@@ -557,11 +571,16 @@ msgstr "工业区"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.INDUSTRIAL_AREA.DESC"
 msgid "INDUSTRIAL_AREA.DESC"
-msgstr "集中布置工业生产设备的大型房间。"
+msgstr "集中布置工业设备的大型厂房。\n\n工业区内的工业建筑生产更快。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.INDUSTRIAL_AREA.TOOLTIP"
 msgid "INDUSTRIAL_AREA.TOOLTIP"
-msgstr "需要至少 1 栋工业建筑、1 个存储设备和 1 个光照设备，平均装饰度至少 +60，大小 32–1000 格。"
+msgstr "工业区内的工业建筑生产更快"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.INDUSTRIAL_AREA.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.INDUSTRIAL_AREA.EFFECT"
+msgid "INDUSTRIAL_AREA.EFFECT"
+msgstr "- 生产加速"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MEDICAL_CENTER.NAME"
 msgid "MEDICAL_CENTER.NAME"
@@ -569,11 +588,16 @@ msgstr "医疗中心"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MEDICAL_CENTER.DESC"
 msgid "MEDICAL_CENTER.DESC"
-msgstr "配备完整医疗设施的隔离治疗区。"
+msgstr "配齐各类医疗设施的大型医院。\n\n患病的复制人会优先送到这里，治疗期间生命回复更快。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MEDICAL_CENTER.TOOLTIP"
 msgid "MEDICAL_CENTER.TOOLTIP"
-msgstr "需要分诊床、医务站、配药桌和病诊站各至少一个，以及厕所、餐桌和光照设备；平均装饰度至少 +80，平均温度 20–26 ℃，没有工业机械，大小 24–108 格。"
+msgstr "患病的复制人优先送到这里，治疗期间生命回复更快"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.MEDICAL_CENTER.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MEDICAL_CENTER.EFFECT"
+msgid "MEDICAL_CENTER.EFFECT"
+msgstr "- 治疗加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DANCE_HALL.NAME"
 msgid "DANCE_HALL.NAME"
@@ -581,11 +605,16 @@ msgstr "舞厅"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DANCE_HALL.DESC"
 msgid "DANCE_HALL.DESC"
-msgstr "以点唱机器人为中心的娱乐空间。"
+msgstr "以点唱机器人为中心的娱乐空间。\n\n在舞厅放松能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DANCE_HALL.TOOLTIP"
 msgid "DANCE_HALL.TOOLTIP"
-msgstr "需要至少一个点唱机器人，不能有其他高级娱乐建筑；至少一个装饰建筑，平均装饰度至少 +100，平均温度 20–26 ℃，没有工业机械，大小 12–96 格。"
+msgstr "在舞厅放松能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.DANCE_HALL.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DANCE_HALL.EFFECT"
+msgid "DANCE_HALL.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARCADE_HALL.NAME"
 msgid "ARCADE_HALL.NAME"
@@ -593,11 +622,16 @@ msgstr "街机厅"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARCADE_HALL.DESC"
 msgid "ARCADE_HALL.DESC"
-msgstr "以游戏机台为中心的娱乐空间。"
+msgstr "以游戏机台为中心的娱乐空间。\n\n在街机厅游玩能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARCADE_HALL.TOOLTIP"
 msgid "ARCADE_HALL.TOOLTIP"
-msgstr "需要至少一个游戏机台，不能有其他高级娱乐建筑；至少一个装饰建筑，平均装饰度至少 +100，平均温度 20–26 ℃，没有工业机械，大小 12–96 格。"
+msgstr "在街机厅游玩能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.ARCADE_HALL.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.ARCADE_HALL.EFFECT"
+msgid "ARCADE_HALL.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.BEACH_PARADISE.NAME"
 msgid "BEACH_PARADISE.NAME"
@@ -605,11 +639,16 @@ msgstr "海滨乐园"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.BEACH_PARADISE.DESC"
 msgid "BEACH_PARADISE.DESC"
-msgstr "模拟海边氛围的娱乐空间。"
+msgstr "模拟海边氛围的娱乐空间。\n\n在海滨乐园放松能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.BEACH_PARADISE.TOOLTIP"
 msgid "BEACH_PARADISE.TOOLTIP"
-msgstr "需要沙滩椅、机械冲浪板、光照设备和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，没有工业机械，大小 12–96 格。"
+msgstr "在海滨乐园放松能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.BEACH_PARADISE.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.BEACH_PARADISE.EFFECT"
+msgid "BEACH_PARADISE.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GALLERY.NAME"
 msgid "GALLERY.NAME"
@@ -617,11 +656,16 @@ msgstr "展览馆"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GALLERY.DESC"
 msgid "GALLERY.DESC"
-msgstr "展示藏品与杰出艺术品的展馆。"
+msgstr "展示藏品与杰出艺术品的展馆。\n\n参观展览馆能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GALLERY.TOOLTIP"
 msgid "GALLERY.TOOLTIP"
-msgstr "需要基座展示藏品、至少一件杰出艺术品、光照设备，不能有其他高级娱乐建筑；平均装饰度至少 +120，平均温度 20–26 ℃，没有工业机械，大小 18–96 格。"
+msgstr "参观展览馆能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.GALLERY.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GALLERY.EFFECT"
+msgid "GALLERY.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.WIND_TUNNEL.NAME"
 msgid "WIND_TUNNEL.NAME"
@@ -629,11 +673,16 @@ msgstr "风洞训练室"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.WIND_TUNNEL.DESC"
 msgid "WIND_TUNNEL.DESC"
-msgstr "以垂直风洞为核心的训练空间。"
+msgstr "以垂直风洞为核心的训练空间。\n\n在风洞训练室活动能提升复制人的士气。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.WIND_TUNNEL.TOOLTIP"
 msgid "WIND_TUNNEL.TOOLTIP"
-msgstr "需要至少一个垂直风洞和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，平均温度 20–26 ℃，没有工业机械，大小 36–96 格。"
+msgstr "在风洞训练室活动能提升复制人的士气"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.WIND_TUNNEL.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.WIND_TUNNEL.EFFECT"
+msgid "WIND_TUNNEL.EFFECT"
+msgstr "- 士气加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPA.NAME"
 msgid "SPA.NAME"
@@ -641,11 +690,16 @@ msgstr "水疗室"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPA.DESC"
 msgid "SPA.DESC"
-msgstr "以桑拿浴室或热水浴缸为核心的放松空间。"
+msgstr "以桑拿浴室或热水浴缸为核心的放松空间。\n\n在水疗室放松能提升士气并缓解压力。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPA.TOOLTIP"
 msgid "SPA.TOOLTIP"
-msgstr "需要至少一个桑拿浴室或热水浴缸和装饰建筑，不能有其他高级娱乐建筑；平均装饰度至少 +80，平均温度 26–50 ℃，没有工业机械，大小 16–64 格。"
+msgstr "在水疗室放松能提升士气并缓解压力"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.SPA.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPA.EFFECT"
+msgid "SPA.EFFECT"
+msgstr "- 士气加成、压力缓解"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.TEA_ROOM.NAME"
 msgid "TEA_ROOM.NAME"
@@ -653,11 +707,16 @@ msgstr "茶歇室"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.TEA_ROOM.DESC"
 msgid "TEA_ROOM.DESC"
-msgstr "提供饮品与饮水的休息空间。"
+msgstr "提供饮品与饮水的休息空间。\n\n在茶歇室休息能提升士气并缓解压力。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.TEA_ROOM.TOOLTIP"
 msgid "TEA_ROOM.TOOLTIP"
-msgstr "需要至少一个饮品娱乐设施和一台饮水机，没有工业机械；平均装饰度至少 +100，平均温度 20–26 ℃，大小 12–64 格。"
+msgstr "在茶歇室休息能提升士气并缓解压力"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.TEA_ROOM.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.TEA_ROOM.EFFECT"
+msgid "TEA_ROOM.EFFECT"
+msgstr "- 士气加成、压力缓解"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MISSION_CONTROL.NAME"
 msgid "MISSION_CONTROL.NAME"
@@ -665,11 +724,16 @@ msgstr "任务控制室"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MISSION_CONTROL.DESC"
 msgid "MISSION_CONTROL.DESC"
-msgstr "集中布置航天指挥设施的科研空间。"
+msgstr "集中布置航天指挥站的科研空间。\n\n这里的航天指挥站工作更快，助推的火箭飞得更快。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MISSION_CONTROL.TOOLTIP"
 msgid "MISSION_CONTROL.TOOLTIP"
-msgstr "需要至少一个航天指挥站，不能有其他科学建筑；至少一个光照设备，平均装饰度至少 +60，没有工业机械，大小 12–64 格。"
+msgstr "这里的航天指挥站工作更快，助推的火箭飞得更快"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.MISSION_CONTROL.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.MISSION_CONTROL.EFFECT"
+msgid "MISSION_CONTROL.EFFECT"
+msgstr "- 火箭加速"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GEO_TUNER_LAB.NAME"
 msgid "GEO_TUNER_LAB.NAME"
@@ -677,11 +741,16 @@ msgstr "地质研究室"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GEO_TUNER_LAB.DESC"
 msgid "GEO_TUNER_LAB.DESC"
-msgstr "围绕地质调谐仪布置的科研空间。"
+msgstr "围绕地质调谐仪布置的科研空间。\n\n这里的地质调谐仪研究更快，调谐效果更强。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GEO_TUNER_LAB.TOOLTIP"
 msgid "GEO_TUNER_LAB.TOOLTIP"
-msgstr "需要至少一个地质调谐仪，不能有其他科学建筑；至少一个光照设备，平均装饰度至少 +60，没有工业机械，大小 12–64 格。"
+msgstr "这里的地质调谐仪研究更快，调谐效果更强"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.GEO_TUNER_LAB.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.GEO_TUNER_LAB.EFFECT"
+msgid "GEO_TUNER_LAB.EFFECT"
+msgstr "- 调谐加成"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPACEPORT.NAME"
 msgid "SPACEPORT.NAME"
@@ -689,11 +758,16 @@ msgstr "航天发射场"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPACEPORT.DESC"
 msgid "SPACEPORT.DESC"
-msgstr "集中停放与发射火箭的开阔场地。"
+msgstr "集中停放与发射火箭的开阔场地。\n\n从这里发射的火箭飞得更快、更省燃料。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPACEPORT.TOOLTIP"
 msgid "SPACEPORT.TOOLTIP"
-msgstr "需要至少一个火箭发射平台，不能有生活建筑，大小 64–2400 格。"
+msgstr "从这里发射的火箭飞得更快、更省燃料"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.SPACEPORT.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.SPACEPORT.EFFECT"
+msgid "SPACEPORT.EFFECT"
+msgstr "- 火箭加速、节省燃料"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CARGO_STATION.NAME"
 msgid "CARGO_STATION.NAME"
@@ -701,11 +775,16 @@ msgstr "星际货运站"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CARGO_STATION.DESC"
 msgid "CARGO_STATION.DESC"
-msgstr "集中布置星际发射与货物拆包设施的房间。"
+msgstr "集中布置星际物流设施的房间。\n\n这里的星际物流发射器发射更快、连发次数更多。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CARGO_STATION.TOOLTIP"
 msgid "CARGO_STATION.TOOLTIP"
-msgstr "需要至少一个星际物流发射器、一个载货拆包器、一个信号播报器和一个信号接收器，大小 32–360 格。"
+msgstr "这里的星际物流发射器发射更快、连发次数更多"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.CARGO_STATION.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CARGO_STATION.EFFECT"
+msgid "CARGO_STATION.EFFECT"
+msgstr "- 物流加速"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DATA_CENTER.NAME"
 msgid "DATA_CENTER.NAME"
@@ -713,15 +792,20 @@ msgstr "数据机房"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DATA_CENTER.DESC"
 msgid "DATA_CENTER.DESC"
-msgstr "为数据挖掘中心提供低温环境的房间。"
+msgstr "为数据挖掘中心提供低温环境的房间。\n\n这里的数据挖掘中心生产更快。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DATA_CENTER.TOOLTIP"
 msgid "DATA_CENTER.TOOLTIP"
-msgstr "需要至少一个数据挖掘中心，平均温度低于 20 ℃，大小 12–96 格。"
+msgstr "这里的数据挖掘中心生产更快"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.DATA_CENTER.EFFECT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DATA_CENTER.EFFECT"
+msgid "DATA_CENTER.EFFECT"
+msgstr "- 生产加速"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CRITERIA.PRIMARY"
 msgid "CRITERIA.PRIMARY"
-msgstr "需要{0}"
+msgstr "至少 1 个{0}"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CRITERIA.MIN_SIZE"
 msgid "CRITERIA.MIN_SIZE"
@@ -891,6 +975,11 @@ msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CRITERIA.DINING_TABLE"
 msgid "CRITERIA.DINING_TABLE"
 msgstr "至少 1 张餐桌"
 
+#. STRINGS.ROOMS.MATERIALOVERHAUL.CRITERIA.PRIMARY_OR
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.CRITERIA.PRIMARY_OR"
+msgid "CRITERIA.PRIMARY_OR"
+msgstr "或"
+
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.EFFECTS.HOSPITAL_RECOVERY.NAME"
 msgid "EFFECTS.HOSPITAL_RECOVERY.NAME"
 msgstr "医院护理"
@@ -917,31 +1006,36 @@ msgstr "护理员正在照料，生命值回复速度再 +25%。"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.PRODUCTION_BONUS"
 msgid "DETAILS.PRODUCTION_BONUS"
-msgstr "生产效率：+{0}%"
+msgstr "工作效率：+{0}%"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.MISSION_CONTROL_BONUS"
 msgid "DETAILS.MISSION_CONTROL_BONUS"
-msgstr "指挥站助推：火箭速度再 +{0}%，群星指挥站范围 +{1} 格；操作者科学大于 {2} 时翻倍"
+msgstr "火箭助推：速度 +{0}%"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.GEOTUNER_LAB_BONUS"
 msgid "DETAILS.GEOTUNER_LAB_BONUS"
-msgstr "地质调谐：喷发量再 +{0}%，每座喷泉可多 {1} 台调谐仪；研究者科学大于 {2} 时翻倍"
+msgstr "地质调谐：喷发量 +{0}%，每座喷泉多接 {1} 台调谐仪"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.SPACEPORT_BONUS"
 msgid "DETAILS.SPACEPORT_BONUS"
-msgstr "发射加成：从本房间平台发射的火箭本次飞行速度 +{0}%，燃料消耗 −{1}%"
+msgstr "发射的火箭：速度 +{0}%，燃料消耗 −{1}%"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.CARGO_STATION_BONUS"
 msgid "DETAILS.CARGO_STATION_BONUS"
-msgstr "星际物流：载荷速度 +{0}%，每轮可连续发射 {1} 次，冷却速度 +{2}%"
+msgstr "星际物流：载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.MEDICAL_CENTER_BONUS"
 msgid "DETAILS.MEDICAL_CENTER_BONUS"
-msgstr "医疗中心：患者优先入院；致命辐射剂量在开始治疗时清除，留下永久后遗症"
+msgstr "患者优先入院，可救治致命辐射病"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.GEOTUNER_EXTRA_SLOT"
 msgid "DETAILS.GEOTUNER_EXTRA_SLOT"
-msgstr "该喷泉已有 {0} 台调谐仪；本调谐仪位于地质研究室，最多允许 {1} 台。"
+msgstr "该喷泉已有 {0} 台调谐仪，地质研究室内最多 {1} 台。"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.MISSION_CONTROL_RANGE
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.MISSION_CONTROL_RANGE"
+msgid "DETAILS.MISSION_CONTROL_RANGE"
+msgstr "，指挥范围 +{0} 格"
 
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.EFFECTS.RADIATION_SCAR.NAME"
 msgid "EFFECTS.RADIATION_SCAR.NAME"
@@ -1046,3 +1140,78 @@ msgstr "风洞训练"
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.EFFECTS.TRAIT_ROCKET.TOOLTIP"
 msgid "EFFECTS.TRAIT_ROCKET.TOOLTIP"
 msgstr "在风洞训练：士气 +4、压力缓解 −20%、驾驶 +3。"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.BUILDING_BONUS.NAME
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.BUILDING_BONUS.NAME"
+msgid "STATUS.BUILDING_BONUS.NAME"
+msgstr "{0}：{1}"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.BUILDING_BONUS.TOOLTIP
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.BUILDING_BONUS.TOOLTIP"
+msgid "STATUS.BUILDING_BONUS.TOOLTIP"
+msgstr "这个建筑位于{0}，获得加成：\n{1}"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_BONUS.NAME
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_BONUS.NAME"
+msgid "STATUS.ROCKET_BONUS.NAME"
+msgstr "房间加成：速度 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_BONUS.TOOLTIP
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_BONUS.TOOLTIP"
+msgid "STATUS.ROCKET_BONUS.TOOLTIP"
+msgstr "这枚火箭本次飞行获得房间加成：\n{0}"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.SEPARATOR
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.SEPARATOR"
+msgid "STATUS.SEPARATOR"
+msgstr "，"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.PRODUCTION
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.PRODUCTION"
+msgid "STATUS.PRODUCTION"
+msgstr "生产速度 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.WORK
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.WORK"
+msgid "STATUS.WORK"
+msgstr "工作速度 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.MISSION_CONTROL
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.MISSION_CONTROL"
+msgid "STATUS.MISSION_CONTROL"
+msgstr "助推的火箭速度 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.MISSION_CONTROL_RANGE
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.MISSION_CONTROL_RANGE"
+msgid "STATUS.MISSION_CONTROL_RANGE"
+msgstr "指挥范围 +{0} 格"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.GEOTUNER
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.GEOTUNER"
+msgid "STATUS.GEOTUNER"
+msgstr "喷发量 +{0}%，调谐仪上限 +{1}"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.SPACEPORT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.SPACEPORT"
+msgid "STATUS.SPACEPORT"
+msgstr "发射的火箭速度 +{0}%，燃料消耗 −{1}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.CARGO
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.CARGO"
+msgid "STATUS.CARGO"
+msgstr "载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.RECOVERY
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.RECOVERY"
+msgid "STATUS.RECOVERY"
+msgstr "患者生命回复 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_MISSION_CONTROL
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_MISSION_CONTROL"
+msgid "STATUS.ROCKET_MISSION_CONTROL"
+msgstr "任务控制室助推：速度 +{0}%"
+
+#. STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_SPACEPORT
+msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_SPACEPORT"
+msgid "STATUS.ROCKET_SPACEPORT"
+msgstr "航天发射场发射：速度 +{0}%，燃料消耗 −{1}%"

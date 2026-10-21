@@ -77,7 +77,6 @@ internal static partial class Program
         Method("RoomProber", "Sim1000ms", "Void(Single)");
         Method("RoomProber", "UpdateRoom", "Void(CavityInfo)");
         Method("RoomProber", "GetRoomOfGameObject", "Room(GameObject)");
-        Method("RoomConstraints", "RoomCriteriaString", "String(Room)");
         Method("RoomDetails", "RoomDetailString", "String(Room)");
         Method("Workable", "CompleteWork", "Void(WorkerBase)");
         Method("Workable", "GetEfficiencyMultiplier", "Single(WorkerBase)");
@@ -87,6 +86,7 @@ internal static partial class Program
         Method("Clinic+ClinicSM+Instance", "StartEffect", "EffectInstance(String,Boolean)");
         Method("Clinic", "OnStopWork", "Void(WorkerBase)");
         Method("RoomProber", "ClearRoom", "Void(Room)");
+        Method("RoomProber", "CreateRoom", "Void(CavityInfo)");
         Method("Workable", "OnUpdateRoom", "Void(Object)");
         Method("MingleCellTracker", "Sim1000ms", "Void(Single)");
         Method("CavityInfo", "OnEnter", "Void(Object)");
@@ -130,6 +130,7 @@ internal static partial class Program
         Method("Clustercraft", "BurnFromTank", "Single(Single,RocketEngineCluster,Tag,IStorage,Single&)");
         Method("GeoTuner", "ApplyTuning", "Void(Instance)");
         Method("GeoTuner", "RemoveTuning", "Void(Instance)");
+        Method("GeoTuner", "InitializeStates", "Void(BaseState&)");
         Method("GeoTunerSideScreen", "SetRow", "Void(Int32,String,Sprite,Geyser,Boolean)");
         Method("GeoTunerSideScreen", "RefreshOptions", "Void(Object)");
         Method("RailGun", "LaunchProjectile", "Void()");
@@ -145,6 +146,9 @@ internal static partial class Program
         Field("Spacecraft", "missionElapsed", "Single");
         Field("MissionControlCluster+Instance", "boostableClustercraft", "List<Clustercraft>");
         Field("GeoTunerSideScreen", "targetGeotuner", "Instance");
+        Field("GeoTuner", "liquidGeyserTuningSoundPath", "String");
+        Field("GeoTuner", "gasGeyserTuningSoundPath", "String");
+        Field("GeoTuner", "metalGeyserTuningSoundPath", "String");
         Field("Workable", "useLaboratoryEfficiencyBonus", "Boolean");
         Field("Workable", "currentlyInLaboratory", "Boolean");
         Field("Workable", "laboratoryEfficiencyBonusStatusItemHandle", "Guid");

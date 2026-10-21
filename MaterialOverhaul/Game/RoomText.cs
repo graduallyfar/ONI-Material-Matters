@@ -27,9 +27,42 @@ namespace MaterialOverhaul.Game
             return definition == null ? string.Empty : Strings.Get(definition.TooltipKey);
         }
 
+        /// <summary>房间概览图例与悬停卡第一行的简述（原版 <c>RoomType.effect</c>，如「- 士气加成」）。</summary>
+        public static string RoomEffect(RoomDefinition definition)
+        {
+            if (definition == null || string.IsNullOrEmpty(definition.NameKey) || !definition.NameKey.EndsWith(".NAME", StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            string key = definition.NameKey.Substring(0, definition.NameKey.Length - ".NAME".Length) + ".EFFECT";
+            StringEntry entry;
+            return Strings.TryGet(new StringKey(key), out entry) && entry != null ? entry.ToString() : string.Empty;
+        }
+
+        /// <summary>主条件显示专属设施的建筑名（同名的本体／群星版本只写一次），而不是房间名。</summary>
         public static string PrimaryName(RoomDefinition definition)
         {
-            return string.Format(Criteria("PRIMARY"), RoomName(definition));
+            string[] ids = definition == null ? null : definition.PrimaryPrefabIds;
+            StringBuilder names = new StringBuilder();
+            System.Collections.Generic.HashSet<string> seen = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; ids != null && i < ids.Length; i++)
+            {
+                string name = PrefabName(ids[i]);
+                if (!seen.Add(STRINGS.UI.StripLinkFormatting(name)))
+                {
+                    continue;
+                }
+
+                if (names.Length > 0)
+                {
+                    names.Append(Criteria("PRIMARY_OR"));
+                }
+
+                names.Append(name);
+            }
+
+            return string.Format(Criteria("PRIMARY"), names.Length > 0 ? names.ToString() : RoomName(definition));
         }
 
         /// <summary>条件显示文本。未识别的种类直接显示内部标识，便于定位而不是静默留空。</summary>
@@ -164,11 +197,12 @@ namespace MaterialOverhaul.Game
             const string prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.";
             if (id == RoomCatalogue.MissionControlId)
             {
-                return string.Format(
+                string text = string.Format(
                     Strings.Get(prefix + "MISSION_CONTROL_BONUS"),
-                    Percent(RoomAdvancedEffects.MissionControlSpeedBonus),
-                    RoomAdvancedEffects.MissionControlRangeBonus,
-                    RoomAdvancedEffects.ScienceThreshold.ToString("0"));
+                    Percent(RoomAdvancedEffects.MissionControlSpeedBonus));
+                return HasMissionControlRange()
+                    ? text + string.Format(Strings.Get(prefix + "MISSION_CONTROL_RANGE"), RoomAdvancedEffects.MissionControlRangeBonus)
+                    : text;
             }
 
             if (id == RoomCatalogue.GeoTunerLabId)
@@ -176,8 +210,7 @@ namespace MaterialOverhaul.Game
                 return string.Format(
                     Strings.Get(prefix + "GEOTUNER_LAB_BONUS"),
                     Percent(RoomAdvancedEffects.GeoTunerLabMassBonus),
-                    RoomAdvancedEffects.GeoTunerLabExtraTuners,
-                    RoomAdvancedEffects.ScienceThreshold.ToString("0"));
+                    RoomAdvancedEffects.GeoTunerLabExtraTuners);
             }
 
             if (id == RoomCatalogue.SpaceportId)
@@ -205,9 +238,110 @@ namespace MaterialOverhaul.Game
             return string.Empty;
         }
 
-        private static string Percent(float fraction)
+        /// <summary>
+        /// 位于该房间的建筑获得的公开加成，按显示顺序列出；没有加成返回空数组。
+        /// 科学翻倍等隐藏机制不写入。矿石洗涤器能构成工业区，但清洗速度不受加成，不显示。
+        /// </summary>
+        public static string[] BuildingBonusLines(string roomTypeId, string prefabId)
+        {
+            const string prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.";
+            if (string.IsNullOrEmpty(roomTypeId) || string.IsNullOrEmpty(prefabId))
+            {
+                return new string[0];
+            }
+
+            float multiplier = RoomProduction.Multiplier(roomTypeId, prefabId);
+            if (roomTypeId == RoomCatalogue.MissionControlId && multiplier > 1f)
+            {
+                string boost = string.Format(Strings.Get(prefix + "MISSION_CONTROL"), Percent(RoomAdvancedEffects.MissionControlSpeedBonus));
+                return HasMissionControlRange()
+                    ? new[]
+                    {
+                        string.Format(Strings.Get(prefix + "WORK"), Percent(multiplier - 1f)),
+                        boost,
+                        string.Format(Strings.Get(prefix + "MISSION_CONTROL_RANGE"), RoomAdvancedEffects.MissionControlRangeBonus)
+                    }
+                    : new[] { string.Format(Strings.Get(prefix + "WORK"), Percent(multiplier - 1f)), boost };
+            }
+
+            if (roomTypeId == RoomCatalogue.GeoTunerLabId && multiplier > 1f)
+            {
+                return new[]
+                {
+                    string.Format(Strings.Get(prefix + "WORK"), Percent(multiplier - 1f)),
+                    string.Format(Strings.Get(prefix + "GEOTUNER"),
+                        Percent(RoomAdvancedEffects.GeoTunerLabMassBonus), RoomAdvancedEffects.GeoTunerLabExtraTuners)
+                };
+            }
+
+            if (multiplier > 1f && prefabId != "OreScrubber")
+            {
+                return new[] { string.Format(Strings.Get(prefix + "PRODUCTION"), Percent(multiplier - 1f)) };
+            }
+
+            if (RoomAdvancedEffects.IsSpaceport(roomTypeId) && prefabId == RoomBuildingCatalogue.LaunchPad)
+            {
+                return new[]
+                {
+                    string.Format(Strings.Get(prefix + "SPACEPORT"),
+                        Percent(RoomAdvancedEffects.SpaceportSpeedBonus), Percent(1f - RoomAdvancedEffects.SpaceportFuelFactor))
+                };
+            }
+
+            if (RoomAdvancedEffects.IsCargoStation(roomTypeId) && prefabId == RoomBuildingCatalogue.RailGun)
+            {
+                return new[]
+                {
+                    string.Format(Strings.Get(prefix + "CARGO"),
+                        Percent(RoomAdvancedEffects.CargoPayloadSpeedFactor - 1f),
+                        RoomAdvancedEffects.VanillaLaunchesPerCooldown + RoomAdvancedEffects.CargoExtraLaunches,
+                        Percent(RoomAdvancedEffects.CargoCooldownSpeedFactor - 1f))
+                };
+            }
+
+            string recovery = prefabId == RoomBuildingCatalogue.MedicalCot ? RoomRecoveryEffect.ForRoomType(roomTypeId) : null;
+            RoomEffectSpec spec = recovery == null ? null : RoomEffectCatalogue.Get(recovery);
+            if (spec != null && spec.HealthRecoveryPercent > 0f)
+            {
+                return new[] { string.Format(Strings.Get(prefix + "RECOVERY"), spec.HealthRecoveryPercent.ToString("0")) };
+            }
+
+            return new string[0];
+        }
+
+        /// <summary>火箭本次飞行获得的房间加成说明；没有加成返回空字符串。</summary>
+        public static string RocketBonusTooltipLines(float missionControlBonus, bool fromSpaceport)
+        {
+            const string prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.";
+            StringBuilder builder = new StringBuilder();
+            if (missionControlBonus > 0f)
+            {
+                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_MISSION_CONTROL"), Percent(missionControlBonus)));
+            }
+
+            if (fromSpaceport)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.Append('\n');
+                }
+
+                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_SPACEPORT"),
+                    Percent(RoomAdvancedEffects.SpaceportSpeedBonus), Percent(1f - RoomAdvancedEffects.SpaceportFuelFactor)));
+            }
+
+            return builder.ToString();
+        }
+
+        public static string Percent(float fraction)
         {
             return (fraction * 100f).ToString("0");
+        }
+
+        /// <summary>指挥范围只在群星版按距离筛选火箭；本体版不显示这一项。</summary>
+        private static bool HasMissionControlRange()
+        {
+            return DlcManager.IsExpansion1Active();
         }
 
         private static string Criteria(string fieldName)

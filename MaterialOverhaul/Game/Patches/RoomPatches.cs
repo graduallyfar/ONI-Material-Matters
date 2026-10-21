@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Patches
                 RoomEffects.Register();
                 RoomTraitRegistration.Register();
                 RoomRegistration.Register();
+                RoomBonusStatus.Register();
             }
             catch (Exception e)
             {
@@ -104,13 +105,41 @@ namespace MaterialOverhaul.Patches
     {
         private static void Prefix(object[] __args)
         {
+            Room room = __args != null && __args.Length > 0 ? __args[0] as Room : null;
             try
             {
-                RoomRetention.Remember(__args != null && __args.Length > 0 ? __args[0] as Room : null);
+                RoomRetention.Remember(room);
             }
             catch (Exception e)
             {
                 ModLog.Error("记录房间重建前类型失败：" + e);
+            }
+
+            try
+            {
+                RoomBonusStatus.Remove(room);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("移除建筑房间加成状态失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>房间建立并判定类型后，给房间内获得加成的建筑挂上「房间加成」状态。</summary>
+    [HarmonyPatch(typeof(RoomProber), "CreateRoom")]
+    internal static class Patch_Room_RoomProber_CreateRoom
+    {
+        private static void Postfix(object[] __args)
+        {
+            try
+            {
+                CavityInfo cavity = __args != null && __args.Length > 0 ? __args[0] as CavityInfo : null;
+                RoomBonusStatus.Apply(cavity == null ? null : cavity.room);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("显示建筑房间加成状态失败：" + e);
             }
         }
     }
@@ -143,16 +172,13 @@ namespace MaterialOverhaul.Patches
         }
     }
 
-    /// <summary>界面读取房间条件／详情前刷新快照，避免显示上一轮判定的环境值。</summary>
-    [HarmonyPatch(typeof(RoomConstraints), "RoomCriteriaString")]
-    internal static class Patch_RoomConstraints_RoomCriteriaString
-    {
-        private static void Prefix()
-        {
-            RoomSnapshotCache.BeginEvaluation();
-        }
-    }
-
+    /// <summary>
+    /// 界面读取房间详情前刷新快照，避免显示上一轮判定的环境值。悬停卡先读条件、再读详情，
+    /// 条件行沿用上一帧详情刷新的快照，最多晚一帧。
+    ///
+    /// 不给 <c>RoomConstraints</c> 打补丁：Mod 加载时打补丁会提前触发它的静态初始化，原版条件名
+    /// （「至少两个科学建筑」等）就会在游戏语言载入前定成英文。
+    /// </summary>
     [HarmonyPatch(typeof(RoomDetails), "RoomDetailString")]
     internal static class Patch_RoomDetails_RoomDetailString
     {

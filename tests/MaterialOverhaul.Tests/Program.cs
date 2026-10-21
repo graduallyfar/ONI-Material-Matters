@@ -40,6 +40,7 @@ namespace MaterialOverhaul.Tests
             Run("房间补丁：V1.0.0 查错修复的源码结构", RoomPatchFixTests.Run);
             Run("房间采样：读档顺序与光照装饰", RoomSamplingTests.Run);
             Run("房间文本：字段树键与中文 PO 一致", RoomLocalizationTests.Run);
+            Run("V1.0.1：装饰度门槛、线损系数、深渊晶石导热、房间文本与接入结构", V101FixTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

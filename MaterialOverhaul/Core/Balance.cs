@@ -22,6 +22,12 @@ namespace MaterialOverhaul.Core
         /// <summary>用户确认：原有正向过热修正统一为 +60%；深渊晶石不提供加成。</summary>
         public const float MaterialOverheatBonus = 0.60f;
 
+        /// <summary>
+        /// 用户确认（V1.0.1）：深渊晶石导热系数（DTU/(m·s·℃)）由原版 0.00001 改为 0.1，
+        /// 仍是很好的隔热材料（陶瓷 0.62），但不再近乎绝热。隔热质不受影响。
+        /// </summary>
+        public const float AbyssaliteThermalConductivity = 0.1f;
+
         /// <summary>负向修正保留此前每 K 对应 0.1% 的取法。</summary>
         public const float MaterialOverheatPenaltyPerKelvin = 0.001f;
 
