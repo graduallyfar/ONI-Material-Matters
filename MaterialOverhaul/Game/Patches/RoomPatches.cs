@@ -194,8 +194,12 @@ namespace MaterialOverhaul.Patches
     /// 有人操作的批次建筑由 <c>ComplexFabricatorWorkable</c> 的工作速度决定；航天指挥站与
     /// 地质调谐仪按其自身工作组件结算。只对这几类设施乘算，避免把修理、清洁等其它工作也算成
     /// 生产加成；具体倍率仍由房间与 prefab 共同决定。配方投入产出比例不变。
+    ///
+    /// 整合版中工业补丁在同一方法后置记录最终倍率，供 <c>OnWorkTick</c> 把缩放后的 dt 还原成
+    /// 真实生产秒数计磨损；本补丁须先于它执行，否则房间加速会被误算成更长的生产时间。
     /// </summary>
     [HarmonyPatch(typeof(Workable), "GetEfficiencyMultiplier")]
+    [HarmonyPriority(Priority.HigherThanNormal)]
     internal static class Patch_Room_Workable_GetEfficiencyMultiplier
     {
         // 按类型名匹配，避免对未加载 DLC 的工作组件产生编译期依赖。

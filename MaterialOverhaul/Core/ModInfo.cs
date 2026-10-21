@@ -8,10 +8,13 @@ namespace MaterialOverhaul.Core
     {
         public const string StaticID = "MaterialOverhaul";
         public const string DisplayName = "Material Overhaul";
+        // 须与 MaterialOverhaul.csproj 中各 SystemProfile 的 Version 一致（ProfileChecks 核对）。
 #if MATERIAL_OVERHAUL_POWER_ONLY
         public const string Version = "0.0.2";
-#else
+#elif MATERIAL_OVERHAUL_INDUSTRIAL_ONLY || MATERIAL_OVERHAUL_ROOM_ONLY
         public const string Version = "0.2.2";
+#else
+        public const string Version = "1.0.0";
 #endif
 
         /// <summary>Harmony 实例标识，用于按 Mod 归属补丁。</summary>

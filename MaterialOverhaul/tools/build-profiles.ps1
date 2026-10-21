@@ -1,4 +1,4 @@
-<# 构建独立系统包；默认生成工业、电力、整合三包，不部署、不改存档。 #>
+<# 构建系统包；默认生成工业、电力、房间三个独立验证包与 V1.0.0 整合包，不部署、不改存档。 #>
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
@@ -47,7 +47,7 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
         'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false } }
         'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false } }
         'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true } }
-        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业、电力与房间整合验证候选；包含温控、订单、磨损、电力损耗与房间条件。游戏交互与平衡待验收。'; Industrial = $true; Power = $true; Room = $true } }
+        'Combined' { @{ Title = '材料革新 V1.0.0 · 工业／电力／房间整合'; Description = 'V1.0.0 三系统整合版：工业温控、加热、订单、磨损与材料改造；电力最短线路损耗、电池与变压器分账；房间分级、平均装饰度／温度条件与房间效果。数值为工作初值，游戏验收与平衡待执行。'; Industrial = $true; Power = $true; Room = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }

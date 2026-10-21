@@ -164,6 +164,19 @@ namespace MaterialOverhaul.Tests
             string scrubberDup = Region(fabricators, "if (__instance is OreScrubber.Work)", "ComplexFabricatorWorkable workable");
             TestRunner.Check(scrubberDup.Contains("scrubber.IndustrialEfficiency : 0f"),
                 "清洗进度、去菌与氯气共用同一工作效率");
+
+            // 整合版：房间工作速度加成须先于工业补丁乘入，工业记录的倍率才包含它，磨损仍按真实秒数。
+            string rooms = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RoomPatches.cs"));
+            const string efficiencyTarget = "[HarmonyPatch(typeof(Workable), \"GetEfficiencyMultiplier\")]";
+            string roomAttrs = Region(rooms, efficiencyTarget, "class Patch_Room_Workable_GetEfficiencyMultiplier");
+            TestRunner.Check(roomAttrs.Contains("[HarmonyPriority(Priority.HigherThanNormal)]"),
+                "房间工作速度加成的后置优先级高于工业倍率记录");
+            string industrialAttrs = Region(fabricators, efficiencyTarget, "class Patch_Workable_GetEfficiencyMultiplier");
+            TestRunner.Check(industrialAttrs.Length > 0 && !industrialAttrs.Contains("HarmonyPriority"),
+                "工业倍率记录保持普通优先级，在房间加成之后执行");
+            string industrialNote = Region(fabricators, "__result *= gate.AllowsProduction ? gate.Efficiency : 0f;", "catch");
+            TestRunner.Check(industrialNote.Contains("fab.NoteEfficiencyMultiplier(__result);"),
+                "工业在乘入温度效率后记录包含其他加成的最终倍率");
         }
 
         /// <summary>取两个标记之间的源码片段；end 为 null 表示取到文件末尾。</summary>

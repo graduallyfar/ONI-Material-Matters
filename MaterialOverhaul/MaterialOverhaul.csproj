@@ -4,8 +4,8 @@
   <Import Project="local.props" Condition="Exists('local.props')" />
 
   <PropertyGroup>
-    <!-- 电力专属分支默认构建Power 0.0.2；其他验证包必须明确指定模式。 -->
-    <SystemProfile Condition="'$(SystemProfile)' == ''">Power</SystemProfile>
+    <!-- V1.0.0 起默认构建三系统整合版 Combined；独立验证包必须明确指定模式。 -->
+    <SystemProfile Condition="'$(SystemProfile)' == ''">Combined</SystemProfile>
     <DefineConstants Condition="'$(SystemProfile)' == 'Power'">$(DefineConstants);MATERIAL_OVERHAUL_POWER_ONLY</DefineConstants>
     <DefineConstants Condition="'$(SystemProfile)' == 'Industrial'">$(DefineConstants);MATERIAL_OVERHAUL_INDUSTRIAL_ONLY</DefineConstants>
     <DefineConstants Condition="'$(SystemProfile)' == 'Room'">$(DefineConstants);MATERIAL_OVERHAUL_ROOM_ONLY</DefineConstants>
@@ -18,8 +18,10 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <!-- 整合版为正式版号；三个独立验证包保留各自系统的验证号（Industrial／Room 0.2.2，Power 0.0.2）。 -->
     <Version>0.2.2</Version>
     <Version Condition="'$(SystemProfile)' == 'Power'">0.0.2</Version>
+    <Version Condition="'$(SystemProfile)' == 'Combined'">1.0.0</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <DebugType>portable</DebugType>
