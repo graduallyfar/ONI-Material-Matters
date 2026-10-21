@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
@@ -107,7 +109,23 @@ internal static partial class Program
         Method("MissionControlCluster+Instance", "IsOwnWorld", "Boolean(Clustercraft)");
         Method("Clustercraft", "get_Speed", "Single()");
         Method("Clustercraft", "get_FuelPerDistance", "Single()");
-        Method("Clustercraft", "Launch", "Void(Boolean)");
+        Method("ClustercraftConfig", "CreatePrefab", "GameObject()");
+        Method("CraftModuleInterface", "DoLaunch", "Void()");
+        Method("CraftModuleInterface", "get_CurrentPad", "LaunchPad()");
+        Method("CraftModuleInterface", "get_Range", "Single()");
+        Method("CraftModuleInterface", "get_MaxRange", "Int32()");
+        Method("CraftModuleInterface", "get_FuelPerHex", "Single()");
+        Method("RocketModulePerformance", "get_FuelKilogramPerDistance", "Single()");
+
+        // 航程显示转接补丁：三个属性各恰有 1 处读取每格耗量，否则运行期保留原版指令。
+        foreach (string getter in new[] { "get_Range", "get_MaxRange", "get_FuelPerHex" })
+        {
+            var type = reader.GetTypeDefinition(GetTypeHandle("CraftModuleInterface"));
+            MethodDefinition method = type.GetMethods().Select(reader.GetMethodDefinition)
+                .Single(m => reader.GetString(m.Name) == getter);
+            int calls = CountCalls(pe, reader, method, "RocketModulePerformance", "get_FuelKilogramPerDistance");
+            Check(calls == 1, "CraftModuleInterface." + getter + " 读取每格耗量 " + calls + " 处，期望 1 处");
+        }
         Method("Clustercraft", "SetCraftStatus", "Void(CraftStatus)");
         Method("Clustercraft", "BurnFromTank", "Single(Single,RocketEngineCluster,Tag,IStorage,Single&)");
         Method("GeoTuner", "ApplyTuning", "Void(Instance)");
@@ -135,5 +153,50 @@ internal static partial class Program
         Check(types.ContainsKey("Klei.AI.Effect"), "原版类型缺失：Klei.AI.Effect");
         Check(types.ContainsKey("Klei.AI.AttributeModifier"), "原版类型缺失：Klei.AI.AttributeModifier");
         Check(types.ContainsKey("Klei.AI.Effects"), "原版类型缺失：Klei.AI.Effects");
+    }
+
+    /// <summary>统计方法 IL 中对指定同程序集方法的调用次数（只读元数据，不加载程序集）。</summary>
+    private static int CountCalls(PEReader pe, MetadataReader reader, MethodDefinition method, string ownerName, string methodName)
+    {
+        var opcodes = typeof(OpCodes).GetFields(BindingFlags.Static | BindingFlags.Public)
+            .Where(f => f.FieldType == typeof(OpCode)).Select(f => (OpCode)f.GetValue(null)!)
+            .ToDictionary(op => unchecked((ushort)op.Value));
+        byte[] il = pe.GetMethodBody(method.RelativeVirtualAddress).GetILBytes()!;
+        int count = 0;
+        for (int offset = 0; offset < il.Length;)
+        {
+            ushort value = il[offset++];
+            if (value == 0xfe)
+            {
+                value = (ushort)(0xfe00 | il[offset++]);
+            }
+
+            OpCode opcode = opcodes[value];
+            if (opcode.OperandType == OperandType.InlineMethod)
+            {
+                EntityHandle handle = MetadataTokens.EntityHandle(BitConverter.ToInt32(il, offset));
+                if (handle.Kind == HandleKind.MethodDefinition)
+                {
+                    MethodDefinition callee = reader.GetMethodDefinition((MethodDefinitionHandle)handle);
+                    if (reader.GetString(callee.Name) == methodName
+                        && reader.GetString(reader.GetTypeDefinition(callee.GetDeclaringType()).Name) == ownerName)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            offset += opcode.OperandType switch
+            {
+                OperandType.InlineNone => 0,
+                OperandType.ShortInlineBrTarget or OperandType.ShortInlineI or OperandType.ShortInlineVar => 1,
+                OperandType.InlineVar => 2,
+                OperandType.InlineI8 or OperandType.InlineR => 8,
+                OperandType.InlineSwitch => 4 + BitConverter.ToInt32(il, offset) * 4,
+                _ => 4
+            };
+        }
+
+        return count;
     }
 }

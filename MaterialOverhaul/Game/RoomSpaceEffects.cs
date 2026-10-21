@@ -9,7 +9,8 @@ namespace MaterialOverhaul.Game
     /// 任务控制室、航天发射场与星际货运站效果的运行期状态。
     ///
     /// 记录哪艘火箭带指挥站新增速度、哪次飞行受航天发射场加成、哪个载荷来自星际货运站，以及
-    /// 发射器本轮已用的额外连发次数。这些都是派生状态，只在本次游戏会话内保存（D14／D15 工作口径）：
+    /// 发射器本轮已用的额外连发次数。航天发射场的飞行标记保存在火箭的 <see cref="RoomSpaceportFlight"/>
+    /// 组件里，随存档保留到落地；其余条目是派生状态，只在本次游戏会话内保存（D14／D15 工作口径）：
     /// 读档后在途的加成丢失，直到下一次操作、发射完成。条目在加成结束、火箭落地或对象失效时清除，
     /// 不在模拟更新中遍历全部火箭。
     /// </summary>
@@ -20,7 +21,6 @@ namespace MaterialOverhaul.Game
 
         // 群星版：按 Unity 实例 id 记录，避免持有已销毁对象。
         private static readonly Dictionary<int, float> ClustercraftBoost = new Dictionary<int, float>();
-        private static readonly HashSet<int> SpaceportFlights = new HashSet<int>();
 
         // 群星指挥站：实例 id → 最近一次完成操作者的科学值（决定扩展范围）。
         private static readonly Dictionary<int, float> StationScience = new Dictionary<int, float>();
@@ -40,7 +40,6 @@ namespace MaterialOverhaul.Game
         {
             SpacecraftBoost.Clear();
             ClustercraftBoost.Clear();
-            SpaceportFlights.Clear();
             StationScience.Clear();
             CargoPayloads.Clear();
             CargoExtraUsed.Clear();
@@ -122,7 +121,7 @@ namespace MaterialOverhaul.Game
                 }
             }
 
-            if (SpaceportFlights.Contains(id))
+            if (IsSpaceportFlight(craft))
             {
                 bonus += RoomAdvancedEffects.SpaceportSpeedBonus;
             }
@@ -159,43 +158,79 @@ namespace MaterialOverhaul.Game
 
         // ---------- 航天发射场 ----------
 
+        /// <summary>
+        /// 起飞时按平台所在房间写入飞行标记；平台不在航天发射场时清除旧标记。
+        /// 由 <c>CraftModuleInterface.DoLaunch</c> 前置补丁调用，早于原版扣除发射那一格燃料。
+        /// </summary>
         public static void BeginFlight(Clustercraft craft, LaunchPad pad)
         {
-            if (craft == null)
+            RoomSpaceportFlight flight = FlightOf(craft);
+            if (flight == null)
             {
+                if (craft != null)
+                {
+                    ModLog.InfoOnce("room|spaceport|missing", "航天发射场：火箭 " + craft.Name
+                        + " 缺少飞行标记组件，本次飞行不获得发射场加成。");
+                }
+
                 return;
             }
 
-            int id = craft.GetInstanceID();
-            if (pad != null && RoomAdvancedEffects.IsSpaceport(RoomQuery.RoomTypeIdOf(pad)))
+            bool fromSpaceport = pad != null && RoomAdvancedEffects.IsSpaceport(RoomQuery.RoomTypeIdOf(pad));
+            flight.FromSpaceport = fromSpaceport;
+            if (fromSpaceport)
             {
-                if (SpaceportFlights.Add(id))
-                {
-                    ModLog.InfoOnce("room|spaceport|first", "航天发射场：火箭 " + craft.Name + " 从发射场平台发射，本次飞行速度 +"
-                        + (RoomAdvancedEffects.SpaceportSpeedBonus * 100f).ToString("0") + "%、燃料 ×"
-                        + RoomAdvancedEffects.SpaceportFuelFactor.ToString("0.##") + "。");
-                }
-            }
-            else
-            {
-                SpaceportFlights.Remove(id);
+                ModLog.InfoOnce("room|spaceport|first", "航天发射场：火箭 " + craft.Name + " 从发射场平台发射，本次飞行速度 +"
+                    + (RoomAdvancedEffects.SpaceportSpeedBonus * 100f).ToString("0") + "%、燃料 ×"
+                    + RoomAdvancedEffects.SpaceportFuelFactor.ToString("0.##") + "，随存档保留到落地。");
             }
         }
 
         public static void EndFlight(Clustercraft craft)
         {
-            if (craft != null)
+            RoomSpaceportFlight flight = FlightOf(craft);
+            if (flight != null)
             {
-                SpaceportFlights.Remove(craft.GetInstanceID());
+                flight.FromSpaceport = false;
             }
         }
 
-        /// <summary>本次飞行的单位距离燃料系数；无加成时为 1。</summary>
+        /// <summary>
+        /// 单位距离燃料系数；无加成时为 1。飞行中按存档的飞行标记；停在平台上（<c>Grounded</c>）时按
+        /// 平台当前所在房间预判，使起飞前的航程显示与目的地可达判定和起飞后的实际扣除一致。
+        /// 速度加成不做此预判，仍只在飞行中生效。
+        /// </summary>
         public static float FuelFactor(Clustercraft craft)
         {
-            return craft != null && SpaceportFlights.Contains(craft.GetInstanceID())
-                ? RoomAdvancedEffects.SpaceportFuelFactor
-                : 1f;
+            return IsSpaceportFlight(craft) || IsGroundedOnSpaceport(craft) ? RoomAdvancedEffects.SpaceportFuelFactor : 1f;
+        }
+
+        /// <summary>按火箭模块接口查询燃料系数（航程与每格耗量显示使用）。</summary>
+        public static float FuelFactor(CraftModuleInterface craftInterface)
+        {
+            return craftInterface == null ? 1f : FuelFactor(craftInterface.GetComponent<Clustercraft>());
+        }
+
+        private static bool IsGroundedOnSpaceport(Clustercraft craft)
+        {
+            if (craft == null || craft.Status != Clustercraft.CraftStatus.Grounded || craft.ModuleInterface == null)
+            {
+                return false;
+            }
+
+            LaunchPad pad = craft.ModuleInterface.CurrentPad;
+            return pad != null && RoomAdvancedEffects.IsSpaceport(RoomQuery.RoomTypeIdOf(pad));
+        }
+
+        private static bool IsSpaceportFlight(Clustercraft craft)
+        {
+            RoomSpaceportFlight flight = FlightOf(craft);
+            return flight != null && flight.FromSpaceport;
+        }
+
+        private static RoomSpaceportFlight FlightOf(Clustercraft craft)
+        {
+            return craft == null ? null : craft.GetComponent<RoomSpaceportFlight>();
         }
 
         // ---------- 星际货运站 ----------

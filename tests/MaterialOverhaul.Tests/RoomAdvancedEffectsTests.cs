@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using MaterialOverhaul.Rooms;
 
 namespace MaterialOverhaul.Tests
@@ -15,6 +17,8 @@ namespace MaterialOverhaul.Tests
             MissionControl();
             GeoTunerLab();
             Spaceport();
+            SpaceportPersistence();
+            SpaceportRangeDisplay();
             CargoStation();
             MedicalCenter();
         }
@@ -116,6 +120,124 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(available / (perDistance * 0.9f), limitedTravel, 0.001f, "燃料不足时按 90% 燃料折算航程");
             TestRunner.CheckClose(attempt, RoomAdvancedEffects.FuelAttempt(attempt, 1f), 0.0001f, "系数 1 时不改变航程");
             TestRunner.CheckClose(attempt, RoomAdvancedEffects.FuelTravelled(attempt, 0f), 0.0001f, "非法系数时保持原值");
+        }
+
+        /// <summary>
+        /// 航天发射场飞行标记随存档保留（D15：燃料减少持续存在）。替身环境无法运行原版存档与火箭，
+        /// 这里只核对源码结构；实际读档、发射与落地需游戏内验收（G26）。
+        /// </summary>
+        private static void SpaceportPersistence()
+        {
+            TestRunner.Section("航天发射场：飞行标记随存档保留");
+
+            string root = FindRepoRoot();
+            TestRunner.Check(root != null, "能找到仓库根目录以读取发射场源码");
+            if (root == null)
+            {
+                return;
+            }
+
+            string flight = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceportFlight.cs"));
+            string effects = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceEffects.cs"));
+            string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RoomAdvancedPatches.cs"));
+
+            TestRunner.Check(flight.Contains("[SerializationConfig(MemberSerialization.OptIn)]")
+                && flight.Contains("[Serialize] private bool fromSpaceport;"),
+                "飞行标记组件按 OptIn 序列化并保存受益标记");
+            TestRunner.Check(!effects.Contains("SpaceportFlights"), "发射场标记不再存放在会话内静态集合");
+            TestRunner.Check(effects.Contains("GetComponent<RoomSpaceportFlight>()"), "燃料与速度系数读取火箭上的飞行标记组件");
+
+            string clear = Region(effects, "public static void Clear()", "// ---------- 任务控制室");
+            TestRunner.Check(clear.Length > 0 && !clear.Contains("Spaceport"), "离开存档时的清理不触及发射场标记");
+
+            string prefab = Region(patches, "class Patch_Room_ClustercraftConfig_CreatePrefab", "class Patch_Room_CraftModuleInterface_DoLaunch");
+            TestRunner.Check(prefab.Contains("AddOrGet<RoomSpaceportFlight>()"), "群星火箭预制体挂上飞行标记组件");
+            TestRunner.Check(patches.Contains("[HarmonyPatch(typeof(ClustercraftConfig), \"CreatePrefab\")]"), "补丁目标为 ClustercraftConfig.CreatePrefab");
+
+            string launch = Region(patches, "class Patch_Room_CraftModuleInterface_DoLaunch", "class Patch_Room_Clustercraft_SetCraftStatus");
+            TestRunner.Check(patches.Contains("[HarmonyPatch(typeof(CraftModuleInterface), \"DoLaunch\")]")
+                && launch.Contains("private static void Prefix(")
+                && launch.Contains("RoomSpaceEffects.BeginFlight(") && launch.Contains("CurrentPad"),
+                "起飞判定在 DoLaunch 前置执行，早于原版扣除发射那一格燃料");
+            TestRunner.Check(!patches.Contains("Patch_Room_Clustercraft_Launch"), "不再用 Launch 后置补丁写入标记（会漏掉发射那一格）");
+
+            string landing = Region(patches, "class Patch_Room_Clustercraft_SetCraftStatus", "class Patch_Room_Clustercraft_FuelPerDistance");
+            TestRunner.Check(landing.Contains("CraftStatus.Grounded") && landing.Contains("RoomSpaceEffects.EndFlight("),
+                "火箭落地（Grounded）时清除标记");
+        }
+
+        /// <summary>
+        /// 航程显示与目的地可达判定同步燃料折扣。只核对源码结构；转接是否装上以游戏日志与
+        /// ProfileChecks 的 IL 调用数契约为准，实际界面数值需游戏内验收（G26）。
+        /// </summary>
+        private static void SpaceportRangeDisplay()
+        {
+            TestRunner.Section("航天发射场：航程显示同步燃料折扣");
+
+            string root = FindRepoRoot();
+            TestRunner.Check(root != null, "能找到仓库根目录以读取航程显示源码");
+            if (root == null)
+            {
+                return;
+            }
+
+            string effects = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceEffects.cs"));
+            string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RoomAdvancedPatches.cs"));
+
+            string range = Region(patches, "class Patch_Room_CraftModuleInterface_FuelRange", "// ---------------- 星际货运站");
+            TestRunner.Check(range.Contains("nameof(CraftModuleInterface.Range)")
+                && range.Contains("nameof(CraftModuleInterface.MaxRange)")
+                && range.Contains("nameof(CraftModuleInterface.FuelPerHex)"),
+                "转接剩余航程、最大航程与每格耗量三个属性");
+            TestRunner.Check(range.Contains("nameof(RocketModulePerformance.FuelKilogramPerDistance)")
+                && range.Contains("codes[i].Calls(FuelGetter)"),
+                "只替换对引擎每格耗量的读取，不改动数据盘航程等其他项");
+            TestRunner.Check(range.Contains("count != 1") && range.Contains("return codes;"),
+                "读取处数不为 1 时保留原版指令，不半途替换");
+            TestRunner.Check(range.Contains("OpCodes.Ldarg_0") && range.Contains("new CodeInstruction(OpCodes.Call, ScaledGetter)"),
+                "补入 this 后改调换算方法");
+            TestRunner.Check(range.Contains("RoomSpaceEffects.FuelFactor(craftInterface)"),
+                "航程换算与实际扣除使用同一燃料系数");
+            TestRunner.Check(!range.Contains("throw "), "转接失败不抛异常，避免中断其他补丁装载");
+
+            string fuel = Region(effects, "public static float FuelFactor(Clustercraft craft)", "public static float FuelFactor(CraftModuleInterface");
+            TestRunner.Check(fuel.Contains("IsSpaceportFlight(craft)") && fuel.Contains("IsGroundedOnSpaceport(craft)"),
+                "燃料系数：飞行中读存档标记，停在平台上按平台房间预判");
+            string grounded = Region(effects, "private static bool IsGroundedOnSpaceport", "private static bool IsSpaceportFlight");
+            TestRunner.Check(grounded.Contains("CraftStatus.Grounded") && grounded.Contains("CurrentPad"),
+                "起飞前预判只在 Grounded 状态按当前平台判断");
+            string speed = Region(effects, "public static float ClustercraftSpeedBonus", "public static void RememberStationScience");
+            TestRunner.Check(speed.Contains("IsSpaceportFlight(craft)") && !speed.Contains("IsGroundedOnSpaceport"),
+                "速度加成不做起飞前预判，仍只在飞行中生效");
+        }
+
+        private static string Region(string text, string start, string end)
+        {
+            int from = text.IndexOf(start, StringComparison.Ordinal);
+            if (from < 0)
+            {
+                return string.Empty;
+            }
+
+            int to = text.IndexOf(end, from + start.Length, StringComparison.Ordinal);
+            return to < 0 ? text.Substring(from) : text.Substring(from, to - from);
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo directory = new DirectoryInfo(AppContext.BaseDirectory);
+            while (directory != null)
+            {
+                if (Directory.Exists(Path.Combine(directory.FullName, "docs"))
+                    && Directory.Exists(Path.Combine(directory.FullName, "MaterialOverhaul")))
+                {
+                    return directory.FullName;
+                }
+
+                directory = directory.Parent;
+            }
+
+            return null;
         }
 
         private static void CargoStation()
