@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using MaterialOverhaul.Rooms;
 
 namespace MaterialOverhaul.Tests
@@ -15,6 +17,7 @@ namespace MaterialOverhaul.Tests
             MissionControl();
             GeoTunerLab();
             Spaceport();
+            SpaceportPersistence();
             CargoStation();
             MedicalCenter();
         }
@@ -116,6 +119,79 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(available / (perDistance * 0.9f), limitedTravel, 0.001f, "燃料不足时按 90% 燃料折算航程");
             TestRunner.CheckClose(attempt, RoomAdvancedEffects.FuelAttempt(attempt, 1f), 0.0001f, "系数 1 时不改变航程");
             TestRunner.CheckClose(attempt, RoomAdvancedEffects.FuelTravelled(attempt, 0f), 0.0001f, "非法系数时保持原值");
+        }
+
+        /// <summary>
+        /// 航天发射场飞行标记随存档保留（D15：燃料减少持续存在）。替身环境无法运行原版存档与火箭，
+        /// 这里只核对源码结构；实际读档、发射与落地需游戏内验收（G26）。
+        /// </summary>
+        private static void SpaceportPersistence()
+        {
+            TestRunner.Section("航天发射场：飞行标记随存档保留");
+
+            string root = FindRepoRoot();
+            TestRunner.Check(root != null, "能找到仓库根目录以读取发射场源码");
+            if (root == null)
+            {
+                return;
+            }
+
+            string flight = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceportFlight.cs"));
+            string effects = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RoomSpaceEffects.cs"));
+            string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RoomAdvancedPatches.cs"));
+
+            TestRunner.Check(flight.Contains("[SerializationConfig(MemberSerialization.OptIn)]")
+                && flight.Contains("[Serialize] private bool fromSpaceport;"),
+                "飞行标记组件按 OptIn 序列化并保存受益标记");
+            TestRunner.Check(!effects.Contains("SpaceportFlights"), "发射场标记不再存放在会话内静态集合");
+            TestRunner.Check(effects.Contains("GetComponent<RoomSpaceportFlight>()"), "燃料与速度系数读取火箭上的飞行标记组件");
+
+            string clear = Region(effects, "public static void Clear()", "// ---------- 任务控制室");
+            TestRunner.Check(clear.Length > 0 && !clear.Contains("Spaceport"), "离开存档时的清理不触及发射场标记");
+
+            string prefab = Region(patches, "class Patch_Room_ClustercraftConfig_CreatePrefab", "class Patch_Room_CraftModuleInterface_DoLaunch");
+            TestRunner.Check(prefab.Contains("AddOrGet<RoomSpaceportFlight>()"), "群星火箭预制体挂上飞行标记组件");
+            TestRunner.Check(patches.Contains("[HarmonyPatch(typeof(ClustercraftConfig), \"CreatePrefab\")]"), "补丁目标为 ClustercraftConfig.CreatePrefab");
+
+            string launch = Region(patches, "class Patch_Room_CraftModuleInterface_DoLaunch", "class Patch_Room_Clustercraft_SetCraftStatus");
+            TestRunner.Check(patches.Contains("[HarmonyPatch(typeof(CraftModuleInterface), \"DoLaunch\")]")
+                && launch.Contains("private static void Prefix(")
+                && launch.Contains("RoomSpaceEffects.BeginFlight(") && launch.Contains("CurrentPad"),
+                "起飞判定在 DoLaunch 前置执行，早于原版扣除发射那一格燃料");
+            TestRunner.Check(!patches.Contains("Patch_Room_Clustercraft_Launch"), "不再用 Launch 后置补丁写入标记（会漏掉发射那一格）");
+
+            string landing = Region(patches, "class Patch_Room_Clustercraft_SetCraftStatus", "class Patch_Room_Clustercraft_FuelPerDistance");
+            TestRunner.Check(landing.Contains("CraftStatus.Grounded") && landing.Contains("RoomSpaceEffects.EndFlight("),
+                "火箭落地（Grounded）时清除标记");
+        }
+
+        private static string Region(string text, string start, string end)
+        {
+            int from = text.IndexOf(start, StringComparison.Ordinal);
+            if (from < 0)
+            {
+                return string.Empty;
+            }
+
+            int to = text.IndexOf(end, from + start.Length, StringComparison.Ordinal);
+            return to < 0 ? text.Substring(from) : text.Substring(from, to - from);
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo directory = new DirectoryInfo(AppContext.BaseDirectory);
+            while (directory != null)
+            {
+                if (Directory.Exists(Path.Combine(directory.FullName, "docs"))
+                    && Directory.Exists(Path.Combine(directory.FullName, "MaterialOverhaul")))
+                {
+                    return directory.FullName;
+                }
+
+                directory = directory.Parent;
+            }
+
+            return null;
         }
 
         private static void CargoStation()

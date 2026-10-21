@@ -104,7 +104,9 @@ internal static partial class Program
         Method("MissionControlCluster+Instance", "IsOwnWorld", "Boolean(Clustercraft)");
         Method("Clustercraft", "get_Speed", "Single()");
         Method("Clustercraft", "get_FuelPerDistance", "Single()");
-        Method("Clustercraft", "Launch", "Void(Boolean)");
+        Method("ClustercraftConfig", "CreatePrefab", "GameObject()");
+        Method("CraftModuleInterface", "DoLaunch", "Void()");
+        Method("CraftModuleInterface", "get_CurrentPad", "LaunchPad()");
         Method("Clustercraft", "SetCraftStatus", "Void(CraftStatus)");
         Method("Clustercraft", "BurnFromTank", "Single(Single,RocketEngineCluster,Tag,IStorage,Single&)");
         Method("GeoTuner", "ApplyTuning", "Void(Instance)");

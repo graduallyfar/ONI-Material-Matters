@@ -432,22 +432,35 @@ namespace MaterialOverhaul.Patches
 
     // ---------------- 航天发射场 ----------------
 
-    /// <summary>发射时判定平台所在房间：平台位于航天发射场时，本次飞行获得速度与燃料加成。</summary>
-    [HarmonyPatch(typeof(Clustercraft), "Launch")]
-    internal static class Patch_Room_Clustercraft_Launch
+    /// <summary>群星火箭实体挂上可保存的航天发射场飞行标记；DLC 未启用时本配置不加载。</summary>
+    [HarmonyPatch(typeof(ClustercraftConfig), "CreatePrefab")]
+    internal static class Patch_Room_ClustercraftConfig_CreatePrefab
     {
-        private static void Prefix(Clustercraft __instance, out LaunchPad __state)
+        private static void Postfix(GameObject __result)
         {
-            __state = __instance == null || __instance.ModuleInterface == null ? null : __instance.ModuleInterface.CurrentPad;
+            if (__result != null)
+            {
+                __result.AddOrGet<RoomSpaceportFlight>();
+            }
         }
+    }
 
-        private static void Postfix(Clustercraft __instance, LaunchPad __state)
+    /// <summary>
+    /// 起飞时判定平台所在房间：平台位于航天发射场时，本次飞行获得速度与燃料加成。
+    ///
+    /// 原版 <c>Clustercraft.Launch</c> 只在确认起飞后调用 <c>DoLaunch</c>，随后才扣除发射那一格燃料；
+    /// 此时状态为 <c>Launching</c>，<c>CurrentPad</c> 仍指向起飞平台。在这里写入标记，发射那一格也按折扣扣除。
+    /// </summary>
+    [HarmonyPatch(typeof(CraftModuleInterface), "DoLaunch")]
+    internal static class Patch_Room_CraftModuleInterface_DoLaunch
+    {
+        private static void Prefix(CraftModuleInterface __instance)
         {
             try
             {
-                if (__instance != null && __instance.Status == Clustercraft.CraftStatus.Launching)
+                if (__instance != null)
                 {
-                    RoomSpaceEffects.BeginFlight(__instance, __state);
+                    RoomSpaceEffects.BeginFlight(__instance.GetComponent<Clustercraft>(), __instance.CurrentPad);
                 }
             }
             catch (Exception e)
