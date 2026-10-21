@@ -1,25 +1,26 @@
 # ONI-Reform · Material Overhaul（材料革新）
 
-《缺氧》的材料与工程系统模组。工业版让材料参与温控、加热和磨损；电力版让实际线路、导线容量和材料电导率共同决定输电损耗。两系统可独立构建和验证。
+《缺氧》的材料与工程系统模组。工业系统让材料参与温控、加热和磨损；电力系统让实际线路、导线容量和材料电导率共同决定输电损耗；房间系统增加房间分级、平均装饰度与温度条件和新的房间加成。
 
-**工业版 0.2.2／电力独立版 0.0.2** · 目标游戏 build `744825` · 只需游戏自带的 0Harmony，无其他前置
+**V1.0.0（三系统整合版）** · 目标游戏 build `744825` · 只需游戏自带的 0Harmony，无其他前置
 
 > [!WARNING]
-> 温控、订单与磨损在代码中已覆盖 **29 栋工业建筑**：原六栋（金属精炼器、岩石粉碎机、玻璃熔炉、分子熔炉、化学精炼厂、窑炉）已经过游戏内运行，第三批 23 栋（批次加工、连续转换、燃料发电、油井、矿石洗涤器）**已完成源码级回归，2026-10-17 已部署到本地 mod 目录（DLL 0.2.2.0），尚未在游戏内验收**。材料过热百分比、深渊晶石矿物原料分类与精炼金属建材扩展适用于全局。数值仍属初值，未上传 Steam 创意工坊。
+> V1.0.0 代码已完成，2026-10-21 已部署到本地 mod 目录，**游戏内验收尚未执行**（测试顺序见[整合版游戏测试清单](docs/开发计划/整合版游戏测试清单.md)）。原六栋工业建筑曾在早期版本游戏内运行过；第三批 23 栋、电力损耗与全部房间效果只通过了构建与源码级测试。各系统数值仍属工作初值，未上传 Steam 创意工坊。
 
-## 独立验证版本
+## 构建模式
 
-同一工程提供三种隔离构建；电力独立版使用专属版本号：
+同一工程提供一个整合版和三个独立验证包，共用同一个 Mod ID：
 
 | 模式 | 版本 | 功能 |
 | --- | --- | --- |
-| Industrial | 0.2.2 | 仅工业温控、加热、订单、磨损与材料改造；电力输配电保持原版 |
-| Power | 0.0.2 | 最短线路与材料损耗、最近电源实际取电、电池充放电、变压器分账及电网信息卡；工业保持原版 |
-| Combined | 0.2.2 | 工业与电力整合验证候选 |
+| Combined | **1.0.0** | 正式整合版：工业、电力、房间同时启用（默认构建） |
+| Industrial | 0.2.2 | 仅工业温控、加热、订单、磨损与材料改造；电力与房间保持原版 |
+| Power | 0.0.2 | 仅最短线路与材料损耗、最近电源实际取电、电池充放电、变压器分账及电网信息卡 |
+| Room | 0.2.2 | 仅房间分级、环境条件与房间效果 |
 
-电力结算与显示代码、构建及源码替身检查已完成；使用获准的首轮测试初值，**游戏运行与平衡尚未验收**。未知材料或无长度定义的虚拟连接整网保留原版结算，信息卡说明原因。
+未知材料或无长度定义的虚拟连接整网保留原版电力结算，信息卡说明原因。
 
-验证包分别位于 `_dist/validation/<模式>/MaterialOverhaul/`，另有同名ZIP。三种包使用同一个Mod ID，切换时替换安装并重启游戏，每次只启用一份，分别使用专门测试存档。详细边界与验证记录见[系统隔离验证记录](docs/开发计划/系统隔离验证记录.md)。下列工业功能适用于Industrial和Combined。
+验证包分别位于 `_dist/validation/<模式>/MaterialOverhaul/`，另有同名ZIP。切换模式时替换安装并重启游戏，每次只启用一份，分别使用专门测试存档。详细边界与验证记录见[V1.0.0开发计划](docs/开发计划/V1.0.0开发计划.md)与[系统隔离验证记录](docs/开发计划/系统隔离验证记录.md)。下列工业功能适用于Industrial和Combined。
 
 ## 它做了什么
 
@@ -70,10 +71,10 @@ copy MaterialOverhaul\local.props.example MaterialOverhaul\local.props   # 填�
 dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release
 dotnet run --project tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj -c Release
 pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\build-profiles.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\deploy.ps1 -Profile Power
+pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\deploy.ps1 -Profile Combined
 ```
 
-当前电力分支直接dotnet构建默认Power 0.0.2，产物在`_build/profiles/Power/`。工业或整合构建需显式指定`-p:SystemProfile=Industrial`／`Combined`。`build-profiles.ps1`生成并检查三种包；`deploy.ps1`必须明确选择模式，校验后只写`mods\local\MaterialOverhaul`，切换前备份旧文件，不触碰订阅目录与存档。
+直接dotnet构建默认Combined 1.0.0，产物在`_build/profiles/Combined/`。独立构建需显式指定`-p:SystemProfile=Industrial`／`Power`／`Room`。`build-profiles.ps1`生成并检查四种包；`deploy.ps1`必须明确选择模式，校验后只写`mods\local\MaterialOverhaul`，切换前备份旧文件，不触碰订阅目录与存档。
 
 ## 文档
 
@@ -84,11 +85,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File MaterialOverhaul\tools\deploy.ps1 
 | [总体设计](<docs/Mod玩法设计和修改/ONI Reform 总体设计.md>) | 目标、原则、各系统路线与交付状态 |
 | [建筑系统设计](<docs/Mod玩法设计和修改/2. 建筑系统设计.md>) | 温区、效率、预热补热、订单、硬度维修、建筑分类与 29 栋全部数值 |
 | [电力系统设计](<docs/Mod玩法设计和修改/3. 电力系统设计.md>) | 输电损耗、线路与材料规则及首轮测试初值（代码完成，游戏和平衡待验收） |
-| [房间系统设计](<docs/Mod玩法设计和修改/4. 房间系统设计.md>) | 房间分级、新增加成、装饰度与房间温度（未实装） |
+| [房间系统设计](<docs/Mod玩法设计和修改/4. 房间系统设计.md>) | 房间分级、新增加成、装饰度与房间温度（代码完成，游戏待验收） |
 | [辐射系统设计](<docs/Mod玩法设计和修改/5. 辐射系统设计.md>) | 辐射耗散与传递（后续开发） |
-| [V0.2.2 开发计划](<docs/开发计划/V0.2.2开发计划.md>) | 当前版本：材料百分比与建材扩展、第二批三栋、第三批 23 栋；已部署，游戏验收未执行 |
-| [V2.0.0 开发计划](<docs/开发计划/V2.0.0开发计划.md>) | 电力系统：已确认计算方法、接入依据与待定边界 |
-| [V3.0.0 开发计划](<docs/开发计划/V3.0.0开发计划.md>) | 房间系统：范围、原版接入依据、分阶段任务与验收清单（代码未开始） |
+| [V1.0.0 开发计划](<docs/开发计划/V1.0.0开发计划.md>) | 当前版本：三系统整合范围、验证、部署与待决定事项 |
+| [整合版游戏测试清单](<docs/开发计划/整合版游戏测试清单.md>) | V1.0.0 游戏内测试顺序（合并各系统验收项，全部未执行） |
+| [V0.2.2 开发计划](<docs/开发计划/V0.2.2开发计划.md>) | 工业：材料百分比与建材扩展、第二批三栋、第三批 23 栋 |
+| [V2.0.0 开发计划](<docs/开发计划/V2.0.0开发计划.md>) | 电力系统：已确认计算方法、接入依据与待定边界（文件名沿用旧里程碑名） |
+| [V3.0.0 开发计划](<docs/开发计划/V3.0.0开发计划.md>) | 房间系统：范围、原版接入依据、实现口径与验收清单（文件名沿用旧里程碑名） |
 | [电力0.0.2开发记录](<docs/开发计划/电力V0.0.2开发计划.md>) | 电力独立版：结算、显示、隔离和实际验证结果 |
 
 其余版本记录在 `docs\开发计划\` 下，每版一份 `VX.X.X开发计划`。
