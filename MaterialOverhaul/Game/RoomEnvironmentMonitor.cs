@@ -35,6 +35,14 @@ namespace MaterialOverhaul.Game
         private static readonly HashSet<string> WatchedIds = BuildWatchedIds();
         private static float elapsed;
 
+        /// <summary>离开存档时丢弃旧档的 Room 引用与计时。</summary>
+        public static void Clear()
+        {
+            Stamps.Clear();
+            Buffer.Clear();
+            elapsed = 0f;
+        }
+
         public static void Tick(float dt)
         {
             elapsed += dt;

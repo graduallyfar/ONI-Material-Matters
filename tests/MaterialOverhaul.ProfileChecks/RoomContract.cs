@@ -83,7 +83,10 @@ internal static partial class Program
         Method("ElementConverter", "GetSpeedMultiplier", "Single()");
         Method("LegacyModMain", "ConfigElements", "Void()");
         Method("Clinic+ClinicSM+Instance", "StartEffect", "EffectInstance(String,Boolean)");
-        Method("Clinic+ClinicSM+Instance", "StopEffect", "Void(String)");
+        Method("Clinic", "OnStopWork", "Void(WorkerBase)");
+        Method("RoomProber", "ClearRoom", "Void(Room)");
+        Method("Workable", "OnUpdateRoom", "Void(Object)");
+        Method("MingleCellTracker", "Sim1000ms", "Void(Single)");
         Method("CavityInfo", "OnEnter", "Void(Object)");
         Method("ModifierSet", "CreateTrait", "Trait(String,String,String,String,Boolean,ChoreGroup[],Boolean,Boolean)");
         Method("RoomTracker", "IsInCorrectRoom", "Boolean()");
@@ -124,6 +127,9 @@ internal static partial class Program
         Field("Spacecraft", "missionElapsed", "Single");
         Field("MissionControlCluster+Instance", "boostableClustercraft", "List<Clustercraft>");
         Field("GeoTunerSideScreen", "targetGeotuner", "Instance");
+        Field("Workable", "useLaboratoryEfficiencyBonus", "Boolean");
+        Field("Workable", "currentlyInLaboratory", "Boolean");
+        Field("Workable", "laboratoryEfficiencyBonusStatusItemHandle", "Guid");
 
         // 房间效果引用的原版类型。
         Check(types.ContainsKey("Klei.AI.Effect"), "原版类型缺失：Klei.AI.Effect");

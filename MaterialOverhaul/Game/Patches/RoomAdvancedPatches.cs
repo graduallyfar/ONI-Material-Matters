@@ -20,6 +20,9 @@ namespace MaterialOverhaul.Patches
         {
             RoomSpaceEffects.Clear();
             RoomGeoTunerEffects.Clear();
+            RoomEnvironmentMonitor.Clear();
+            RoomSnapshotCache.BeginEvaluation();
+            RoomRetention.EndRebuild();
         }
     }
 
@@ -606,7 +609,7 @@ namespace MaterialOverhaul.Patches
                 // 只在冷却状态内加速，与原版只在 on.cooldown.loop 递减计时一致（断电、关闭时不推进）。
                 RailGun.StatesInstance smi = __instance.smi;
                 if (smi.sm.cooldownTimer.Get(smi) <= 0f
-                    || !smi.IsInsideState(smi.sm.on.cooldown)
+                    || !smi.IsInsideState(smi.sm.on.cooldown.loop)
                     || !RoomAdvancedEffects.IsCargoStation(RoomQuery.RoomTypeIdOf(__instance)))
                 {
                     return;

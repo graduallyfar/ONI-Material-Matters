@@ -365,10 +365,18 @@ namespace MaterialOverhaul.Game
             return best == null ? null : FindRoomType(best.Id);
         }
 
-        /// <summary>房间重判前的类型 id；新建房间对象尚无类型时为 null。</summary>
+        /// <summary>
+        /// 房间重判前的类型 id。原版拓扑重建会新建尚无类型的 Room 对象，
+        /// 此时取重建前同一批格子的类型（见 <see cref="RoomRetention"/>），没有记录时为 null。
+        /// </summary>
         private static string PreviousRoomId(Room room)
         {
-            return room == null || room.roomType == null ? null : room.roomType.Id;
+            if (room == null)
+            {
+                return null;
+            }
+
+            return room.roomType != null ? room.roomType.Id : RoomRetention.PreviousTypeOf(room);
         }
 
         /// <summary>

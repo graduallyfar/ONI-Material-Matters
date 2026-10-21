@@ -77,13 +77,51 @@ namespace MaterialOverhaul.Patches
         }
     }
 
-    /// <summary>每次房间拓扑刷新前放宽探测器上限，让大型房间能建立 Room 对象。</summary>
+    /// <summary>
+    /// 每次房间拓扑刷新前放宽探测器上限，让大型房间能建立 Room 对象；
+    /// 刷新结束后丢弃本轮记下的旧房间类型（见 <see cref="RoomRetention"/>）。
+    /// </summary>
     [HarmonyPatch(typeof(RoomProber), "Refresh")]
     internal static class Patch_RoomProber_Refresh
     {
         private static void Prefix()
         {
             RoomRegistration.EnsureRoomSize();
+        }
+
+        private static void Postfix()
+        {
+            RoomRetention.EndRebuild();
+        }
+    }
+
+    /// <summary>
+    /// 原版拓扑变化时先清除旧 Room、再新建 Room，新对象没有类型，保持回差会失效。
+    /// 清除前按格子记下旧类型，新房间判定时据此决定是否按保持线判定。
+    /// </summary>
+    [HarmonyPatch(typeof(RoomProber), "ClearRoom")]
+    internal static class Patch_Room_RoomProber_ClearRoom
+    {
+        private static void Prefix(object[] __args)
+        {
+            try
+            {
+                RoomRetention.Remember(__args != null && __args.Length > 0 ? __args[0] as Room : null);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("记录房间重建前类型失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>环境重判触发的单个房间重建结束后，同样丢弃记下的旧类型。</summary>
+    [HarmonyPatch(typeof(RoomProber), "UpdateRoom")]
+    internal static class Patch_Room_RoomProber_UpdateRoom
+    {
+        private static void Postfix()
+        {
+            RoomRetention.EndRebuild();
         }
     }
 
@@ -169,6 +207,13 @@ namespace MaterialOverhaul.Patches
                 Effects effects = worker.GetComponent<Effects>();
                 KPrefabID prefab = __instance.GetComponent<KPrefabID>();
                 if (effects == null || prefab == null)
+                {
+                    return;
+                }
+
+                // 与原版 TriggerRoomEffects 同一主设施谓词：扫地、修理等其他工作不发放房间效果。
+                RoomConstraints.Constraint primary = room.roomType.primary_constraint;
+                if (primary == null || primary.building_criteria == null || !primary.building_criteria(prefab))
                 {
                     return;
                 }
@@ -351,9 +396,111 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
+    /// 原版科研建筑的实验室工作效率 +10% 由 <c>Workable.OnUpdateRoom</c> 直接比较
+    /// <c>roomType == Laboratory</c> 决定，不经过 <c>RoomTracker</c>。顶替实验室的房间
+    /// 补上同一个标记与状态项，使其仍享有原版加成（本 Mod 房间加成另行乘算）。
+    /// </summary>
+    [HarmonyPatch(typeof(Workable), "OnUpdateRoom")]
+    internal static class Patch_Room_Workable_OnUpdateRoom
+    {
+        private static readonly AccessTools.FieldRef<Workable, bool> UseLaboratoryBonus =
+            AccessTools.FieldRefAccess<Workable, bool>("useLaboratoryEfficiencyBonus");
+
+        private static readonly AccessTools.FieldRef<Workable, bool> InLaboratory =
+            AccessTools.FieldRefAccess<Workable, bool>("currentlyInLaboratory");
+
+        private static readonly AccessTools.FieldRef<Workable, Guid> LaboratoryStatusHandle =
+            AccessTools.FieldRefAccess<Workable, Guid>("laboratoryEfficiencyBonusStatusItemHandle");
+
+        private static void Postfix(Workable __instance, object[] __args)
+        {
+            try
+            {
+                if (__instance == null || __instance.worker == null
+                    || !UseLaboratoryBonus(__instance) || InLaboratory(__instance))
+                {
+                    return;
+                }
+
+                Room room = __args != null && __args.Length > 0 ? __args[0] as Room : null;
+                if (!RoomRegistration.CountsAsRoom(room, Db.Get().RoomTypes.Laboratory.Id))
+                {
+                    return;
+                }
+
+                InLaboratory(__instance) = true;
+                ref Guid handle = ref LaboratoryStatusHandle(__instance);
+                if (handle == Guid.Empty)
+                {
+                    handle = __instance.worker.OfferStatusItem(
+                        Db.Get().DuplicantStatusItems.LaboratoryWorkEfficiencyBonus, __instance);
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("顶替房间的实验室工作效率加成失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 原版只在娱乐室内生成复制人休息时的闲聊格（<c>MingleCellTracker</c> 直接比较
+    /// <c>roomType == RecRoom</c>）。顶替娱乐室的房间按原版同一格子条件补上闲聊格。
+    /// </summary>
+    [HarmonyPatch(typeof(MingleCellTracker), "Sim1000ms")]
+    internal static class Patch_Room_MingleCellTracker_Sim1000ms
+    {
+        private static void Postfix(MingleCellTracker __instance)
+        {
+            try
+            {
+                global::Game game = global::Game.Instance;
+                RoomProber prober = game == null ? null : game.roomProber;
+                MinionGroupProber reachability = MinionGroupProber.Get();
+                if (__instance == null || prober == null || reachability == null)
+                {
+                    return;
+                }
+
+                RoomType recRoom = Db.Get().RoomTypes.RecRoom;
+                foreach (Room room in prober.rooms)
+                {
+                    if (room == null || room.cavity == null || room.roomType == recRoom
+                        || !RoomRegistration.CountsAsRoom(room, recRoom.Id))
+                    {
+                        continue;
+                    }
+
+                    for (int y = room.cavity.minY; y <= room.cavity.maxY; y++)
+                    {
+                        for (int x = room.cavity.minX; x <= room.cavity.maxX; x++)
+                        {
+                            int cell = Grid.XYToCell(x, y);
+                            if (prober.GetCavityForCell(cell) == room.cavity
+                                && reachability.IsReachable(cell)
+                                && !Grid.HasLadder[cell]
+                                && !Grid.HasTube[cell]
+                                && !Grid.IsLiquid(cell)
+                                && Grid.Element[cell].id == SimHashes.Oxygen)
+                            {
+                                __instance.mingleCells.Add(cell);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("顶替娱乐室的闲聊格生成失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
     /// 患者进入诊疗床治疗状态时追加生命回复效果。
     /// 原版 <c>Clinic</c> 在治疗状态进入时对患者调用 <c>StartEffect</c>；这里按诊疗床所在
-    /// 房间类型追加医院／医疗中心效果，并在医疗中心结算辐射拯救者。离开治疗状态时在 <c>StopEffect</c> 移除。
+    /// 房间类型追加医院／医疗中心效果，并在医疗中心结算辐射拯救者。患者离床时由
+    /// <see cref="Patch_Room_Clinic_OnStopWork"/> 移除。
     /// </summary>
     [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StartEffect")]
     internal static class Patch_Room_Clinic_StartEffect
@@ -405,21 +552,27 @@ namespace MaterialOverhaul.Patches
         }
     }
 
-    /// <summary>患者离开诊疗床治疗状态时移除医院／医疗中心的恢复效果。</summary>
-    [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StopEffect")]
-    internal static class Patch_Room_Clinic_StopEffect
+    /// <summary>
+    /// 患者离开诊疗床时移除医院／医疗中心与护理员的恢复效果。
+    ///
+    /// 不能挂在 <c>StopEffect</c>：原版在「未诊疗 → 已诊疗」的内部切换时也会调用它，
+    /// 患者仍在床上，挂在那里会把刚加上的护理员加成和房间恢复效果一起删掉。
+    /// <c>Clinic.OnStopWork</c> 只在患者真正停止躺床（离床、被打断或治疗结束）时调用。
+    /// </summary>
+    [HarmonyPatch(typeof(Clinic), "OnStopWork")]
+    internal static class Patch_Room_Clinic_OnStopWork
     {
-        private static void Postfix(Clinic.ClinicSM.Instance __instance)
+        private static void Postfix(object[] __args)
         {
             try
             {
-                Clinic clinic = __instance == null ? null : __instance.master;
-                if (clinic == null || clinic.worker == null)
+                WorkerBase patient = __args != null && __args.Length > 0 ? __args[0] as WorkerBase : null;
+                if (patient == null)
                 {
                     return;
                 }
 
-                RoomRecoveryEffect.RemoveAll(clinic.worker.GetComponent<Effects>());
+                RoomRecoveryEffect.RemoveAll(patient.GetComponent<Effects>());
             }
             catch (Exception e)
             {
@@ -430,8 +583,8 @@ namespace MaterialOverhaul.Patches
 
     /// <summary>
     /// 护理员特质加成：医生完成一次诊疗时，若其拥有原版 「Caregiver」（<c>BedsideManner</c>）特质，
-    /// 给正在该诊疗床接受治疗的患者追加 +50% 生命回复效果。患者离开治疗状态时由
-    /// <see cref="Patch_Room_Clinic_StopEffect"/> 一并移除。
+    /// 给正在该诊疗床接受治疗的患者追加生命回复效果。患者离床时由
+    /// <see cref="Patch_Room_Clinic_OnStopWork"/> 一并移除。
     /// </summary>
     [HarmonyPatch(typeof(Workable), "CompleteWork")]
     internal static class Patch_Room_Caregiver_CompleteWork
