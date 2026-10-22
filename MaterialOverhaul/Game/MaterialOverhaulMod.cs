@@ -40,11 +40,11 @@ namespace MaterialOverhaul
             ModLog.Info("v" + Core.ModInfo.Version + "；构建模式：" + BuildProfile.DisplayName
                 + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled
                 + "；房间=" + BuildProfile.RoomEnabled + "；辐射=" + BuildProfile.RadiationEnabled + "。");
-#if MATERIAL_OVERHAUL_RADIATION_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             ModLog.Info("辐射0.0.1：感生放射性第一版。建筑（含砖块）受照超过 "
                 + Radiation.RadiationBalance.ActivationThresholdRads.ToString("0") + " rads/周期累积活化度，半衰期 "
                 + Radiation.RadiationBalance.BuildingHalfLifeCycles.ToString("0") + " 周期，活化后自身放射；"
-                + "液体、气体、天然格添加原版放射性污染物（优先于其他病菌）。工业、电力、房间保持原版；数值为工作初值，游戏验收待执行。");
+                + "液体、气体、天然格添加原版放射性污染物（优先于其他病菌）。数值为工作初值，游戏验收待执行。");
 #endif
 #if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             ModLog.Info("电力0.0.2：按最短物理路径实际支付损耗；设备、电池充放电与变压器分账；信息卡显示电线数量、输送和损耗。系数与电导率为首轮测试初值，尚未通过游戏平衡验收。");
@@ -128,7 +128,7 @@ namespace MaterialOverhaul
 #if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             LocString.CreateLocStringKeys(typeof(Game.RoomStrings.ROOMS), "STRINGS.");
 #endif
-#if MATERIAL_OVERHAUL_RADIATION_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             LocString.CreateLocStringKeys(typeof(Game.RadiationStrings.RADIATION), "STRINGS.");
 #endif
         }

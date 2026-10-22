@@ -103,12 +103,16 @@ internal static partial class Program
             if (profiles.TryGetValue("Combined", out var combined)
                 && profiles.TryGetValue("Industrial", out var industrial)
                 && profiles.TryGetValue("Power", out var power)
-                && profiles.TryGetValue("Room", out var room))
+                && profiles.TryGetValue("Room", out var room)
+            && profiles.TryGetValue("Radiation", out var radiation))
             {
                 var union = new HashSet<string>(industrial.Patches);
                 union.UnionWith(power.Patches);
                 union.UnionWith(room.Patches);
-                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于三个独立版补丁的并集。");
+                union.UnionWith(radiation.Patches);
+                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于四个独立版补丁的并集。");
+                Check(!radiation.Patches.Overlaps(industrial.Patches) && !radiation.Patches.Overlaps(power.Patches)
+                    && !radiation.Patches.Overlaps(room.Patches), "辐射独立版不得与其他独立版包含同一个功能补丁。");
                 Check(!industrial.Patches.Overlaps(power.Patches), "工业与电力独立版不得包含同一个功能补丁。");
                 Check(!industrial.Patches.Overlaps(room.Patches), "工业与房间独立版不得包含同一个功能补丁。");
                 Check(!power.Patches.Overlaps(room.Patches), "电力与房间独立版不得包含同一个功能补丁。");
@@ -131,8 +135,7 @@ internal static partial class Program
         Check(root.GetProperty("industrialEnabled").GetBoolean() == (profile is "Industrial" or "Combined"), "清单工业开关不符。");
         Check(root.GetProperty("powerEnabled").GetBoolean() == (profile is "Power" or "Combined"), "清单电力开关不符。");
         Check(root.GetProperty("roomEnabled").GetBoolean() == (profile is "Room" or "Combined"), "清单房间开关不符。");
-        // 辐射系统尚未整合：只有辐射独立版开启。
-        Check(root.GetProperty("radiationEnabled").GetBoolean() == (profile == "Radiation"), "清单辐射开关不符。");
+        Check(root.GetProperty("radiationEnabled").GetBoolean() == (profile is "Radiation" or "Combined"), "清单辐射开关不符。");
         foreach (JsonProperty file in root.GetProperty("files").EnumerateObject())
         {
             string path = Path.GetFullPath(Path.Combine(directory, file.Name));
@@ -195,7 +198,7 @@ internal static partial class Program
                         case "IndustrialEnabled": Check((bytes[0] != 0) == (profile is "Industrial" or "Combined"), "DLL工业开关不符。"); break;
                         case "PowerEnabled": Check((bytes[0] != 0) == (profile is "Power" or "Combined"), "DLL电力开关不符。"); break;
                         case "RoomEnabled": Check((bytes[0] != 0) == (profile is "Room" or "Combined"), "DLL房间开关不符。"); break;
-                        case "RadiationEnabled": Check((bytes[0] != 0) == (profile == "Radiation"), "DLL辐射开关不符。"); break;
+                        case "RadiationEnabled": Check((bytes[0] != 0) == (profile is "Radiation" or "Combined"), "DLL辐射开关不符。"); break;
                     }
                 }
             }
@@ -216,11 +219,11 @@ internal static partial class Program
                         + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
         }
         Check(types.Contains("MaterialOverhaul.Core.BuildProfile"), "缺少构建身份。");
-        if (profile != "Radiation")
+        if (profile is "Industrial" or "Power" or "Room")
         {
-            Check(!patches.Overlaps(RadiationPatches), profile + "包含辐射补丁（辐射系统尚未整合）。");
+            Check(!patches.Overlaps(RadiationPatches), profile + "独立版包含辐射补丁。");
             Check(!types.Any(t => t.StartsWith("MaterialOverhaul.Radiation.", StringComparison.Ordinal)
-                || t.Split('+')[0].StartsWith("MaterialOverhaul.Game.Radiation", StringComparison.Ordinal)), profile + "包含辐射源码（辐射系统尚未整合）。");
+                || t.Split('+')[0].StartsWith("MaterialOverhaul.Game.Radiation", StringComparison.Ordinal)), profile + "独立版包含辐射源码。");
         }
         if (profile == "Radiation")
         {
@@ -265,9 +268,11 @@ internal static partial class Program
             {
                 Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
+                Check(RadiationPatches.IsSubsetOf(patches), "完整整合版缺少辐射补丁。");
+                Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑活化组件。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : profile == "Radiation" ? 2 : 266;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : profile == "Radiation" ? 2 : 268;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

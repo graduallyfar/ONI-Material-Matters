@@ -200,26 +200,39 @@ namespace MaterialOverhaul.Tests
 
         private static void ProfileIsolation()
         {
-            TestRunner.Section("辐射独立版不并入整合版（源码结构）");
+            TestRunner.Section("辐射并入整合版，其他独立版不含辐射（源码结构）");
             string root = FindRepoRoot();
             TestRunner.Check(root != null, "能找到仓库根目录");
             if (root == null) return;
 
             string csproj = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "MaterialOverhaul.csproj"));
             TestRunner.Check(csproj.Contains("MATERIAL_OVERHAUL_RADIATION_ONLY"), "定义辐射独立版编译符号");
-            TestRunner.Check(Regex.IsMatch(csproj, "SystemProfile\\)' == 'Combined'\">\\s*<Compile Remove=\"Radiation"),
-                "整合版移除全部辐射源码");
+            TestRunner.Check(!Regex.IsMatch(csproj, "SystemProfile\\)' == 'Combined'\">\\s*<Compile Remove="), "整合版不移除任何源码（含辐射）");
+            foreach (string mode in new[] { "Power", "Industrial", "Room" })
+            {
+                Match group = Regex.Match(csproj, "SystemProfile\\)' == '" + mode + "'\">\\s*<Compile Remove=\"([^\"]*)\"");
+                TestRunner.Check(group.Success && group.Groups[1].Value.Contains("Radiation\\**\\*.cs"), mode + " 独立版移除辐射判断层");
+            }
             TestRunner.Check(csproj.Contains("<Version Condition=\"'$(SystemProfile)' == 'Radiation'\">0.0.1</Version>"), "辐射独立版版本 0.0.1");
 
             string profile = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Core", "BuildProfile.cs"));
             int combined = profile.IndexOf("Name = \"Combined\"", StringComparison.Ordinal);
-            TestRunner.Check(combined > 0 && profile.IndexOf("RadiationEnabled = false", combined, StringComparison.Ordinal) > 0,
-                "整合版辐射开关为 false");
+            TestRunner.Check(combined > 0 && profile.IndexOf("RadiationEnabled = true", combined, StringComparison.Ordinal) > 0,
+                "整合版辐射开关为 true");
+            int radiation = profile.IndexOf("Name = \"Radiation\"", StringComparison.Ordinal);
+            TestRunner.CheckEqual(2, Regex.Matches(profile, "RadiationEnabled = true").Count, "只有辐射独立版与整合版开启辐射");
+            TestRunner.Check(radiation > 0, "存在辐射独立版构建身份");
 
             string script = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "tools", "build-profiles.ps1"));
-            TestRunner.Check(script.Contains("[string[]]$Profile = @('Industrial', 'Power', 'Room', 'Combined')"),
-                "默认构建列表不含辐射独立版");
-            TestRunner.Check(script.Contains("($mode -eq 'Combined' -and !$isRadiation)"), "整合包本地化不含辐射键");
+            TestRunner.Check(script.Contains("[string[]]$Profile = @('Industrial', 'Power', 'Room', 'Radiation', 'Combined')"),
+                "默认构建四个独立版与整合版");
+            TestRunner.Check(script.Contains("if ($mode -eq 'Combined' -or"), "整合包本地化包含全部键（含辐射）");
+            TestRunner.Check(script.Contains("($mode -eq 'Industrial' -and !$isPower -and !$isRoom -and !$isRadiation)"), "工业包本地化不含辐射键");
+
+            string entry = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "MaterialOverhaulMod.cs"));
+            TestRunner.Check(entry.Contains("#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY\n            LocString.CreateLocStringKeys(typeof(Game.RadiationStrings.RADIATION)")
+                || entry.Contains("#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY\r\n            LocString.CreateLocStringKeys(typeof(Game.RadiationStrings.RADIATION)"),
+                "整合版与辐射版都登记辐射文本键");
 
             string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RadiationPatches.cs"));
             TestRunner.CheckEqual(4, Regex.Matches(patches, "\\[HarmonyPatch\\(").Count, "辐射独立版共 4 个补丁");
