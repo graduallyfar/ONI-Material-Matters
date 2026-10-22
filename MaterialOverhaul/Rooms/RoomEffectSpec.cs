@@ -14,11 +14,17 @@ namespace MaterialOverhaul.Rooms
         /// <summary>士气修正（<c>QualityOfLife</c>），0 表示不修改。</summary>
         public float Morale;
 
-        /// <summary>压力缓解百分比（正数；50 表示 −50%），0 表示不修改。工作口径为实现为压力变化乘数。</summary>
+        /// <summary>压力缓解（正数；30 表示每周期压力 −30 个百分点），0 表示不修改。按加减法结算。</summary>
         public float StressReductionPercent;
 
         /// <summary>生命值回复速度提高百分比（正数；50 表示 +50%），0 表示不修改。</summary>
         public float HealthRecoveryPercent;
+
+        /// <summary>
+        /// 实际写入原版乘数之和的生命回复百分比；0 表示与 <see cref="HealthRecoveryPercent"/> 相同。
+        /// 护理员加成接在房间加成之后连乘时，用它补足连乘与相加的差。
+        /// </summary>
+        public float HealthModifierPercent;
 
         /// <summary>属性加成 id（例如 Athletics）；为空表示不修改属性。</summary>
         public string AttributeId;
@@ -51,6 +57,11 @@ namespace MaterialOverhaul.Rooms
         public bool HasHealthRecovery
         {
             get { return HealthRecoveryPercent != 0f; }
+        }
+
+        public float EffectiveHealthModifierPercent
+        {
+            get { return HealthModifierPercent != 0f ? HealthModifierPercent : HealthRecoveryPercent; }
         }
 
         public bool HasAttributeBonus

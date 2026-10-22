@@ -33,6 +33,16 @@ namespace MaterialOverhaul.Game
 
         private static bool registered;
 
+        /// <summary>
+        /// 本 Mod 生成的条件与其显示文本。条件在 <c>Db.Initialize</c> 中创建，此时原版建筑名还没有按游戏语言
+        /// 写入字符串表（<c>LegacyModMain.LoadBuildings</c> 在其后），建筑名会是英文（V1.0.2 #15）；
+        /// 进入游戏后按当前字符串表重写一次。
+        /// </summary>
+        private static readonly List<KeyValuePair<RoomConstraints.Constraint, Func<string>>> NamedConstraints =
+            new List<KeyValuePair<RoomConstraints.Constraint, Func<string>>>();
+
+        private static bool textsRefreshed;
+
         public static bool Registered
         {
             get { return registered; }
@@ -54,6 +64,7 @@ namespace MaterialOverhaul.Game
             }
 
             ActiveRoomsValue.Clear();
+            textsRefreshed = false;
             int added = 0;
             int skippedDlc = 0;
             RoomDefinition[] definitions = RoomCatalogue.NewRooms;
@@ -85,6 +96,7 @@ namespace MaterialOverhaul.Game
             registered = true;
             AppendModifications(types);
             AppendAverageDecor(types);
+            RoomHoverText.Install();
             ModLog.Info("房间类型登记完成：新增 " + added + "，活动 " + ActiveRoomsValue.Count
                 + "，因 DLC 跳过 " + skippedDlc + "；原版房间改造 " + RoomCatalogue.ModificationCount + " 项。");
         }
@@ -423,7 +435,7 @@ namespace MaterialOverhaul.Game
             return definition != null && RoomEvaluator.Beats(definition, requiredRoomId);
         }
 
-        private static RoomDefinition DefinitionOf(string roomId)
+        internal static RoomDefinition DefinitionOf(string roomId)
         {
             for (int i = 0; i < ActiveRoomsValue.Count; i++)
             {
@@ -474,6 +486,33 @@ namespace MaterialOverhaul.Game
             return result;
         }
 
+        private static RoomConstraints.Constraint Named(RoomConstraints.Constraint constraint, Func<string> text)
+        {
+            NamedConstraints.Add(new KeyValuePair<RoomConstraints.Constraint, Func<string>>(constraint, text));
+            return constraint;
+        }
+
+        /// <summary>进入游戏后按当前语言重写一次条件文本；之后的调用直接返回。</summary>
+        public static void EnsureTextsRefreshed()
+        {
+            if (textsRefreshed || !registered)
+            {
+                return;
+            }
+
+            textsRefreshed = true;
+            for (int i = 0; i < NamedConstraints.Count; i++)
+            {
+                RoomConstraints.Constraint constraint = NamedConstraints[i].Key;
+                string text = NamedConstraints[i].Value();
+                constraint.name = text;
+                constraint.description = text;
+                constraint.conflictDescription = text;
+            }
+
+            ModLog.Info("房间条件文本：按当前语言重写 " + NamedConstraints.Count + " 条。");
+        }
+
         public static RoomType FindRoomType(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -491,7 +530,7 @@ namespace MaterialOverhaul.Game
             for (int i = 0; i < definition.Additional.Length; i++)
             {
                 RoomRequirement requirement = definition.Additional[i];
-                additional[i] = new RoomConstraints.Constraint(
+                additional[i] = Named(new RoomConstraints.Constraint(
                     building_criteria: null,
                     room_criteria: (Room room) => RoomEvaluator.IsSatisfied(
                         definition,
@@ -500,7 +539,8 @@ namespace MaterialOverhaul.Game
                             string.Equals(PreviousRoomId(room), definition.Id, StringComparison.Ordinal)),
                     times_required: 1,
                     name: RoomText.RequirementName(definition, requirement),
-                    description: RoomText.RequirementName(definition, requirement));
+                    description: RoomText.RequirementName(definition, requirement)),
+                    () => RoomText.RequirementName(definition, requirement));
             }
 
             return additional;
@@ -508,12 +548,13 @@ namespace MaterialOverhaul.Game
 
         private static RoomType CreateRoomType(RoomDefinition definition)
         {
-            RoomConstraints.Constraint primary = new RoomConstraints.Constraint(
+            RoomConstraints.Constraint primary = Named(new RoomConstraints.Constraint(
                 building_criteria: (KPrefabID entity) => MatchesPrimary(definition, entity),
                 room_criteria: null,
                 times_required: 1,
                 name: RoomText.PrimaryName(definition),
-                description: RoomText.PrimaryName(definition));
+                description: RoomText.PrimaryName(definition)),
+                () => RoomText.PrimaryName(definition));
 
             RoomConstraints.Constraint[] additional = BuildAdditional(definition);
 

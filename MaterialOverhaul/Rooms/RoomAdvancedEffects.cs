@@ -25,7 +25,7 @@ namespace MaterialOverhaul.Rooms
         /// <summary>原版群星指挥站范围（目标程序集字面量，核实值）。</summary>
         public const int VanillaMissionControlRange = 2;
 
-        /// <summary>地质研究室：广播期间对目标喷泉新增的喷发量修正（百分比口径，0.1 = +10%）。</summary>
+        /// <summary>地质研究室：广播期间目标喷泉的喷发量加成（0.1 = 原版调谐之后 ×1.1）。</summary>
         public const float GeoTunerLabMassBonus = 0.1f;
 
         /// <summary>地质研究室：每座喷泉新增可指向的调谐仪台数。</summary>
@@ -113,6 +113,83 @@ namespace MaterialOverhaul.Rooms
         public static bool CanAddGeotuner(int currentCount, int limit)
         {
             return currentCount + 1 <= limit;
+        }
+
+        /// <summary>
+        /// 地质研究室的喷发量乘数（V1.0.2）：原版调谐全部算完后乘以（1 + 加成），每座喷泉只乘一次。
+        /// </summary>
+        public static float GeoTunerMassFactor(float bonus)
+        {
+            return bonus > 0f ? 1f + bonus : 1f;
+        }
+
+        /// <summary>
+        /// 调谐仪超过上限时需要取消目标的项（返回 <paramref name="assignOrders"/> 的下标）。
+        /// 序号越大越晚指定，先取消最晚的；序号未知（0，读档前指定）的排在已知序号之前，
+        /// 彼此之间按下标倒序。未超过上限时返回空数组。
+        /// </summary>
+        public static int[] GeotunersToRelease(int[] assignOrders, int limit)
+        {
+            int count = assignOrders == null ? 0 : assignOrders.Length;
+            int excess = count - Math.Max(limit, 0);
+            if (excess <= 0)
+            {
+                return new int[0];
+            }
+
+            int[] indices = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                indices[i] = i;
+            }
+
+            Array.Sort(indices, (a, b) =>
+            {
+                int byOrder = assignOrders[b].CompareTo(assignOrders[a]);
+                return byOrder != 0 ? byOrder : b.CompareTo(a);
+            });
+
+            int[] release = new int[excess];
+            Array.Copy(indices, release, excess);
+            return release;
+        }
+
+        /// <summary>
+        /// 同一对象有多个房间加成时按连乘结算（V1.0.2 #22，先触发的在前）。返回合计的新增比例，
+        /// 例如 +20% 与 +10% 得 0.32。
+        /// </summary>
+        public static float ChainBonus(float first, float second)
+        {
+            return (1f + Math.Max(first, 0f)) * (1f + Math.Max(second, 0f)) - 1f;
+        }
+
+        /// <summary>辐射后遗症的运动修正（施治者医疗低于该值时不减轻）。</summary>
+        public const float RadiationScarMedicineStart = 12f;
+
+        /// <summary>施治者医疗达到该值（含）时不留运动修正。</summary>
+        public const float RadiationScarMedicineFull = 20f;
+
+        /// <summary>未经减轻的辐射后遗症运动修正。</summary>
+        public const int RadiationScarAthletics = -6;
+
+        /// <summary>
+        /// 辐射后遗症运动修正（V1.0.2 #17）：施治者医疗 12 及以下为 −6，20 及以上为 0，
+        /// 其间线性减轻并四舍五入到整数（远离零取整）。没有施治者（NaN）按 −6。
+        /// </summary>
+        public static int RadiationScarPenalty(float medicine)
+        {
+            if (float.IsNaN(medicine) || medicine <= RadiationScarMedicineStart)
+            {
+                return RadiationScarAthletics;
+            }
+
+            if (medicine >= RadiationScarMedicineFull)
+            {
+                return 0;
+            }
+
+            float share = (RadiationScarMedicineFull - medicine) / (RadiationScarMedicineFull - RadiationScarMedicineStart);
+            return (int)Math.Round(RadiationScarAthletics * share, MidpointRounding.AwayFromZero);
         }
 
         /// <summary>从该房间内的平台发射时，本次飞行是否获得航天发射场加成。</summary>

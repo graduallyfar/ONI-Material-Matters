@@ -255,16 +255,16 @@ namespace MaterialOverhaul.Tests
             List<RoomDefinition> definitions = new List<RoomDefinition>(RoomCatalogue.NewRooms);
             RoomDefinition dance = Find("MO_DanceHall");
 
-            // 舞厅要求平均装饰度 ≥ +65、温度 20–26 ℃。
+            // 舞厅要求平均装饰度 ≥ +120（V1.0.2）、温度 20–26 ℃。
             RoomSnapshot snapshot = Snapshot(40);
             snapshot.PrefabIds.Add(RoomBuildingCatalogue.Phonobox);
             snapshot.PrefabIds.Add(RoomBuildingCatalogue.ParkSign);
             snapshot.HasDecoration = true;
-            snapshot.AverageDecor = 62f;
+            snapshot.AverageDecor = 117f;
             snapshot.AverageTemperatureK = 296.15f;
 
-            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, snapshot), "新判定：装饰度 +62 不满足舞厅");
-            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, snapshot, true), "保持：装饰度 +62 仍满足舞厅");
+            TestRunner.Check(!RoomEvaluator.IsSatisfied(dance, snapshot), "新判定：装饰度 +117 不满足舞厅");
+            TestRunner.Check(RoomEvaluator.IsSatisfied(dance, snapshot, true), "保持：装饰度 +117 仍满足舞厅");
             TestRunner.Check(RoomEvaluator.Missing(dance, snapshot, true).Count == 0, "保持：没有缺失条件");
             TestRunner.CheckEqual(1, RoomEvaluator.Missing(dance, snapshot).Count, "新判定：只缺装饰度一项");
 
@@ -277,7 +277,7 @@ namespace MaterialOverhaul.Tests
             chosen = RoomEvaluator.Choose(definitions, snapshot, "Neutral");
             TestRunner.Check(chosen == null, "中立房间不因回差升级为舞厅");
 
-            snapshot.AverageDecor = 120f;
+            snapshot.AverageDecor = 130f;
             snapshot.AverageTemperatureK = 299.15f + 0.5f;
             chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
             TestRunner.CheckEqual("MO_DanceHall", chosen == null ? null : chosen.Id, "温度 26.5 ℃ 时按回差保持舞厅");
@@ -285,9 +285,9 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(chosen == null, "温度 26.5 ℃ 时不新判为舞厅");
 
             snapshot.AverageTemperatureK = 296.15f;
-            snapshot.AverageDecor = 59f;
+            snapshot.AverageDecor = 114f;
             chosen = RoomEvaluator.Choose(definitions, snapshot, "MO_DanceHall");
-            TestRunner.Check(chosen == null, "装饰度 +59 超出回差，不再保持");
+            TestRunner.Check(chosen == null, "装饰度 +114 超出回差，不再保持");
 
             // 顶替关系：RoomTracker 放行的依据（CountsAsRoom 本身依赖游戏 Room 对象，见游戏验收）。
             TestRunner.Check(RoomEvaluator.Beats(Find(RoomCatalogue.MissionControlId), "Laboratory"), "任务控制中心顶替实验室");

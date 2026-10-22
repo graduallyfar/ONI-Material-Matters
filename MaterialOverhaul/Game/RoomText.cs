@@ -209,7 +209,7 @@ namespace MaterialOverhaul.Game
             {
                 return string.Format(
                     Strings.Get(prefix + "GEOTUNER_LAB_BONUS"),
-                    Percent(RoomAdvancedEffects.GeoTunerLabMassBonus),
+                    Factor(RoomAdvancedEffects.GeoTunerLabMassBonus),
                     RoomAdvancedEffects.GeoTunerLabExtraTuners);
             }
 
@@ -270,7 +270,7 @@ namespace MaterialOverhaul.Game
                 {
                     string.Format(Strings.Get(prefix + "WORK"), Percent(multiplier - 1f)),
                     string.Format(Strings.Get(prefix + "GEOTUNER"),
-                        Percent(RoomAdvancedEffects.GeoTunerLabMassBonus), RoomAdvancedEffects.GeoTunerLabExtraTuners)
+                        Factor(RoomAdvancedEffects.GeoTunerLabMassBonus), RoomAdvancedEffects.GeoTunerLabExtraTuners)
                 };
             }
 
@@ -314,20 +314,21 @@ namespace MaterialOverhaul.Game
         {
             const string prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.";
             StringBuilder builder = new StringBuilder();
-            if (missionControlBonus > 0f)
+            // 按触发先后列出：发射场加成在起飞时，指挥站助推在飞行中（V1.0.2 #22）。
+            if (fromSpaceport)
             {
-                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_MISSION_CONTROL"), Percent(missionControlBonus)));
+                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_SPACEPORT"),
+                    Percent(RoomAdvancedEffects.SpaceportSpeedBonus), Percent(1f - RoomAdvancedEffects.SpaceportFuelFactor)));
             }
 
-            if (fromSpaceport)
+            if (missionControlBonus > 0f)
             {
                 if (builder.Length > 0)
                 {
                     builder.Append('\n');
                 }
 
-                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_SPACEPORT"),
-                    Percent(RoomAdvancedEffects.SpaceportSpeedBonus), Percent(1f - RoomAdvancedEffects.SpaceportFuelFactor)));
+                builder.Append(string.Format(Strings.Get(prefix + "ROCKET_MISSION_CONTROL"), Percent(missionControlBonus)));
             }
 
             return builder.ToString();
@@ -336,6 +337,12 @@ namespace MaterialOverhaul.Game
         public static string Percent(float fraction)
         {
             return (fraction * 100f).ToString("0");
+        }
+
+        /// <summary>最后结算的乘数写法，如加成 0.1 显示为「1.1」。</summary>
+        public static string Factor(float bonus)
+        {
+            return (1f + Math.Max(bonus, 0f)).ToString("0.##");
         }
 
         /// <summary>指挥范围只在群星版按距离筛选火箭；本体版不显示这一项。</summary>

@@ -210,6 +210,7 @@ namespace MaterialOverhaul.Game
                     public static LocString NO_OTHER_ADVANCED_RECREATION = "无其他高级娱乐建筑";
                     public static LocString NO_OTHER_SCIENCE = "无其他科学建筑";
                     public static LocString NO_LIFE_BUILDING = "无生活建筑";
+                    public static LocString UPGRADE_HEADER = "可升级为";
                 }
 
                 /// <summary>房间详情里的平均环境行。</summary>
@@ -220,10 +221,11 @@ namespace MaterialOverhaul.Game
                     public static LocString PRODUCTION_BONUS = "工作效率：+{0}%";
                     public static LocString MISSION_CONTROL_BONUS = "火箭助推：速度 +{0}%";
                     public static LocString MISSION_CONTROL_RANGE = "，指挥范围 +{0} 格";
-                    public static LocString GEOTUNER_LAB_BONUS = "地质调谐：喷发量 +{0}%，每座喷泉多接 {1} 台调谐仪";
+                    public static LocString GEOTUNER_LAB_BONUS = "地质调谐：喷发量 ×{0}，每座喷泉多接 {1} 台调谐仪";
                     public static LocString SPACEPORT_BONUS = "发射的火箭：速度 +{0}%，燃料消耗 −{1}%";
                     public static LocString CARGO_STATION_BONUS = "星际物流：载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%";
-                    public static LocString MEDICAL_CENTER_BONUS = "患者优先入院，可救治致命辐射病";
+                    public static LocString MEDICAL_CENTER_BONUS = "患者优先入院，可救治致命辐射病（会留下后遗症）";
+                    public static LocString RADIATION_RESCUE = "可救治致命辐射病，但会留下后遗症";
                     public static LocString GEOTUNER_EXTRA_SLOT = "该喷泉已有 {0} 台调谐仪，地质研究室内最多 {1} 台。";
                 }
 
@@ -242,12 +244,18 @@ namespace MaterialOverhaul.Game
                         public static LocString TOOLTIP = "这枚火箭本次飞行获得房间加成：\n{0}";
                     }
 
+                    public static class GEYSER_BONUS
+                    {
+                        public static LocString NAME = "地质研究室：喷发量 ×{0}";
+                        public static LocString TOOLTIP = "有调谐仪在地质研究室中为这座喷泉广播，原版调谐之后喷发量再 ×{0}。";
+                    }
+
                     public static LocString SEPARATOR = "，";
                     public static LocString PRODUCTION = "生产速度 +{0}%";
                     public static LocString WORK = "工作速度 +{0}%";
                     public static LocString MISSION_CONTROL = "助推的火箭速度 +{0}%";
                     public static LocString MISSION_CONTROL_RANGE = "指挥范围 +{0} 格";
-                    public static LocString GEOTUNER = "喷发量 +{0}%，调谐仪上限 +{1}";
+                    public static LocString GEOTUNER = "喷发量 ×{0}，调谐仪上限 +{1}";
                     public static LocString SPACEPORT = "发射的火箭速度 +{0}%，燃料消耗 −{1}%";
                     public static LocString CARGO = "载荷速度 +{0}%，每轮连发 {1} 次，冷却加快 {2}%";
                     public static LocString RECOVERY = "患者生命回复 +{0}%";
@@ -270,13 +278,13 @@ namespace MaterialOverhaul.Game
                     public static class SHOWER_RELIEF
                     {
                         public static LocString NAME = "清爽淋浴";
-                        public static LocString TOOLTIP = "最近洗过澡，压力缓解 −10%。";
+                        public static LocString TOOLTIP = "最近洗过澡，压力每周期 −10%。";
                     }
 
                     public static class BANQUET_RELIEF
                     {
                         public static LocString NAME = "宴会余韵";
-                        public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力缓解 −10%。";
+                        public static LocString TOOLTIP = "最近在宴会厅享用过餐点，压力每周期 −10%。";
                     }
 
                     public static class HOSPITAL_RECOVERY
@@ -294,43 +302,43 @@ namespace MaterialOverhaul.Game
                     public static class CAREGIVER_BOOST
                     {
                         public static LocString NAME = "护理员照料";
-                        public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 +25%。";
+                        public static LocString TOOLTIP = "护理员正在照料，生命值回复速度再 ×1.25。";
                     }
 
                     public static class TRAIT_SUPERSTAR
                     {
                         public static LocString NAME = "舞台焦点";
-                        public static LocString TOOLTIP = "在舞厅舒展天赋：士气 +4、压力缓解 −20%、运动 +3。";
+                        public static LocString TOOLTIP = "在舞厅舒展天赋：士气 +4、压力每周期 −20%、运动 +3。";
                     }
 
                     public static class TRAIT_ESPORTS
                     {
                         public static LocString NAME = "竞技状态";
-                        public static LocString TOOLTIP = "在街机厅舒展天赋：士气 +4、压力缓解 −20%、机械 +3。";
+                        public static LocString TOOLTIP = "在街机厅舒展天赋：士气 +4、压力每周期 −20%、机械 +3。";
                     }
 
                     public static class TRAIT_BEACH
                     {
                         public static LocString NAME = "海滨放松";
-                        public static LocString TOOLTIP = "在海滨乐园放松：士气 +4、压力缓解 −20%、挖掘 +3。";
+                        public static LocString TOOLTIP = "在海滨乐园放松：士气 +4、压力每周期 −20%、挖掘 +3。";
                     }
 
                     public static class TRAIT_ADVENTURER
                     {
                         public static LocString NAME = "冲浪冒险";
-                        public static LocString TOOLTIP = "在海滨乐园冲浪：士气 +4、压力缓解 −20%、建造 +3。";
+                        public static LocString TOOLTIP = "在海滨乐园冲浪：士气 +4、压力每周期 −20%、建造 +3。";
                     }
 
                     public static class TRAIT_ARTIST
                     {
                         public static LocString NAME = "艺术灵感";
-                        public static LocString TOOLTIP = "在展览馆放松：士气 +4、压力缓解 −20%、艺术 +3。";
+                        public static LocString TOOLTIP = "在展览馆放松：士气 +4、压力每周期 −20%、艺术 +3。";
                     }
 
                     public static class TRAIT_ROCKET
                     {
                         public static LocString NAME = "风洞训练";
-                        public static LocString TOOLTIP = "在风洞训练：士气 +4、压力缓解 −20%、驾驶 +3。";
+                        public static LocString TOOLTIP = "在风洞训练：士气 +4、压力每周期 −20%、驾驶 +3。";
                     }
 
                     public static class DANCE_HALL_MORALE
@@ -366,19 +374,19 @@ namespace MaterialOverhaul.Game
                     public static class SPA_MORALE
                     {
                         public static LocString NAME = "水疗放松";
-                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力缓解 −40%。";
+                        public static LocString TOOLTIP = "最近在水疗室放松过，士气 +2，压力每周期 −40%。";
                     }
 
                     public static class TEA_ROOM_MORALE
                     {
                         public static LocString NAME = "茶歇时光";
-                        public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2，压力缓解 −30%。";
+                        public static LocString TOOLTIP = "最近在茶歇室休息过，士气 +2，压力每周期 −30%。";
                     }
 
                     public static class RADIATION_SCAR
                     {
                         public static LocString NAME = "辐射后遗症";
-                        public static LocString TOOLTIP = "曾在医疗中心从致命辐射病中获救，运动 −6（永久）。";
+                        public static LocString TOOLTIP = "曾在医疗中心从致命辐射病中获救，留下永久后遗症。";
                     }
                 }
             }

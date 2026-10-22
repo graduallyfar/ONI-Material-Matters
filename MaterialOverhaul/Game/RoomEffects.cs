@@ -9,7 +9,7 @@ namespace MaterialOverhaul.Game
     ///
     /// 数值与持续时间在纯配置层 <see cref="RoomEffectCatalogue"/> 维护；这里只负责把
     /// <see cref="RoomEffectSpec"/> 翻译成原版 <c>Klei.AI.Effect</c>：士气挂
-    /// <c>QualityOfLife</c> 属性，压力按 <c>Stress.deltaAttribute</c> 的乘数修正。
+    /// <c>QualityOfLife</c> 属性，压力按 <c>Stress.deltaAttribute</c> 的加法修正（每周期百分点）。
     /// 效果对象在 <c>Db.Initialize</c> 后置处理里加入 <c>Db.Get().effects</c>，房间类型只保存 id；
     /// 实际发放由原版 <c>RoomType.TriggerRoomEffects</c> 在设施被使用／进入时完成。
     /// </summary>
@@ -107,18 +107,18 @@ namespace MaterialOverhaul.Game
 
             if (spec.HasStressReduction)
             {
+                // 压力本身是百分数，按加减法结算（V1.0.2 #21）。
                 effect.Add(new AttributeModifier(
                     Db.Get().Amounts.Stress.deltaAttribute.Id,
-                    -spec.StressReductionPercent / 100f,
-                    name,
-                    is_multiplier: true));
+                    RoomEffectCatalogue.StressDeltaPerSecond(spec.StressReductionPercent),
+                    name));
             }
 
             if (spec.HasHealthRecovery)
             {
                 effect.Add(new AttributeModifier(
                     Db.Get().Amounts.HitPoints.deltaAttribute.Id,
-                    spec.HealthRecoveryPercent / 100f,
+                    spec.EffectiveHealthModifierPercent / 100f,
                     name,
                     is_multiplier: true));
             }
@@ -144,7 +144,7 @@ namespace MaterialOverhaul.Game
 
         private static string Stress(float percent)
         {
-            return percent == 0f ? "不变" : "−" + percent.ToString("0") + "%";
+            return percent == 0f ? "不变" : "−" + percent.ToString("0") + "%／周期";
         }
 
         private static string Health(float percent)

@@ -131,6 +131,9 @@ internal static partial class Program
         Method("GeoTuner", "ApplyTuning", "Void(Instance)");
         Method("GeoTuner", "RemoveTuning", "Void(Instance)");
         Method("GeoTuner", "InitializeStates", "Void(BaseState&)");
+        Method("GeoTuner+Instance", "AssignFutureGeyser", "Void(Geyser)");
+        Method("GeyserConfigurator+GeyserInstanceConfiguration", "GetMassPerCycle", "Single()");
+        Method("Geyser", "ApplyConfigurationEmissionValues", "Void(GeyserInstanceConfiguration)");
         Method("GeoTunerSideScreen", "SetRow", "Void(Int32,String,Sprite,Geyser,Boolean)");
         Method("GeoTunerSideScreen", "RefreshOptions", "Void(Object)");
         Method("RailGun", "LaunchProjectile", "Void()");

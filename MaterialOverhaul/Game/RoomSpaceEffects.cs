@@ -113,7 +113,10 @@ namespace MaterialOverhaul.Game
             return IsSpaceportFlight(craft);
         }
 
-        /// <summary>群星火箭当前的房间新增速度比例（指挥站 + 航天发射场）。</summary>
+        /// <summary>
+        /// 群星火箭当前的房间新增速度比例（基础速度的比例）。任务控制室助推与航天发射场同时生效时连乘
+        /// （V1.0.2 #22）：+20% 与 +10% 得 +32%。只作用于基础速度，不受驾驶员与驾驶方式倍率放大。
+        /// </summary>
         public static float ClustercraftSpeedBonus(Clustercraft craft)
         {
             if (craft == null)
@@ -122,12 +125,12 @@ namespace MaterialOverhaul.Game
             }
 
             int id = craft.GetInstanceID();
-            float bonus = 0f;
+            float missionControl = 0f;
             if (ClustercraftBoost.TryGetValue(id, out float boost))
             {
                 if (craft.controlStationBuffTimeRemaining > 0f)
                 {
-                    bonus += boost;
+                    missionControl = boost;
                 }
                 else
                 {
@@ -141,12 +144,8 @@ namespace MaterialOverhaul.Game
                 }
             }
 
-            if (IsSpaceportFlight(craft))
-            {
-                bonus += RoomAdvancedEffects.SpaceportSpeedBonus;
-            }
-
-            return bonus;
+            float spaceport = IsSpaceportFlight(craft) ? RoomAdvancedEffects.SpaceportSpeedBonus : 0f;
+            return RoomAdvancedEffects.ChainBonus(missionControl, spaceport);
         }
 
         public static void RememberStationScience(UnityEngine.Component station, float science)

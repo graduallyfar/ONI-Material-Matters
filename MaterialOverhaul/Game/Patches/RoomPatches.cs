@@ -171,6 +171,7 @@ namespace MaterialOverhaul.Patches
             try
             {
                 float dt = __args != null && __args.Length > 0 ? (float)__args[0] : 1f;
+                RoomRegistration.EnsureTextsRefreshed();
                 RoomEnvironmentMonitor.Tick(dt);
             }
             catch (Exception e)
@@ -186,6 +187,8 @@ namespace MaterialOverhaul.Patches
     ///
     /// 不给 <c>RoomConstraints</c> 打补丁：Mod 加载时打补丁会提前触发它的静态初始化，原版条件名
     /// （「至少两个科学建筑」等）就会在游戏语言载入前定成英文。
+    ///
+    /// 详情列表也会读取原版「效果」行；读取期间标记为详情，升级提示只出现在悬停卡的效果段（V1.0.2 #19）。
     /// </summary>
     [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomDetails), "RoomDetailString")]
@@ -194,6 +197,13 @@ namespace MaterialOverhaul.Patches
         private static void Prefix()
         {
             RoomSnapshotCache.BeginEvaluation();
+            RoomRegistration.EnsureTextsRefreshed();
+            RoomHoverText.InDetails = true;
+        }
+
+        private static void Finalizer()
+        {
+            RoomHoverText.InDetails = false;
         }
     }
 
@@ -414,6 +424,16 @@ namespace MaterialOverhaul.Patches
         {
             try
             {
+                // 地质调谐仪换了房间：延迟复查研究室产量乘数与调谐上限（V1.0.2 #14、#20）。
+                RoomGeoTunerEffects.OnRoomChanged(__instance == null ? null : __instance.gameObject);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("地质调谐仪房间变化复查排程失败：" + e);
+            }
+
+            try
+            {
                 if (__instance == null
                     || !RoomRegistration.CountsAsRoom(__instance.room, __instance.requiredRoomType))
                 {
@@ -618,6 +638,7 @@ namespace MaterialOverhaul.Patches
                 }
 
                 RoomRecoveryEffect.RemoveAll(patient.GetComponent<Effects>());
+                RoomMedicalEffects.EndStay(patient.gameObject);
             }
             catch (Exception e)
             {
@@ -627,8 +648,8 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
-    /// 护理员特质加成：医生完成一次诊疗时，若其拥有原版 「Caregiver」（<c>BedsideManner</c>）特质，
-    /// 给正在该诊疗床接受治疗的患者追加生命回复效果。患者离床时由
+    /// 医生完成一次诊疗时：按施治者医疗减轻本次获救患者的辐射后遗症；若医生拥有原版
+    /// 「Caregiver」（<c>BedsideManner</c>）特质，给正在该诊疗床接受治疗的患者追加生命回复效果。患者离床时由
     /// <see cref="Patch_Room_Clinic_OnStopWork"/> 一并移除。
     /// </summary>
     [Core.SystemPart(Core.ModSystem.Room)]
@@ -653,13 +674,17 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
+                // 辐射拯救者后遗症按施治者医疗减轻（V1.0.2 #17）。
+                RoomMedicalEffects.EaseRadiationScar(clinic.worker.gameObject, doctor);
+
                 Traits traits = doctor.GetComponent<Traits>();
                 if (traits == null || !traits.HasTrait(CaregiverTraitId))
                 {
                     return;
                 }
 
-                if (!RoomRecoveryEffect.IsRecoveryRoom(RoomTypeIdOf(clinic.gameObject)))
+                string boost = RoomRecoveryEffect.CaregiverFor(RoomTypeIdOf(clinic.gameObject));
+                if (boost == null)
                 {
                     return;
                 }
@@ -667,7 +692,7 @@ namespace MaterialOverhaul.Patches
                 Effects effects = clinic.worker.GetComponent<Effects>();
                 if (effects != null)
                 {
-                    effects.Add(RoomEffectIds.CaregiverBoost, false);
+                    effects.Add(boost, false);
                 }
             }
             catch (Exception e)

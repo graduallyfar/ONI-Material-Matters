@@ -26,14 +26,15 @@ namespace MaterialOverhaul.Tests
 
         private static void DecorThresholds()
         {
-            TestRunner.Section("房间平均装饰度门槛（V1.0.1）");
+            // V1.0.1 下调后，V1.0.2（#18）把基地内高级房间统一为 +120；非基地功能房间仍为 +20。
+            TestRunner.Section("房间平均装饰度门槛（V1.0.2）");
             var expected = new Dictionary<string, float>(StringComparer.Ordinal)
             {
                 { RoomCatalogue.IndustrialAreaId, 20f }, { RoomCatalogue.MissionControlId, 20f }, { RoomCatalogue.GeoTunerLabId, 20f },
-                { RoomCatalogue.MedicalCenterId, 50f }, { "MO_BeachParadise", 50f }, { "MO_WindTunnel", 50f }, { "MO_Spa", 50f },
-                { "MO_DanceHall", 65f }, { "MO_ArcadeHall", 65f }, { "MO_TeaRoom", 65f },
-                { "MO_Gallery", 80f },
-                { "Private Bedroom", 50f }, { "BanquetHall", 80f }
+                { RoomCatalogue.MedicalCenterId, 120f }, { "MO_BeachParadise", 120f }, { "MO_WindTunnel", 120f }, { "MO_Spa", 120f },
+                { "MO_DanceHall", 120f }, { "MO_ArcadeHall", 120f }, { "MO_TeaRoom", 120f },
+                { "MO_Gallery", 120f },
+                { "Private Bedroom", 120f }, { "BanquetHall", 120f }
             };
 
             int found = 0;

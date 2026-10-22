@@ -12,6 +12,7 @@ namespace MaterialOverhaul.Rooms
         public const string HospitalRecovery = "MO_RoomHospitalRecovery";
         public const string MedicalCenterRecovery = "MO_RoomMedicalCenterRecovery";
         public const string CaregiverBoost = "MO_RoomCaregiverBoost";
+        public const string CaregiverBoostMedicalCenter = "MO_RoomCaregiverBoostMedicalCenter";
         public const string TraitSuperstar = "MO_RoomTraitSuperstar";
         public const string TraitEsports = "MO_RoomTraitEsports";
         public const string TraitBeach = "MO_RoomTraitBeach";
@@ -26,5 +27,22 @@ namespace MaterialOverhaul.Rooms
         public const string SpaMorale = "MO_RoomSpaMorale";
         public const string TeaRoomMorale = "MO_RoomTeaRoomMorale";
         public const string RadiationScar = "MO_RoomRadiationScar";
+
+        /// <summary>辐射后遗症各档的效果 id：−6 沿用旧 id，−5～−1 追加档位后缀；0 表示不留后遗症，返回 null。</summary>
+        public static string RadiationScarFor(int athletics)
+        {
+            if (athletics >= 0)
+            {
+                return null;
+            }
+
+            return athletics <= -6 ? RadiationScar : RadiationScar + (-athletics).ToString();
+        }
+
+        /// <summary>全部辐射后遗症档位 id（从重到轻）。</summary>
+        public static readonly string[] RadiationScars =
+        {
+            RadiationScar, RadiationScar + "5", RadiationScar + "4", RadiationScar + "3", RadiationScar + "2", RadiationScar + "1"
+        };
     }
 }

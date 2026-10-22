@@ -52,6 +52,8 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Room_MissionControlCluster_IsRocketInRange",
         "MaterialOverhaul.Patches.Patch_Room_GeoTunerResearch_CompleteWork",
         "MaterialOverhaul.Patches.Patch_Room_GeoTuner_ApplyTuning",
+        "MaterialOverhaul.Patches.Patch_Room_GeyserConfiguration_GetMassPerCycle",
+        "MaterialOverhaul.Patches.Patch_Room_GeoTuner_AssignFutureGeyser",
         "MaterialOverhaul.Patches.Patch_Room_GeoTuner_RemoveTuning",
         "MaterialOverhaul.Patches.Patch_Room_GeoTuner_InitializeStates",
         "MaterialOverhaul.Patches.Patch_Room_GeoTunerSideScreen_SetRow",
@@ -140,7 +142,7 @@ internal static partial class Program
         Check(profile is "Industrial" or "Power" or "Room" or "Combined" or "Radiation", "未知构建模式：" + profile);
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
         JsonElement root = manifest.RootElement;
-        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.1", "Radiation" => "0.0.1", _ => "0.2.2" };
+        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.2", "Radiation" => "0.0.1", _ => "0.2.2" };
         Check(root.GetProperty("version").GetString() == expectedVersion, "包版本与系统专属版本不符。");
         Check(File.ReadAllText(Path.Combine(directory, "mod_info.yaml")).Contains("version: \"" + expectedVersion + "\""), "模组元数据版本不符。");
         Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
@@ -313,7 +315,7 @@ internal static partial class Program
                 Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑活化组件。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : profile == "Radiation" ? 2 : 290;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 167 : profile == "Radiation" ? 2 : 294;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

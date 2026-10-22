@@ -22,6 +22,7 @@ namespace MaterialOverhaul.Patches
         {
             RoomSpaceEffects.Clear();
             RoomGeoTunerEffects.Clear();
+            RoomMedicalEffects.Clear();
             RoomEnvironmentMonitor.Clear();
             RoomSnapshotCache.BeginEvaluation();
             RoomRetention.EndRebuild();
@@ -141,7 +142,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>
-    /// 群星火箭速度：指挥站新增量与航天发射场加成按基础速度（引擎功率 ÷ 负载）的比例相加。
+    /// 群星火箭速度：指挥站新增量与航天发射场加成连乘后，按基础速度（引擎功率 ÷ 负载）的比例追加。
     /// 只在原版结果大于 0 时追加，不让无人驾驶、停飞的火箭因房间加成移动。
     /// </summary>
     [Core.SystemPart(Core.ModSystem.Room)]
@@ -308,6 +309,38 @@ namespace MaterialOverhaul.Patches
             catch (Exception e)
             {
                 ModLog.Error("地质研究室记录研究者失败：" + e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 地质研究室喷发量在原版调谐之后最后结算（V1.0.2 #20、#22）：喷发速率、平均排放与界面数值
+    /// 都经由 <c>GetMassPerCycle</c>，在此乘以喷泉当前的研究室乘数；没有加成的喷泉为 ×1。
+    /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
+    [HarmonyPatch(typeof(GeyserConfigurator.GeyserInstanceConfiguration), "GetMassPerCycle")]
+    internal static class Patch_Room_GeyserConfiguration_GetMassPerCycle
+    {
+        private static void Postfix(GeyserConfigurator.GeyserInstanceConfiguration __instance, ref float __result)
+        {
+            __result *= RoomGeoTunerEffects.MassFactor(__instance);
+        }
+    }
+
+    /// <summary>记录调谐仪指定目标的先后，供房间失效后超出上限时取消最晚指定的一台（V1.0.2 #14）。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
+    [HarmonyPatch(typeof(GeoTuner.Instance), "AssignFutureGeyser")]
+    internal static class Patch_Room_GeoTuner_AssignFutureGeyser
+    {
+        private static void Postfix(GeoTuner.Instance __instance, Geyser newFutureGeyser)
+        {
+            try
+            {
+                RoomGeoTunerEffects.RememberAssignment(__instance, newFutureGeyser);
+            }
+            catch (Exception e)
+            {
+                ModLog.Error("地质研究室记录调谐目标失败：" + e);
             }
         }
     }

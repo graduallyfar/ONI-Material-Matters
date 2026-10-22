@@ -25,6 +25,12 @@ namespace MaterialOverhaul.Rooms
 
         private const string Prefix = "STRINGS.ROOMS.MATERIALOVERHAUL.";
 
+        /// <summary>
+        /// 基地内高级房间的最低平均装饰度（V1.0.2 #18，用户确认）：医疗中心、舞厅、街机厅、海滨乐园、展览馆、
+        /// 风洞训练室、水疗室、茶歇室、私人卧室★、宴会厅★。工业区、任务控制室、地质研究室仍为 +20。
+        /// </summary>
+        public const float BaseAdvancedDecor = 120f;
+
         private static readonly RoomDefinition[] NewRoomsValue =
         {
             new RoomDefinition
@@ -117,7 +123,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireToilet(),
                     RoomRequirement.RequireDiningTable(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(50f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(24),
@@ -141,7 +147,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(65f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
@@ -165,7 +171,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(65f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
@@ -191,7 +197,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireDecoration(),
                     RoomRequirement.RequireLight(),
                     RoomRequirement.RequirePrefab(RoomBuildingCatalogue.MechanicalSurfboard),
-                    RoomRequirement.MinimumDecor(50f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(96)
@@ -216,7 +222,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireMasterpiece(),
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireLight(),
-                    RoomRequirement.MinimumDecor(80f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(18),
@@ -241,7 +247,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumDecor(50f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumSize(36),
                     RoomRequirement.MaximumSize(96)
@@ -264,7 +270,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.NoOtherAdvancedRecreation(),
                     RoomRequirement.RequireDecoration(),
-                    RoomRequirement.MinimumDecor(50f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(26f, 50f),
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumSize(16),
@@ -288,7 +294,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.RequirePrefab(RoomBuildingCatalogue.WaterCooler),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumDecor(65f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(64)
@@ -418,7 +424,7 @@ namespace MaterialOverhaul.Rooms
                 ExistingRoomId = "Private Bedroom",
                 Additional = new[]
                 {
-                    RoomRequirement.MinimumDecor(50f),
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(10f, 40f)
                 },
                 FallbackRoomIds = new[] { "Bedroom" },
@@ -433,7 +439,7 @@ namespace MaterialOverhaul.Rooms
                 {
                     RoomRequirement.RequireLight(),
                     RoomRequirement.TemperatureRange(20f, 26f),
-                    RoomRequirement.MinimumDecor(80f)
+                    RoomRequirement.MinimumDecor(BaseAdvancedDecor)
                 },
                 EffectIds = new[] { RoomEffectIds.BanquetRelief },
                 FallbackRoomIds = new[] { "GreatHall", "MessHall" },

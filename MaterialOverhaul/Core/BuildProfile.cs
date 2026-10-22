@@ -33,7 +33,7 @@ namespace MaterialOverhaul.Core
         public const bool RadiationEnabled = true;
 #else
         public const string Name = "Combined";
-        public const string DisplayName = "V1.0.1 整合版（工业／电力／房间／辐射）";
+        public const string DisplayName = "V1.0.2 整合版（工业／电力／房间／辐射）";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = true;
         public const bool RoomEnabled = true;

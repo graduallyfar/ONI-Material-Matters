@@ -10,6 +10,7 @@ namespace MaterialOverhaul.Game
     /// 建筑：房间建立（<c>RoomProber.CreateRoom</c>）后对房间内获得加成的建筑挂上，房间清除前摘下；
     /// 建造、拆除与环境重判都会重建房间，因此不需要在模拟更新里扫描建筑。
     /// 火箭：发射登记、助推登记与加成到期时按当前加成刷新；只写公开的基础加成，不写科学翻倍等隐藏机制。
+    /// 喷泉：地质研究室乘数变化时刷新，显示实际乘数。
     /// </summary>
     public static class RoomBonusStatus
     {
@@ -18,6 +19,8 @@ namespace MaterialOverhaul.Game
         public static StatusItem BuildingItem { get; private set; }
 
         public static StatusItem RocketItem { get; private set; }
+
+        public static StatusItem GeyserItem { get; private set; }
 
         /// <summary>在 Db 初始化之后登记（Db.Initialize 会重建状态项集合）。</summary>
         public static void Register()
@@ -41,6 +44,13 @@ namespace MaterialOverhaul.Game
             RocketItem.resolveStringCallback = (text, data) => ResolveRocket(text, data, false);
             RocketItem.resolveTooltipCallback = (text, data) => ResolveRocket(text, data, true);
             db.BuildingStatusItems.Add(RocketItem);
+
+            GeyserItem = new StatusItem("MaterialOverhaulGeyserRoomBonus", Strings.Get(Prefix + "GEYSER_BONUS.NAME"),
+                Strings.Get(Prefix + "GEYSER_BONUS.TOOLTIP"), string.Empty, StatusItem.IconType.Info,
+                NotificationType.Good, allow_multiples: false, OverlayModes.None.ID, showWorldIcon: false);
+            GeyserItem.resolveStringCallback = (text, data) => ResolveGeyser(text, data);
+            GeyserItem.resolveTooltipCallback = (text, data) => ResolveGeyser(text, data);
+            db.BuildingStatusItems.Add(GeyserItem);
         }
 
         /// <summary>房间建立后：给房间内获得加成的建筑挂上状态。</summary>
@@ -110,6 +120,34 @@ namespace MaterialOverhaul.Game
             {
                 selectable.RemoveStatusItem(RocketItem);
             }
+        }
+
+        /// <summary>喷泉受地质研究室加成时挂上「地质研究室：喷发量 ×N」，加成消失时摘下。</summary>
+        public static void RefreshGeyser(Geyser geyser)
+        {
+            KSelectable selectable = geyser == null || GeyserItem == null ? null : geyser.GetComponent<KSelectable>();
+            if (selectable == null)
+            {
+                return;
+            }
+
+            bool show = RoomGeoTunerEffects.GeyserBonus(geyser) > 0f;
+            if (show && !selectable.HasStatusItem(GeyserItem))
+            {
+                selectable.AddStatusItem(GeyserItem, geyser);
+            }
+            else if (!show && selectable.HasStatusItem(GeyserItem))
+            {
+                selectable.RemoveStatusItem(GeyserItem);
+            }
+        }
+
+        private static string ResolveGeyser(string text, object data)
+        {
+            Geyser geyser = data as Geyser;
+            return geyser == null
+                ? text
+                : string.Format(text, (1f + RoomGeoTunerEffects.GeyserBonus(geyser)).ToString("0.##"));
         }
 
         private static string ResolveBuilding(string text, object data, bool tooltip)
