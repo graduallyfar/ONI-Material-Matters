@@ -41,6 +41,7 @@ namespace MaterialOverhaul.Tests
             Run("房间采样：读档顺序与光照装饰", RoomSamplingTests.Run);
             Run("房间文本：字段树键与中文 PO 一致", RoomLocalizationTests.Run);
             Run("V1.0.1：装饰度门槛、线损系数、深渊晶石导热、房间文本与接入结构", V101FixTests.Run);
+            Run("辐射0.0.1：感生放射性的活化度、污染物与独立构建", RadiationTests.Run);
 
             Console.WriteLine();
             Console.WriteLine("断言 " + TestRunner.Checks + " 项，失败 " + TestRunner.Failures + " 项。");

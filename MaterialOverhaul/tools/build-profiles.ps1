@@ -1,14 +1,15 @@
-<# 构建系统包；默认生成工业、电力、房间三个独立验证包与 V1.0.1 整合包，不部署、不改存档。 #>
+<# 构建系统包；默认生成工业、电力、房间三个独立验证包与 V1.0.1 整合包，不部署、不改存档。
+   辐射独立验证包（Radiation）尚未整合，只在 -Profile Radiation 明确指定时构建。 #>
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [ValidateSet('Industrial', 'Power', 'Room', 'Combined')]
+    [ValidateSet('Industrial', 'Power', 'Room', 'Combined', 'Radiation')]
     [string[]]$Profile = @('Industrial', 'Power', 'Room', 'Combined'),
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release'
 )
 $ErrorActionPreference = 'Stop'
-$canonicalProfiles = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined' }
+$canonicalProfiles = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined'; radiation = 'Radiation' }
 $Profile = @($Profile | ForEach-Object { $canonicalProfiles[$_] })
 $workspaceRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $projectRoot = Join-Path $workspaceRoot 'MaterialOverhaul'
@@ -44,10 +45,11 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     $version = (& dotnet msbuild $projectFile "-p:SystemProfile=$mode" -getProperty:Version).Trim()
     if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw "$mode 版本读取失败。" }
     $settings = switch ($mode) {
-        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false } }
-        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false } }
-        'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true } }
-        'Combined' { @{ Title = '材料革新 V1.0.1 · 工业／电力／房间整合'; Description = 'V1.0.1 三系统整合版：工业温控、加热、订单、磨损与材料改造；电力最短线路损耗、电池与变压器分账；房间分级、平均装饰度／温度条件与房间效果。数值为工作初值，游戏验收与平衡待执行。'; Industrial = $true; Power = $true; Room = $true } }
+        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false; Radiation = $false } }
+        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false; Radiation = $false } }
+        'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true; Radiation = $false } }
+        'Combined' { @{ Title = '材料革新 V1.0.1 · 工业／电力／房间整合'; Description = 'V1.0.1 三系统整合版：工业温控、加热、订单、磨损与材料改造；电力最短线路损耗、电池与变压器分账；房间分级、平均装饰度／温度条件与房间效果。数值为工作初值，游戏验收与平衡待执行。'; Industrial = $true; Power = $true; Room = $true; Radiation = $false } }
+        'Radiation' { @{ Title = '材料革新 · 辐射独立验证'; Description = '辐射0.0.1：感生放射性第一版。建筑受强辐射后累积活化度并自身放射；液体、气体、天然格带上放射性污染物（优先于其他病菌）。工业、电力、房间保持原版。数值为工作初值，游戏验收待执行。'; Industrial = $false; Power = $false; Room = $false; Radiation = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }
@@ -69,7 +71,8 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
         $key = $context.Groups[1].Value
         $isPower = $key.StartsWith('STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_', [StringComparison]::Ordinal)
         $isRoom = $key.StartsWith('STRINGS.ROOMS.MATERIALOVERHAUL.', [StringComparison]::Ordinal)
-        if ($mode -eq 'Combined' -or ($mode -eq 'Power' -and $isPower) -or ($mode -eq 'Room' -and $isRoom) -or ($mode -eq 'Industrial' -and !$isPower -and !$isRoom)) { $block }
+        $isRadiation = $key.StartsWith('STRINGS.RADIATION.MATERIALOVERHAUL.', [StringComparison]::Ordinal)
+        if (($mode -eq 'Combined' -and !$isRadiation) -or ($mode -eq 'Power' -and $isPower) -or ($mode -eq 'Room' -and $isRoom) -or ($mode -eq 'Industrial' -and !$isPower -and !$isRoom -and !$isRadiation) -or ($mode -eq 'Radiation' -and $isRadiation)) { $block }
     }
     [System.IO.File]::WriteAllText((Join-Path $stringsDir 'zh.po'), ($selectedBlocks -join "`n`n") + "`n", $utf8)
     $fileHashes = [ordered]@{}
@@ -78,7 +81,7 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     }
     $manifest = [ordered]@{
         schemaVersion = 1; profile = $mode; version = [string]$version; configuration = $Configuration
-        industrialEnabled = $settings.Industrial; powerEnabled = $settings.Power; roomEnabled = $settings.Room
+        industrialEnabled = $settings.Industrial; powerEnabled = $settings.Power; roomEnabled = $settings.Room; radiationEnabled = $settings.Radiation
         sourceCommit = $commit; sourceDirty = $sourceDirty; files = $fileHashes
     }
     [System.IO.File]::WriteAllText((Join-Path $packageDir 'build_profile.json'), ($manifest | ConvertTo-Json -Depth 5) + "`n", $utf8)

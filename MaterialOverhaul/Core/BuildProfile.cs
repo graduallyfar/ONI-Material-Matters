@@ -9,24 +9,36 @@ namespace MaterialOverhaul.Core
         public const bool IndustrialEnabled = false;
         public const bool PowerEnabled = true;
         public const bool RoomEnabled = false;
+        public const bool RadiationEnabled = false;
 #elif MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
         public const string Name = "Industrial";
         public const string DisplayName = "工业独立验证版";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = false;
         public const bool RoomEnabled = false;
+        public const bool RadiationEnabled = false;
 #elif MATERIAL_OVERHAUL_ROOM_ONLY
         public const string Name = "Room";
         public const string DisplayName = "房间独立验证版";
         public const bool IndustrialEnabled = false;
         public const bool PowerEnabled = false;
         public const bool RoomEnabled = true;
+        public const bool RadiationEnabled = false;
+#elif MATERIAL_OVERHAUL_RADIATION_ONLY
+        public const string Name = "Radiation";
+        public const string DisplayName = "辐射独立验证版";
+        public const bool IndustrialEnabled = false;
+        public const bool PowerEnabled = false;
+        public const bool RoomEnabled = false;
+        public const bool RadiationEnabled = true;
 #else
         public const string Name = "Combined";
         public const string DisplayName = "V1.0.1 三系统整合版";
         public const bool IndustrialEnabled = true;
         public const bool PowerEnabled = true;
         public const bool RoomEnabled = true;
+        // 辐射系统尚未整合进整合版。
+        public const bool RadiationEnabled = false;
 #endif
     }
 }
