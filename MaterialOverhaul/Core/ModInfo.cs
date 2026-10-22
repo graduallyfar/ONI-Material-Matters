@@ -7,7 +7,7 @@ namespace MaterialOverhaul.Core
     public static class ModInfo
     {
         public const string StaticID = "MaterialOverhaul";
-        public const string DisplayName = "Material Overhaul";
+        public const string DisplayName = "Material Matters";
         // 须与 MaterialOverhaul.csproj 中各 SystemProfile 的 Version 一致（ProfileChecks 核对）。
 #if MATERIAL_OVERHAUL_POWER_ONLY
         public const string Version = "0.0.2";

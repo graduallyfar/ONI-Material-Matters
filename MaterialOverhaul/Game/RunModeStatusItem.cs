@@ -13,7 +13,7 @@ namespace MaterialOverhaul.Game
         {
             if (Item != null) return;
             Db db = Db.Get();
-            Category = new StatusItemCategory("MaterialOverhaulRunModeCategory", db.StatusItemCategories, "Material Overhaul mode");
+            Category = new StatusItemCategory("MaterialOverhaulRunModeCategory", db.StatusItemCategories, "Material Matters mode");
             db.StatusItemCategories.Add(Category);
             Item = new StatusItem("MaterialOverhaulRunMode", "{0}", "{0}", "status_item_fabricator_select",
                 StatusItem.IconType.Custom, NotificationType.Neutral, false, OverlayModes.None.ID, showWorldIcon: false);

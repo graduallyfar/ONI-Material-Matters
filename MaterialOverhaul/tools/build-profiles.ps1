@@ -44,11 +44,11 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     $version = (& dotnet msbuild $projectFile "-p:SystemProfile=$mode" -getProperty:Version).Trim()
     if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw "$mode 版本读取失败。" }
     $settings = switch ($mode) {
-        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false; Radiation = $false } }
-        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false; Radiation = $false } }
-        'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true; Radiation = $false } }
-        'Combined' { @{ Title = '材料革新 V1.0.2 · 工业／电力／房间／辐射整合'; Description = 'V1.0.2 整合版：工业温控、加热、订单、磨损与材料改造；电力最短线路损耗、电池与变压器分账；房间分级、平均装饰度／温度条件与房间效果；辐射感生放射性（建筑活化与放射性污染物）。模组界面“选项”可分别开关四个系统（重启生效）。数值为工作初值，游戏验收与平衡待执行。'; Industrial = $true; Power = $true; Room = $true; Radiation = $true } }
-        'Radiation' { @{ Title = '材料革新 · 辐射独立验证'; Description = '辐射0.0.1：感生放射性第一版。建筑受强辐射后累积活化度并自身放射；液体、气体、天然格带上放射性污染物（优先于其他病菌）。工业、电力、房间保持原版。数值为工作初值，游戏验收待执行。'; Industrial = $false; Power = $false; Room = $false; Radiation = $true } }
+        'Industrial' { @{ Title = '物尽其用 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false; Radiation = $false } }
+        'Power' { @{ Title = '物尽其用 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false; Radiation = $false } }
+        'Room' { @{ Title = '物尽其用 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true; Radiation = $false } }
+        'Combined' { @{ Title = '物尽其用 · Material Matters'; Description = '让材料属性参与工程运算：建材决定工业建筑的工作温区与磨损，导线材料决定输电损耗，装饰度与温度决定高级房间，强辐射会让材料带上放射性。可在模组「选项」中分别开关工业、电力、房间、辐射四个系统（重启生效）。'; Industrial = $true; Power = $true; Room = $true; Radiation = $true } }
+        'Radiation' { @{ Title = '物尽其用 · 辐射独立验证'; Description = '辐射0.0.1：感生放射性第一版。建筑受强辐射后累积活化度并自身放射；液体、气体、天然格带上放射性污染物（优先于其他病菌）。工业、电力、房间保持原版。数值为工作初值，游戏验收待执行。'; Industrial = $false; Power = $false; Room = $false; Radiation = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }

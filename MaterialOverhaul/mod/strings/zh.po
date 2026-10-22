@@ -1253,13 +1253,13 @@ msgstr "选项"
 
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON_TOOLTIP
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON_TOOLTIP"
-msgid "Choose which Material Overhaul systems are enabled. Changes take effect after restarting the game."
-msgstr "选择启用材料革新的哪些系统。\n修改保存后，重启游戏生效。"
+msgid "Choose which Material Matters systems are enabled. Changes take effect after restarting the game."
+msgstr "选择启用物尽其用的哪些系统。\n修改保存后，重启游戏生效。"
 
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.TITLE
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.TITLE"
-msgid "Material Overhaul · Systems"
-msgstr "材料革新 · 系统开关"
+msgid "Material Matters · Systems"
+msgstr "物尽其用 · 系统开关"
 
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.INTRO
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.INTRO"

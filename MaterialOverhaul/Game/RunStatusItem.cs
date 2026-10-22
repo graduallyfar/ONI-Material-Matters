@@ -64,7 +64,7 @@ namespace MaterialOverhaul.Game
                 return;
             }
 
-            Category = new StatusItemCategory("MaterialOverhaulRunStatusCategory", db.StatusItemCategories, "Material Overhaul status");
+            Category = new StatusItemCategory("MaterialOverhaulRunStatusCategory", db.StatusItemCategories, "Material Matters status");
             db.StatusItemCategories.Add(Category);
 
             Item = new StatusItem(

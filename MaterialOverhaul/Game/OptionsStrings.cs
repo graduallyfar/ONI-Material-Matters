@@ -12,8 +12,8 @@ namespace MaterialOverhaul.Game
             public static class MATERIALOVERHAUL
             {
                 public static LocString BUTTON = "选项";
-                public static LocString BUTTON_TOOLTIP = "选择启用材料革新的哪些系统。\n修改保存后，重启游戏生效。";
-                public static LocString TITLE = "材料革新 · 系统开关";
+                public static LocString BUTTON_TOOLTIP = "选择启用物尽其用的哪些系统。\n修改保存后，重启游戏生效。";
+                public static LocString TITLE = "物尽其用 · 系统开关";
                 public static LocString INTRO = "点击下面的按钮开启或关闭对应系统。保存后需要重启游戏才会生效。";
                 public static LocString STATE_ON = "{0}：开启";
                 public static LocString STATE_OFF = "{0}：关闭";
