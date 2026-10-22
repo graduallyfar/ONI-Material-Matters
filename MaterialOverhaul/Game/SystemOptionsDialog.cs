@@ -43,7 +43,7 @@ namespace MaterialOverhaul.Game
                 }
 
                 KMod.Mod mod = mods[index];
-                if (mod == null || mod.staticID != ModInfo.StaticID || !mod.IsEnabledForActiveDlc())
+                if (mod == null || mod.staticID != Core.ModInfo.StaticID || !mod.IsEnabledForActiveDlc())
                 {
                     continue;
                 }

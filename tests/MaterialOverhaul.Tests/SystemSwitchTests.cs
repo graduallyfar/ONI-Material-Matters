@@ -129,7 +129,7 @@ namespace MaterialOverhaul.Tests
                 "工业独立版排除系统开关");
 
             string dialog = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "SystemOptionsDialog.cs"));
-            TestRunner.Check(dialog.Contains("mod.staticID != ModInfo.StaticID"), "按钮只加在本 Mod 那一行");
+            TestRunner.Check(dialog.Contains("mod.staticID != Core.ModInfo.StaticID"), "按钮只加在本 Mod 那一行");
             TestRunner.Check(dialog.Contains("SystemSwitches.Save(ConfigPath, pending"), "保存写入配置文件");
             TestRunner.Check(dialog.Contains("App.instance.Restart"), "开关变化时提示重启");
         }
