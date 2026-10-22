@@ -62,6 +62,8 @@
     <Compile Include="..\..\MaterialOverhaul\Power\**\*.cs" LinkBase="Linked\Power" />
     <!-- 房间纯判定层：配置、快照、平均环境、条件求值与覆盖规则。 -->
     <Compile Include="..\..\MaterialOverhaul\Rooms\**\*.cs" LinkBase="Linked\Rooms" />
+    <!-- 辐射独立验证版的纯判断层：活化度、污染物添加量与优先规则。 -->
+    <Compile Include="..\..\MaterialOverhaul\Radiation\**\*.cs" LinkBase="Linked\Radiation" />
     <!-- 基础版只读电网快照的实际源码；原版对象由 PowerTopologyGameStubs 提供。 -->
     <Compile Include="..\..\MaterialOverhaul\Game\PowerTopologyMonitor.cs" Link="Linked\Game\PowerTopologyMonitor.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\Patches\PowerTopologyPatches.cs" Link="Linked\Game\PowerTopologyPatches.cs" />

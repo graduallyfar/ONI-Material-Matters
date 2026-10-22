@@ -13,7 +13,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Industrial', 'Power', 'Room', 'Combined')]
+    [ValidateSet('Industrial', 'Power', 'Room', 'Combined', 'Radiation')]
     [string]$Profile,
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release',
@@ -22,7 +22,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Profile = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined' }[$Profile]
+$Profile = @{ industrial = 'Industrial'; power = 'Power'; room = 'Room'; combined = 'Combined'; radiation = 'Radiation' }[$Profile]
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $projectRoot

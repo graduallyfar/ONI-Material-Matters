@@ -9,6 +9,8 @@
     <DefineConstants Condition="'$(SystemProfile)' == 'Power'">$(DefineConstants);MATERIAL_OVERHAUL_POWER_ONLY</DefineConstants>
     <DefineConstants Condition="'$(SystemProfile)' == 'Industrial'">$(DefineConstants);MATERIAL_OVERHAUL_INDUSTRIAL_ONLY</DefineConstants>
     <DefineConstants Condition="'$(SystemProfile)' == 'Room'">$(DefineConstants);MATERIAL_OVERHAUL_ROOM_ONLY</DefineConstants>
+    <!-- 辐射独立验证版：感生放射性第一版，不并入整合版。 -->
+    <DefineConstants Condition="'$(SystemProfile)' == 'Radiation'">$(DefineConstants);MATERIAL_OVERHAUL_RADIATION_ONLY</DefineConstants>
     <IntermediateOutputPath>obj\$(SystemProfile)\$(Configuration)\</IntermediateOutputPath>
     <!-- 目标框架由游戏程序集核实：OxygenNotIncluded_Data\Managed\netstandard.dll 为 2.1.0.0 -->
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -18,10 +20,11 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <!-- 整合版为正式版号；三个独立验证包保留各自系统的验证号（Industrial／Room 0.2.2，Power 0.0.2）。 -->
+    <!-- 整合版为正式版号；独立验证包保留各自系统的验证号（Industrial／Room 0.2.2，Power 0.0.2，Radiation 0.0.1）。 -->
     <Version>0.2.2</Version>
     <Version Condition="'$(SystemProfile)' == 'Power'">0.0.2</Version>
     <Version Condition="'$(SystemProfile)' == 'Combined'">1.0.1</Version>
+    <Version Condition="'$(SystemProfile)' == 'Radiation'">0.0.1</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <DebugType>portable</DebugType>
@@ -41,20 +44,29 @@
 
   <!-- 真正排除另一系统的组件、判断层与补丁，而非只在运行期跳过。 -->
   <ItemGroup Condition="'$(SystemProfile)' == 'Power'">
-    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Rooms\**\*.cs" />
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Rooms\**\*.cs;Radiation\**\*.cs" />
     <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Industrial'">
-    <Compile Remove="Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+    <Compile Remove="Radiation\**\*.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs;Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Room'">
-    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs" />
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs;Radiation\**\*.cs" />
     <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs" />
   </ItemGroup>
 
+  <!-- 辐射系统尚未整合：整合版不编入任何辐射源码。 -->
+  <ItemGroup Condition="'$(SystemProfile)' == 'Combined'">
+    <Compile Remove="Radiation\**\*.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SystemProfile)' == 'Radiation'">
+    <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs;Rooms\**\*.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs" />
+  </ItemGroup>
+
   <Target Name="CheckSystemProfile" BeforeTargets="PrepareForBuild">
-    <Error Condition="'$(SystemProfile)' != 'Industrial' and '$(SystemProfile)' != 'Power' and '$(SystemProfile)' != 'Room' and '$(SystemProfile)' != 'Combined'"
-           Text="未知SystemProfile：$(SystemProfile)。只支持Industrial、Power、Room、Combined。" />
+    <Error Condition="'$(SystemProfile)' != 'Industrial' and '$(SystemProfile)' != 'Power' and '$(SystemProfile)' != 'Room' and '$(SystemProfile)' != 'Combined' and '$(SystemProfile)' != 'Radiation'"
+           Text="未知SystemProfile：$(SystemProfile)。只支持Industrial、Power、Room、Combined、Radiation。" />
   </Target>
 
   <PropertyGroup>

@@ -1215,3 +1215,14 @@ msgstr "任务控制室助推：速度 +{0}%"
 msgctxt "STRINGS.ROOMS.MATERIALOVERHAUL.STATUS.ROCKET_SPACEPORT"
 msgid "STATUS.ROCKET_SPACEPORT"
 msgstr "航天发射场发射：速度 +{0}%，燃料消耗 −{1}%"
+
+#. 辐射独立验证版：活化建筑的状态栏条目
+#. STRINGS.RADIATION.MATERIALOVERHAUL.STATUS.INDUCED.NAME
+msgctxt "STRINGS.RADIATION.MATERIALOVERHAUL.STATUS.INDUCED.NAME"
+msgid "Induced Radiation: {0} rads/cycle"
+msgstr "感生放射：{0} rads/周期"
+
+#. STRINGS.RADIATION.MATERIALOVERHAUL.STATUS.INDUCED.TOOLTIP
+msgctxt "STRINGS.RADIATION.MATERIALOVERHAUL.STATUS.INDUCED.TOOLTIP"
+msgid "This building has been exposed to strong radiation for a long time and is now radioactive itself."
+msgstr "这个建筑长期处在强辐射中，自身已带有放射性。\n\n当前自身放射：{0} rads/周期\n离开辐射源后，放射强度每 {1} 周期减半。"

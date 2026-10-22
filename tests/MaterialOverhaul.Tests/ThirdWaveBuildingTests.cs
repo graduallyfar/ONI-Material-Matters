@@ -767,6 +767,9 @@ namespace MaterialOverhaul.Tests
             // 分别校验；这里只核对工业与电力共用的 103 条，避免把房间包差异算成工业回归。
             foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(roomKey);
+            // 辐射独立验证版的键同样只进辐射包，由 ProfileChecks 校验。
+            foreach (string radiationKey in po.Keys.Where(k => k.StartsWith("STRINGS.RADIATION.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
+                po.Remove(radiationKey);
             TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {

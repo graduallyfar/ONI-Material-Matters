@@ -2,7 +2,7 @@ using System;
 using HarmonyLib;
 using KMod;
 using MaterialOverhaul.Core;
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
 using MaterialOverhaul.Hardness;
 using MaterialOverhaul.Zones;
 #endif
@@ -28,7 +28,7 @@ namespace MaterialOverhaul
                 throw;
             }
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             Core.DebugValues.Initialize(path);
 #endif
 
@@ -39,12 +39,18 @@ namespace MaterialOverhaul
 
             ModLog.Info("v" + Core.ModInfo.Version + "；构建模式：" + BuildProfile.DisplayName
                 + " [" + BuildProfile.Name + "]；工业=" + BuildProfile.IndustrialEnabled + "；电力=" + BuildProfile.PowerEnabled
-                + "；房间=" + BuildProfile.RoomEnabled + "。");
-#if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+                + "；房间=" + BuildProfile.RoomEnabled + "；辐射=" + BuildProfile.RadiationEnabled + "。");
+#if MATERIAL_OVERHAUL_RADIATION_ONLY
+            ModLog.Info("辐射0.0.1：感生放射性第一版。建筑（含砖块）受照超过 "
+                + Radiation.RadiationBalance.ActivationThresholdRads.ToString("0") + " rads/周期累积活化度，半衰期 "
+                + Radiation.RadiationBalance.BuildingHalfLifeCycles.ToString("0") + " 周期，活化后自身放射；"
+                + "液体、气体、天然格添加原版放射性污染物（优先于其他病菌）。工业、电力、房间保持原版；数值为工作初值，游戏验收待执行。");
+#endif
+#if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             ModLog.Info("电力0.0.2：按最短物理路径实际支付损耗；设备、电池充放电与变压器分账；信息卡显示电线数量、输送和损耗。系数与电导率为首轮测试初值，尚未通过游戏平衡验收。");
 #endif
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             // 注意：UserMod2 继承链上存在同名成员 ModInfo，此处必须用限定名指到本 Mod 的常量类。
             ModLog.Info("v" + Core.ModInfo.Version + " 已加载。白名单建筑 " + BuildingWhitelist.Count
                 + " 项，配方温区条目 " + RecipeZoneTable.Count
@@ -64,13 +70,13 @@ namespace MaterialOverhaul
             ModLog.Info("工业温控、预热补热、订单、磨损、材料分类及过热改造未编入此验证版；工业建筑沿用原版机制。");
             ModLog.Info("加载路径：" + path + "；程序集：" + typeof(MaterialOverhaulMod).Assembly.Location);
 #endif
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             ModLog.Info("房间系统：16 个新增房间、3 项原版改造、平均装饰度／温度条件（含保持回差）与独立模式已编入；"
                 + "士气、压力、医疗（含优先入院与辐射拯救者）、特质、生产效率、科研、航天发射场与星际货运站效果已接入；数值为工作初值，游戏验收待执行。");
 #endif
         }
 
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
         /// <summary>启动时把本版关键数值打一条日志，便于核对实际生效的是哪一套（§2.1）。</summary>
         private static void LogBalanceSummary()
         {
@@ -112,15 +118,18 @@ namespace MaterialOverhaul
         /// </summary>
         private static void RegisterStrings()
         {
-#if !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.UI), "STRINGS.");
 #endif
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(Game.ModStrings.BUILDING), "STRINGS.");
 #endif
-#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY
+#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
             LocString.CreateLocStringKeys(typeof(Game.RoomStrings.ROOMS), "STRINGS.");
+#endif
+#if MATERIAL_OVERHAUL_RADIATION_ONLY
+            LocString.CreateLocStringKeys(typeof(Game.RadiationStrings.RADIATION), "STRINGS.");
 #endif
         }
 
