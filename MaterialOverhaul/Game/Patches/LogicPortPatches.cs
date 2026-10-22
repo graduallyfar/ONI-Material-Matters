@@ -22,6 +22,7 @@ namespace MaterialOverhaul.Patches
     ///      （v0.0.4 开发计划 §2.4、验收 G04）。
     /// 文本正确时仍然只是重写一遍，属于幂等操作。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(LogicPorts), "OnSpawn")]
     internal static class Patch_LogicPorts_OnSpawn
     {

@@ -6,6 +6,7 @@ using MaterialOverhaul.Game;
 namespace MaterialOverhaul.Patches
 {
     // PrimaryElement.OnSpawn 会把材料倍率加入建筑属性；无论组件生成顺序如何，随后再校准一次。
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(PrimaryElement), "OnSpawn")]
     internal static class Patch_PrimaryElement_OnSpawn
     {
@@ -24,6 +25,7 @@ namespace MaterialOverhaul.Patches
     /// 组件自身的 OnSpawn 也会调用一次：两处调用都是幂等的，谁先谁后都能得到同一结果
     /// （先调用时属性修饰项尚未建立，规则值直接落在基础值上；后调用时再补偿一次差值）。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Overheatable), "OnSpawn")]
     internal static class Patch_Overheatable_OnSpawn
     {

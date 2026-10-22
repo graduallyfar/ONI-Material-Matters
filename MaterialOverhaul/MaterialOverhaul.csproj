@@ -11,6 +11,8 @@
     <DefineConstants Condition="'$(SystemProfile)' == 'Room'">$(DefineConstants);MATERIAL_OVERHAUL_ROOM_ONLY</DefineConstants>
     <!-- 辐射独立验证版：只编入感生放射性；整合版同时包含工业、电力、房间与辐射。 -->
     <DefineConstants Condition="'$(SystemProfile)' == 'Radiation'">$(DefineConstants);MATERIAL_OVERHAUL_RADIATION_ONLY</DefineConstants>
+    <!-- 整合版：模组界面“选项”可分别开关四个系统，启动时按开关装配补丁。 -->
+    <DefineConstants Condition="'$(SystemProfile)' == 'Combined'">$(DefineConstants);MATERIAL_OVERHAUL_COMBINED</DefineConstants>
     <IntermediateOutputPath>obj\$(SystemProfile)\$(Configuration)\</IntermediateOutputPath>
     <!-- 目标框架由游戏程序集核实：OxygenNotIncluded_Data\Managed\netstandard.dll 为 2.1.0.0 -->
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -42,22 +44,23 @@
     <AssemblyMetadata Include="MaterialOverhaul.SystemProfile" Value="$(SystemProfile)" />
   </ItemGroup>
 
-  <!-- 真正排除另一系统的组件、判断层与补丁，而非只在运行期跳过。 -->
+  <!-- 真正排除另一系统的组件、判断层与补丁，而非只在运行期跳过。
+       系统开关（Core\SystemSwitches.cs、选项对话框与模组界面补丁）只编入整合版。 -->
   <ItemGroup Condition="'$(SystemProfile)' == 'Power'">
     <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Rooms\**\*.cs;Radiation\**\*.cs" />
-    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModSystem.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Industrial'">
-    <Compile Remove="Radiation\**\*.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs;Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
+    <Compile Remove="Core\SystemSwitches.cs;Game\OptionsStrings.cs;Game\SystemOptionsDialog.cs;Game\Patches\ModOptionsPatches.cs;Radiation\**\*.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs;Power\**\*.cs;Rooms\**\*.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs;Game\PowerStrings.cs;Game\PowerText.cs;Game\PowerTopologyMonitor.cs;Game\PowerWireCount.cs;Game\PowerSettlement.cs;Game\Patches\PowerTopologyPatches.cs;Game\Patches\PowerInfoCardPatches.cs;Game\Patches\PowerSettlementPatches.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(SystemProfile)' == 'Room'">
     <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs;Radiation\**\*.cs" />
-    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModSystem.cs;Core\ModInfo.cs;Core\ModLog.cs;Core\Temperatures.cs;Game\MaterialOverhaulMod.cs;Game\RoomStrings.cs;Game\RoomText.cs;Game\RoomRegistration.cs;Game\RoomEffects.cs;Game\RoomProductionBonus.cs;Game\RoomRecoveryEffect.cs;Game\RoomTraitRegistration.cs;Game\RoomTraitEffects.cs;Game\MaterialDecorRegistration.cs;Game\RoomSnapshotFactory.cs;Game\RoomSnapshotCache.cs;Game\RoomRetention.cs;Game\RoomEnvironmentMonitor.cs;Game\Patches\RoomPatches.cs;Game\Patches\RoomMaterialPatches.cs;Game\RoomQuery.cs;Game\RoomSpaceEffects.cs;Game\RoomSpaceportFlight.cs;Game\RoomGeoTunerEffects.cs;Game\RoomMedicalEffects.cs;Game\RoomBonusStatus.cs;Game\Patches\RoomAdvancedPatches.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(SystemProfile)' == 'Radiation'">
     <Compile Remove="Game\**\*.cs;Core\**\*.cs;Heating\**\*.cs;Hardness\**\*.cs;Orders\**\*.cs;Zones\**\*.cs;Power\**\*.cs;Rooms\**\*.cs" />
-    <Compile Include="Core\BuildProfile.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs" />
+    <Compile Include="Core\BuildProfile.cs;Core\ModSystem.cs;Core\ModInfo.cs;Core\ModLog.cs;Game\MaterialOverhaulMod.cs;Game\RadiationStrings.cs;Game\RadiationStatusItems.cs;Game\RadiationActivation.cs;Game\RadiationInducedMonitor.cs;Game\Patches\RadiationPatches.cs" />
   </ItemGroup>
 
   <Target Name="CheckSystemProfile" BeforeTargets="PrepareForBuild">
@@ -97,6 +100,19 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- 整合版模组界面“选项”按钮要改按钮文字（LocText 继承自 TextMeshPro 与 UGUI）。 -->
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

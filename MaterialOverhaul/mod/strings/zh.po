@@ -1226,3 +1226,114 @@ msgstr "感生放射：{0} rads/周期"
 msgctxt "STRINGS.RADIATION.MATERIALOVERHAUL.STATUS.INDUCED.TOOLTIP"
 msgid "This building has been exposed to strong radiation for a long time and is now radioactive itself."
 msgstr "这个建筑长期处在强辐射中，自身已带有放射性。\n\n当前自身放射：{0} rads/周期\n离开辐射源后，放射强度每 {1} 周期减半。"
+
+#. 模组界面：系统开关选项（仅整合版）
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON"
+msgid "Options"
+msgstr "选项"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON_TOOLTIP
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.BUTTON_TOOLTIP"
+msgid "Choose which Material Overhaul systems are enabled. Changes take effect after restarting the game."
+msgstr "选择启用材料革新的哪些系统。\n修改保存后，重启游戏生效。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.TITLE
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.TITLE"
+msgid "Material Overhaul · Systems"
+msgstr "材料革新 · 系统开关"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.INTRO
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.INTRO"
+msgid "Click the buttons below to turn each system on or off. Changes take effect after restarting the game."
+msgstr "点击下面的按钮开启或关闭对应系统。保存后需要重启游戏才会生效。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.STATE_ON
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.STATE_ON"
+msgid "{0}: On"
+msgstr "{0}：开启"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.STATE_OFF
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.STATE_OFF"
+msgid "{0}: Off"
+msgstr "{0}：关闭"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.PENDING
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.PENDING"
+msgid " (after restart)"
+msgstr "（重启后生效）"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.WARNING
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.WARNING"
+msgid "Turning a system off in an existing save drops the data it keeps on buildings the next time you save; added rooms fall back to vanilla rooms and related duplicant effects and traits stop working. Back up your save first."
+msgstr "在已有存档中途关闭某个系统：该系统记在建筑上的数据（工业订单与磨损进度、建筑活化度、航天飞行加成等）会在下次存档时丢失；新增房间退回原版房间，复制人身上相关的效果和特质暂时失效。重新开启后系统从头开始计算。建议先备份存档。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE"
+msgid "Save"
+msgstr "保存"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE_FAILED
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE_FAILED"
+msgid "Failed to save system switches: {0}"
+msgstr "系统开关保存失败：{0}"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_TITLE
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_TITLE"
+msgid "Restart Required"
+msgstr "需要重启游戏"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_TEXT
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_TEXT"
+msgid "System switches saved. They take effect after restarting the game. Restart now?"
+msgstr "系统开关已保存，重启游戏后生效。现在重启吗？"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_NOW
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_NOW"
+msgid "Restart Now"
+msgstr "立即重启"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_LATER
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.RESTART_LATER"
+msgid "Later"
+msgstr "稍后"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.INDUSTRIAL
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.INDUSTRIAL"
+msgid "Industrial System"
+msgstr "工业系统"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.INDUSTRIAL_TOOLTIP
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.INDUSTRIAL_TOOLTIP"
+msgid "Working temperature zones, built-in heating, orders, wear and material changes for industrial buildings."
+msgstr "工业建筑的工作温区、内置加热、订单、磨损与材料改造。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.POWER
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.POWER"
+msgid "Power System"
+msgstr "电力系统"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.POWER_TOOLTIP
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.POWER_TOOLTIP"
+msgid "Wire losses by shortest path and material, separate accounting for batteries and transformers, grid info card."
+msgstr "电线按最短路径和材料计算损耗，电池充放电与变压器分账，电网信息卡。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.ROOM
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.ROOM"
+msgid "Room System"
+msgstr "房间系统"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.ROOM_TOOLTIP
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.ROOM_TOOLTIP"
+msgid "Room tiers, average decor and temperature conditions, added rooms and room effects."
+msgstr "房间分级、平均装饰度与温度条件、新增房间和房间效果。"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION"
+msgid "Radiation System"
+msgstr "辐射系统"
+
+#. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION_TOOLTIP
+msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION_TOOLTIP"
+msgid "Induced radioactivity: buildings exposed to strong radiation emit it themselves; liquids, gases and tiles pick up radioactive contaminants."
+msgstr "感生放射性：建筑长期受强辐射后自身放射，液体、气体和地块带上放射性污染物。"

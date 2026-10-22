@@ -9,6 +9,7 @@ namespace MaterialOverhaul.Patches
     /// 在 <c>Db.Initialize</c> 之后登记本 Mod 的状态项。
     /// Db.Initialize 内部会重建 BuildingStatusItems 集合，早于它登记会被覆盖，所以用后置补丁。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Db), "Initialize")]
     internal static class Patch_Db_Initialize
     {
@@ -42,6 +43,7 @@ namespace MaterialOverhaul.Patches
     /// 建筑在常温下照样生产）。原版在 `Assets.CreatePrefabs` 末尾调用 `PostProcess()` 把
     /// `preProcessRecipes` 转入 `recipes`，因此在这里补一次登记。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexRecipeManager), "PostProcess")]
     internal static class Patch_ComplexRecipeManager_PostProcess
     {
@@ -70,6 +72,7 @@ namespace MaterialOverhaul.Patches
     ///
     /// 参数用 <c>__args</c> 取，不依赖原方法参数名——参数名一旦对不上，Harmony 注入会直接失败。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingLoader), "CreateBuildingComplete")]
     internal static class Patch_BuildingLoader_CreateBuildingComplete
     {

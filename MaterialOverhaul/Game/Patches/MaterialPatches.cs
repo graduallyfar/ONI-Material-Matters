@@ -6,6 +6,7 @@ using MaterialOverhaul.Game;
 namespace MaterialOverhaul.Patches
 {
     // 配置类已完成建材定义，施工／预览预制件尚未生成；所有接受 Metal 的槽位加入 RefinedMetal。
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingLoader), "CreateBuildingComplete")]
     internal static class Patch_BuildingLoader_AllowRefinedMetal
     {
@@ -17,6 +18,7 @@ namespace MaterialOverhaul.Patches
     }
 
     // 元素加载后、矿石预制件生成前加入标签，让材料选择、取料和旧档实例共用原版分类。
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ElementLoader), "Load")]
     internal static class Patch_ElementLoader_Load
     {
@@ -30,6 +32,7 @@ namespace MaterialOverhaul.Patches
     }
 
     // 原版在这里建立元素过热加成；Db.Initialize 时修饰项尚不存在。
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(LegacyModMain), "ConfigElements")]
     internal static class Patch_LegacyModMain_ConfigElements
     {

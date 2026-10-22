@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Patches
     ///
     /// 白名单外的建筑取不到组件，直接放行原版行为。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Overheatable), "ResetTemperature")]
     internal static class Patch_Overheatable_ResetTemperature
     {
@@ -55,6 +56,7 @@ namespace MaterialOverhaul.Patches
     /// 才锁存过热损坏原因。这样「刚超过阈值但还没扣血」不会被写成「已过热受损」，
     /// 而损坏停机后原版不再发伤害的情形由 <c>MaterialOverhaulFab.TickDamage</c> 的阈值兜底处理。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingHP), "OnDoBuildingDamage")]
     internal static class Patch_BuildingHP_OnDoBuildingDamage
     {

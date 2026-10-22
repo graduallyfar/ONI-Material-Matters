@@ -38,6 +38,7 @@ namespace MaterialOverhaul.Patches
     /// 行里的数值取建筑级静态数据（建筑下限 + 当前过热阈值），不随配方与订单变化，
     /// 避免效果行在切配方时跳动；配方最佳温区仍在配方详情里显示。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "AdditionalEffectsForRecipe")]
     internal static class Patch_ComplexFabricator_AdditionalEffectsForRecipe
     {
@@ -96,6 +97,7 @@ namespace MaterialOverhaul.Patches
     /// **只在真正建成的实例上生效**（<c>MaterialOverhaulFab.Spawned</c>），因此建造菜单里的
     /// 预制件预览保持原版不变。文本全部走本 Mod 的键，不依赖原版 LocString 的类路径。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Overheatable), "GetDescriptors")]
     internal static class Patch_Overheatable_GetDescriptors
     {

@@ -8,6 +8,7 @@ namespace MaterialOverhaul.Patches
     /// 只将本 Mod 的加热滑条放到 -1，使其位于配方卡下方。
     /// SingleSliderSideScreen 未覆写排序方法，因此补丁挂在声明它的基类。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(SideScreenContent), "GetSideScreenSortOrder")]
     internal static class Patch_HeatingPowerSideScreen_SortOrder
     {

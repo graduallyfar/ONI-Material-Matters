@@ -28,6 +28,7 @@
     <!-- 状态项直接编译实际注册／显示源码，替身保留原版两种构造重载的不同语义。 -->
     <Compile Include="..\..\MaterialOverhaul\Game\ModStrings.cs" Link="Linked\Game\ModStrings.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\RoomStrings.cs" Link="Linked\Game\RoomStrings.cs" />
+    <Compile Include="..\..\MaterialOverhaul\Game\OptionsStrings.cs" Link="Linked\Game\OptionsStrings.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\PowerStrings.cs" Link="Linked\Game\PowerStrings.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\DamageStatusItems.cs" Link="Linked\Game\DamageStatusItems.cs" />
     <Compile Include="..\..\MaterialOverhaul\Game\MaterialRiskStatusItems.cs" Link="Linked\Game\MaterialRiskStatusItems.cs" />

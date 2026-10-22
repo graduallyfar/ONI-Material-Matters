@@ -20,6 +20,7 @@ namespace MaterialOverhaul.Patches
     ///   - 未获供电时需求仍然保留，但本 Mod 不注入任何热量（<c>AppliedHeating</c> 为 None）；
     ///   - 不新增第二个消费者，也不新增可见接线口，只复用建筑原有电力连接。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(EnergyConsumer), "get_WattsUsed")]
     internal static class Patch_EnergyConsumer_WattsUsed
     {
@@ -46,6 +47,7 @@ namespace MaterialOverhaul.Patches
     /// 潜在功率：需求排序与「潜在耗电」显示用。取原版额定值与本 Mod 需求中的较大者，
     /// 保证加热需求不会因为建筑基础额定更低而被低估。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(EnergyConsumer), "get_WattsNeededWhenActive")]
     internal static class Patch_EnergyConsumer_WattsNeededWhenActive
     {

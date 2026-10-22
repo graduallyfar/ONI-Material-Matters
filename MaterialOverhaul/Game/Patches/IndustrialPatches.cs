@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace MaterialOverhaul.Patches
 {
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingLoader),"CreateBuildingComplete")]
     internal static class Patch_IndustrialPrefab
     {
@@ -17,6 +18,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ElementConverter),"GetSpeedMultiplier")]
     internal static class Patch_IndustrialConverterSpeed
     {
@@ -27,6 +29,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ElementConverter),"ConvertMass")]
     internal static class Patch_IndustrialConversionGate
     {
@@ -42,6 +45,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(EnergyGenerator),"EnergySim200ms")]
     internal static class Patch_IndustrialGeneration
     {
@@ -70,6 +74,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Generator),"get_WattageRating")]
     internal static class Patch_IndustrialWattage
     {
@@ -82,6 +87,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(StructureTemperaturePayload),"get_OperatingKilowatts")]
     internal static class Patch_IndustrialOperatingHeat
     {
@@ -91,6 +97,7 @@ namespace MaterialOverhaul.Patches
             if (fab != null && fab.Spawned && fab.IsFuelGenerator) __result *= fab.IndustrialEfficiency;
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(StructureTemperaturePayload),"get_ExhaustKilowatts")]
     internal static class Patch_IndustrialExhaustHeat
     {
@@ -98,6 +105,7 @@ namespace MaterialOverhaul.Patches
         { Patch_IndustrialOperatingHeat.Postfix(__instance,ref __result); }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(OilWellCap.States),"IsAbleToPump")]
     internal static class Patch_OilWellStart
     {
@@ -109,6 +117,7 @@ namespace MaterialOverhaul.Patches
             __result &= fab.IndustrialTemperatureAllowed;
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(OilWellCap.States),"MustStopPumping")]
     internal static class Patch_OilWellStop
     {
@@ -120,6 +129,7 @@ namespace MaterialOverhaul.Patches
             __result |= !fab.IndustrialTemperatureAllowed;
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(OilWellCap),"AddGasPressure")]
     internal static class Patch_OilWellPressure
     {
@@ -135,6 +145,7 @@ namespace MaterialOverhaul.Patches
     }
 
     // 原排放器异步运行于SIM。肥料的副产物已按实际耗料由转换回调结算，必须关闭原SIM源。
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingElementEmitter),"UpdateSimState")]
     internal static class Patch_IndustrialEmitter
     {
@@ -149,6 +160,7 @@ namespace MaterialOverhaul.Patches
             if (Active(__instance)) { Active(__instance)=false; Dirty(__instance)=true; }
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(BuildingElementEmitter),"get_EmitRate")]
     internal static class Patch_IndustrialEmitterDescriptor
     {
@@ -159,6 +171,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(WorkableReactable),"InternalCanBegin")]
     internal static class Patch_ScrubberBypass
     {
@@ -175,6 +188,7 @@ namespace MaterialOverhaul.Patches
             return false; // 原Reactable不接管搬运者，继续原移动过程。
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Workable),"WorkTick")]
     internal static class Patch_ScrubberWorkGate
     {
@@ -190,6 +204,7 @@ namespace MaterialOverhaul.Patches
             return false;
         }
     }
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(OreScrubber.Work),"OnWorkTick")]
     internal static class Patch_ScrubberWear
     {

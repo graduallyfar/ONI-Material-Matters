@@ -19,6 +19,7 @@ namespace MaterialOverhaul.Patches
     // V0.1.0 移除逐笔侧屏；保留原版三个入口及底层订单身份。
 
     /// <summary>「+」：新增一笔 1 批的有限订单；原版计数到达上限后会变成无限，这里同步为无限订单。</summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "IncrementRecipeQueueCount")]
     internal static class Patch_ComplexFabricator_IncrementRecipeQueueCount
     {
@@ -66,6 +67,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>「−」：按订单逐笔回退，数量减到 0 时整笔移除。</summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "DecrementRecipeQueueCount")]
     internal static class Patch_ComplexFabricator_DecrementRecipeQueueCount
     {
@@ -115,6 +117,7 @@ namespace MaterialOverhaul.Patches
     /// 侧屏直接设置数量：原版界面沿用合计口径（0 取消该配方全部订单、-1 记为无限、正数改写为一批）。
     /// V0.1.0 只提供原版合计编辑界面，底层仍以有序订单表为准。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "SetRecipeQueueCount")]
     internal static class Patch_ComplexFabricator_SetRecipeQueueCount
     {
@@ -163,6 +166,7 @@ namespace MaterialOverhaul.Patches
     /// 判断仍然沿用原版口径：剩余队列数与原料齐备都由原版方法给出，不复制一份逻辑；
     /// 温度不足不参与选择——温度只决定已锁定批次是加热还是生产（建筑细节文档 §2.3.3）。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "AdvanceNextOrder")]
     internal static class Patch_ComplexFabricator_AdvanceNextOrder
     {
@@ -193,6 +197,7 @@ namespace MaterialOverhaul.Patches
     /// 因此批次完成（<c>CompleteWorkingOrder</c> 末尾会调用本方法）之后立刻按新状态选择订单，
     /// 不会先把刚结束的那笔订单又启动一次。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "RefreshAndStartNextOrder")]
     internal static class Patch_ComplexFabricator_RefreshAndStartNextOrder
     {
@@ -217,6 +222,7 @@ namespace MaterialOverhaul.Patches
     /// 开始生产时锁定对应的那一笔订单：重复配方必须靠订单身份（而不是配方标识）确定是哪一笔。
     /// 这是**批次准备**发生的时刻，锁定必须在这里完成，并且不受温度与自动化影响。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "StartWorkingOrder")]
     internal static class Patch_ComplexFabricator_StartWorkingOrder
     {
@@ -253,6 +259,7 @@ namespace MaterialOverhaul.Patches
     /// 原版计数字典的同步放在**后置**：原版正文内部会自己扣一次计数（走私有的
     /// <c>DecrementRecipeQueueCountInternal</c>，不经过公开 API），后置最后以订单表为准写回。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "CompleteWorkingOrder")]
     internal static class Patch_ComplexFabricator_CompleteWorkingOrder
     {

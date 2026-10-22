@@ -14,6 +14,7 @@ namespace MaterialOverhaul.Patches
     // 参数见 RoomAdvancedEffects；所有加成都是原版效果之外的新增量，DLC 未启用时目标对象不存在、补丁不触发。
 
     /// <summary>离开存档时清空房间效果的运行期派生状态。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(global::Game), "OnCleanUp")]
     internal static class Patch_RoomAdvanced_Game_OnCleanUp
     {
@@ -33,6 +34,7 @@ namespace MaterialOverhaul.Patches
     /// 优先入院（D11）：自动分配诊疗床时先选医疗中心内的空床；没有可用床位时交回原版。
     /// 患病（<c>SicknessMonitor.AutoAssignClinic</c>）与失能（<c>BeIncapacitatedChore</c>）都经过此方法。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Assignables), "AutoAssignSlot")]
     internal static class Patch_Room_Assignables_AutoAssignSlot
     {
@@ -59,6 +61,7 @@ namespace MaterialOverhaul.Patches
     // ---------------- 任务控制室 ----------------
 
     /// <summary>本体版指挥站完成助推：位于任务控制室时给目标火箭登记新增推进比例。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MissionControlWorkable), "OnCompleteWork")]
     internal static class Patch_Room_MissionControl_OnCompleteWork
     {
@@ -85,6 +88,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>本体版任务推进：助推期间按登记的新增比例额外推进（原版另有 +20%）。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Spacecraft), "ProgressMission")]
     internal static class Patch_Room_Spacecraft_ProgressMission
     {
@@ -110,6 +114,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>群星版指挥站完成助推：登记新增速度，并记录操作者科学值供扩展范围使用。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MissionControlClusterWorkable), "OnCompleteWork")]
     internal static class Patch_Room_MissionControlCluster_OnCompleteWork
     {
@@ -139,6 +144,7 @@ namespace MaterialOverhaul.Patches
     /// 群星火箭速度：指挥站新增量与航天发射场加成按基础速度（引擎功率 ÷ 负载）的比例相加。
     /// 只在原版结果大于 0 时追加，不让无人驾驶、停飞的火箭因房间加成移动。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clustercraft), "Speed", MethodType.Getter)]
     internal static class Patch_Room_Clustercraft_Speed
     {
@@ -171,6 +177,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>群星指挥站候选火箭：位于任务控制室时按扩展范围补充原版 2 格以外的候选。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MissionControlCluster.Instance), "UpdateWorkableRocketsInRange")]
     internal static class Patch_Room_MissionControlCluster_UpdateRange
     {
@@ -240,6 +247,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>群星指挥站工作期间按扩展范围判定目标是否仍在范围内，避免超出原版 2 格即中断。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MissionControlClusterWorkable), "OnWorkTick")]
     internal static class Patch_Room_MissionControlCluster_OnWorkTick
     {
@@ -263,6 +271,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MissionControlClusterWorkable), "IsRocketInRange")]
     internal static class Patch_Room_MissionControlCluster_IsRocketInRange
     {
@@ -281,6 +290,7 @@ namespace MaterialOverhaul.Patches
     // ---------------- 地质研究室 ----------------
 
     /// <summary>调谐研究完成前记录研究者科学值；原版完成后会立即进入广播并施加调谐，因此用前缀。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Workable), "CompleteWork")]
     internal static class Patch_Room_GeoTunerResearch_CompleteWork
     {
@@ -302,6 +312,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(GeoTuner), "ApplyTuning")]
     internal static class Patch_Room_GeoTuner_ApplyTuning
     {
@@ -318,6 +329,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(GeoTuner), "RemoveTuning")]
     internal static class Patch_Room_GeoTuner_RemoveTuning
     {
@@ -342,6 +354,7 @@ namespace MaterialOverhaul.Patches
     /// 三个路径都是 null，切换喷泉播放音效时 FMOD 抛空引用。状态机在进入游戏后才初始化，
     /// 届时音效表已就绪，这里只补回仍为空的路径。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(GeoTuner), "InitializeStates")]
     internal static class Patch_Room_GeoTuner_InitializeStates
     {
@@ -384,6 +397,7 @@ namespace MaterialOverhaul.Patches
     /// 调谐仪侧栏：位于地质研究室的调谐仪按扩展上限判定能否再指向一座喷泉。
     /// 原版上限是点击回调与提示里的字面量 5；这里只替换有喷泉的行，空行（「无」）保持原版。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(GeoTunerSideScreen), "SetRow")]
     internal static class Patch_Room_GeoTunerSideScreen_SetRow
     {
@@ -483,6 +497,7 @@ namespace MaterialOverhaul.Patches
     // ---------------- 航天发射场 ----------------
 
     /// <summary>群星火箭实体挂上可保存的航天发射场飞行标记；DLC 未启用时本配置不加载。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(ClustercraftConfig), "CreatePrefab")]
     internal static class Patch_Room_ClustercraftConfig_CreatePrefab
     {
@@ -501,6 +516,7 @@ namespace MaterialOverhaul.Patches
     /// 原版 <c>Clustercraft.Launch</c> 只在确认起飞后调用 <c>DoLaunch</c>，随后才扣除发射那一格燃料；
     /// 此时状态为 <c>Launching</c>，<c>CurrentPad</c> 仍指向起飞平台。在这里写入标记，发射那一格也按折扣扣除。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(CraftModuleInterface), "DoLaunch")]
     internal static class Patch_Room_CraftModuleInterface_DoLaunch
     {
@@ -521,6 +537,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>火箭落地时结束本次飞行的航天发射场加成。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clustercraft), "SetCraftStatus")]
     internal static class Patch_Room_Clustercraft_SetCraftStatus
     {
@@ -534,6 +551,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>航程与「能否移动」判定使用的每格燃料，与实际扣除保持一致。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clustercraft), "FuelPerDistance", MethodType.Getter)]
     internal static class Patch_Room_Clustercraft_FuelPerDistance
     {
@@ -547,6 +565,7 @@ namespace MaterialOverhaul.Patches
     /// 实际扣燃料：尝试航程 ×系数、返回航程 ÷系数，等价于每格燃料与氧化剂 ×系数，
     /// 并保留原版按库存与氧化剂截断的逻辑。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clustercraft), "BurnFromTank")]
     internal static class Patch_Room_Clustercraft_BurnFromTank
     {
@@ -576,6 +595,7 @@ namespace MaterialOverhaul.Patches
     /// 不经 <c>Clustercraft.FuelPerDistance</c>。把这一处读取替换为乘燃料系数后的值；机器人驾驶的
     /// 数据盘航程上限不受影响。每个方法应恰有 1 处读取，不符时保留原版指令并记录日志，不半途替换。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch]
     internal static class Patch_Room_CraftModuleInterface_FuelRange
     {
@@ -650,6 +670,7 @@ namespace MaterialOverhaul.Patches
     /// 发射：标记发射上下文供载荷登记；位于星际货运站时按连发规则回拨本轮计数（每轮多发 2 次）。
     /// 原版在本方法返回后才把计数 +1 并判断是否进入冷却。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RailGun), "LaunchProjectile")]
     internal static class Patch_Room_RailGun_LaunchProjectile
     {
@@ -696,6 +717,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>载荷出发：来自星际货运站的载荷登记为加速载荷。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RailGunPayload.StatesInstance), "Launch")]
     internal static class Patch_Room_RailGunPayload_Launch
     {
@@ -717,6 +739,7 @@ namespace MaterialOverhaul.Patches
         }
     }
 
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(BallisticClusterGridEntity), "GetSpeed")]
     internal static class Patch_Room_BallisticClusterGridEntity_GetSpeed
     {
@@ -730,6 +753,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>冷却：位于星际货运站时每次模拟额外递减冷却计时，使冷却按 1.5 倍速进行。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RailGun), "Sim200ms")]
     internal static class Patch_Room_RailGun_Sim200ms
     {

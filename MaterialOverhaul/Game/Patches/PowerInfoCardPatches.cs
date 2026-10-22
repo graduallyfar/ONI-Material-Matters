@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace MaterialOverhaul.Patches
 {
+    [Core.SystemPart(Core.ModSystem.Power)]
     [HarmonyPatch(typeof(AdditionalDetailsPanel), "RefreshEnergyOverviewPanel")]
     internal static class Patch_PowerInfoCard_WireCount
     {

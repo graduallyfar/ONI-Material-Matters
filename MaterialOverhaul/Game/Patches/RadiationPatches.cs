@@ -7,6 +7,7 @@ using UnityEngine;
 namespace MaterialOverhaul.Patches
 {
     /// <summary>在 Db 初始化之后登记感生放射状态项（Db.Initialize 会重建状态项集合）。</summary>
+    [Core.SystemPart(Core.ModSystem.Radiation)]
     [HarmonyPatch(typeof(Db), "Initialize")]
     internal static class Patch_Radiation_Db_Initialize
     {
@@ -27,6 +28,7 @@ namespace MaterialOverhaul.Patches
     /// 给所有完成建筑（含建造砖块）挂上活化度组件。原版自带辐射源在本方法之后的
     /// <c>DoPostConfigureComplete</c> 才添加，所以是否参与活化在组件生成时判断。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Radiation)]
     [HarmonyPatch(typeof(BuildingLoader), "CreateBuildingComplete")]
     internal static class Patch_Radiation_BuildingComplete
     {
@@ -40,6 +42,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>借用原版房间探测的 1 秒模拟更新驱动扫描；暂停时原版不调用，扫描随之暂停。</summary>
+    [Core.SystemPart(Core.ModSystem.Radiation)]
     [HarmonyPatch(typeof(RoomProber), "Sim1000ms")]
     internal static class Patch_Radiation_RoomProber_Sim1000ms
     {
@@ -58,6 +61,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>退出或读档前清空扫描的静态状态。</summary>
+    [Core.SystemPart(Core.ModSystem.Radiation)]
     [HarmonyPatch(typeof(global::Game), "OnCleanUp")]
     internal static class Patch_Radiation_Game_OnCleanUp
     {

@@ -73,7 +73,14 @@ internal static partial class Program
         "MaterialOverhaul.Patches.Patch_Radiation_RoomProber_Sim1000ms",
         "MaterialOverhaul.Patches.Patch_Radiation_Game_OnCleanUp"
     };
-    private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches);
+    // 整合版外壳补丁：模组界面“选项”按钮，不属于任何系统，任何独立版都不应包含。
+    private static readonly HashSet<string> ShellPatches = new(StringComparer.Ordinal)
+    {
+        "MaterialOverhaul.Patches.Patch_ModsScreen_BuildDisplay"
+    };
+    // 与 MaterialOverhaul.Core.ModSystem 的枚举值一致。
+    private const int ShellPart = 0, IndustrialPart = 1, PowerPart = 2, RoomPart = 3, RadiationPart = 4;
+    private sealed record Snapshot(HashSet<string> Types, HashSet<string> Patches, Dictionary<string, int> Parts);
 
     private static void Check(bool condition, string message)
     {
@@ -110,7 +117,12 @@ internal static partial class Program
                 union.UnionWith(power.Patches);
                 union.UnionWith(room.Patches);
                 union.UnionWith(radiation.Patches);
-                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于四个独立版补丁的并集。");
+                union.UnionWith(ShellPatches);
+                Check(union.SetEquals(combined.Patches), "完整整合版补丁必须恰好等于四个独立版补丁的并集加外壳补丁。");
+                // 整合版按系统开关装配补丁：每个补丁的系统标注必须与它所在的独立版一致。
+                foreach (var (standalone, part) in new[] { (industrial, IndustrialPart), (power, PowerPart), (room, RoomPart), (radiation, RadiationPart) })
+                    foreach (string patch in standalone.Patches)
+                        Check(combined.Parts[patch] == part, "整合版补丁系统标注与独立版归属不一致：" + patch);
                 Check(!radiation.Patches.Overlaps(industrial.Patches) && !radiation.Patches.Overlaps(power.Patches)
                     && !radiation.Patches.Overlaps(room.Patches), "辐射独立版不得与其他独立版包含同一个功能补丁。");
                 Check(!industrial.Patches.Overlaps(power.Patches), "工业与电力独立版不得包含同一个功能补丁。");
@@ -172,6 +184,7 @@ internal static partial class Program
         Check(productVersion == expectedVersion || productVersion?.StartsWith(expectedVersion + "+", StringComparison.Ordinal) == true, "DLL产品版本不符。");
         var types = new HashSet<string>(StringComparer.Ordinal);
         var patches = new HashSet<string>(StringComparer.Ordinal);
+        var parts = new Dictionary<string, int>(StringComparer.Ordinal);
         var textKeys = new HashSet<string>(StringComparer.Ordinal);
         foreach (TypeDefinitionHandle handle in metadata.TypeDefinitions)
         {
@@ -183,7 +196,16 @@ internal static partial class Program
                 Check(Encoding.Unicode.GetString(metadata.GetBlobBytes(metadata.GetConstant(versionField.GetDefaultValue()).Value)) == expectedVersion, "启动日志版本与包版本不一致。");
             }
             foreach (CustomAttributeHandle attr in type.GetCustomAttributes())
-                if (AttributeType(metadata, metadata.GetCustomAttribute(attr)) == "HarmonyLib.HarmonyPatch") patches.Add(name);
+            {
+                CustomAttribute attribute = metadata.GetCustomAttribute(attr);
+                string attributeType = AttributeType(metadata, attribute);
+                if (attributeType == "HarmonyLib.HarmonyPatch") patches.Add(name);
+                if (attributeType == "MaterialOverhaul.Core.SystemPartAttribute")
+                {
+                    var blob = metadata.GetBlobReader(attribute.Value); blob.ReadUInt16();
+                    Check(parts.TryAdd(name, blob.ReadInt32()), "补丁类重复标注系统：" + name);
+                }
+            }
             if (name == "MaterialOverhaul.Core.BuildProfile")
             {
                 foreach (FieldDefinitionHandle fieldHandle in type.GetFields())
@@ -205,6 +227,7 @@ internal static partial class Program
             const string textPrefix = "MaterialOverhaul.Game.ModStrings+";
             const string roomTextPrefix = "MaterialOverhaul.Game.RoomStrings+";
             const string radiationTextPrefix = "MaterialOverhaul.Game.RadiationStrings+";
+            const string optionsTextPrefix = "MaterialOverhaul.Game.OptionsStrings+";
             if (name.StartsWith(textPrefix, StringComparison.Ordinal))
                 foreach (FieldDefinitionHandle field in type.GetFields())
                     textKeys.Add("STRINGS." + name[textPrefix.Length..].Replace('+', '.').ToUpperInvariant()
@@ -217,8 +240,26 @@ internal static partial class Program
                 foreach (FieldDefinitionHandle field in type.GetFields())
                     textKeys.Add("STRINGS." + name[radiationTextPrefix.Length..].Replace('+', '.').ToUpperInvariant()
                         + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
+            if (name.StartsWith(optionsTextPrefix, StringComparison.Ordinal))
+                foreach (FieldDefinitionHandle field in type.GetFields())
+                    textKeys.Add("STRINGS." + name[optionsTextPrefix.Length..].Replace('+', '.').ToUpperInvariant()
+                        + "." + metadata.GetString(metadata.GetFieldDefinition(field).Name).ToUpperInvariant());
         }
         Check(types.Contains("MaterialOverhaul.Core.BuildProfile"), "缺少构建身份。");
+        // 每个补丁类都要标明所属系统；独立版只能含自己系统的补丁，系统开关与外壳补丁只在整合版。
+        Check(parts.Keys.ToHashSet().SetEquals(patches), "存在未标注所属系统的补丁类，或标注落在非补丁类上。");
+        int ownPart = profile switch { "Industrial" => IndustrialPart, "Power" => PowerPart, "Room" => RoomPart, "Radiation" => RadiationPart, _ => -1 };
+        if (profile == "Combined")
+        {
+            Check(patches.Where(p => parts[p] == ShellPart).ToHashSet().SetEquals(ShellPatches), "整合版外壳补丁不符。");
+            Check(types.Contains("MaterialOverhaul.Core.SystemSwitches") && types.Contains("MaterialOverhaul.Game.SystemOptionsDialog"), "整合版缺少系统开关。");
+        }
+        else
+        {
+            Check(patches.All(p => parts[p] == ownPart), profile + "独立版含有其他系统标注的补丁。");
+            Check(!types.Contains("MaterialOverhaul.Core.SystemSwitches") && !types.Contains("MaterialOverhaul.Game.SystemOptionsDialog")
+                && !types.Any(t => t.StartsWith("MaterialOverhaul.Game.OptionsStrings", StringComparison.Ordinal)), profile + "独立版不应包含系统开关。");
+        }
         if (profile is "Industrial" or "Power" or "Room")
         {
             Check(!patches.Overlaps(RadiationPatches), profile + "独立版包含辐射补丁。");
@@ -272,14 +313,14 @@ internal static partial class Program
                 Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑活化组件。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : profile == "Radiation" ? 2 : 268;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 163 : profile == "Radiation" ? 2 : 290;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();
         Check(textKeys.Count == expectedKeys, "DLL本地化字段数不符。");
         Check(poKeys.Count == expectedKeys && textKeys.SetEquals(poKeys), "PO与此模式的真实字段不一致。");
         Console.WriteLine($"{profile}: {patches.Count}个补丁，{textKeys.Count}条文本；DLL与包一致。");
-        return new Snapshot(types, patches);
+        return new Snapshot(types, patches, parts);
     }
 
     private static string TypeName(MetadataReader reader, TypeDefinitionHandle handle)

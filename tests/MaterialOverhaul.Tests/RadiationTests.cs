@@ -227,7 +227,7 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(script.Contains("[string[]]$Profile = @('Industrial', 'Power', 'Room', 'Radiation', 'Combined')"),
                 "默认构建四个独立版与整合版");
             TestRunner.Check(script.Contains("if ($mode -eq 'Combined' -or"), "整合包本地化包含全部键（含辐射）");
-            TestRunner.Check(script.Contains("($mode -eq 'Industrial' -and !$isPower -and !$isRoom -and !$isRadiation)"), "工业包本地化不含辐射键");
+            TestRunner.Check(script.Contains("($mode -eq 'Industrial' -and !$isPower -and !$isRoom -and !$isRadiation -and !$isOptions)"), "工业包本地化不含辐射键");
 
             string entry = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "MaterialOverhaulMod.cs"));
             TestRunner.Check(entry.Contains("#if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY\n            LocString.CreateLocStringKeys(typeof(Game.RadiationStrings.RADIATION)")

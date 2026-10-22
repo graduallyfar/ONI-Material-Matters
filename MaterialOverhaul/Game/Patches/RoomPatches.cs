@@ -8,6 +8,7 @@ using MaterialOverhaul.Rooms;
 namespace MaterialOverhaul.Patches
 {
     /// <summary>在 Db.Initialize 之后登记房间类型；此时原版 RoomTypes 已建好、探测器尚未运行。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Db), "Initialize")]
     internal static class Patch_Room_Db_Initialize
     {
@@ -31,6 +32,7 @@ namespace MaterialOverhaul.Patches
     /// 开始一轮房间判定时清空快照缓存；判定结束后按已确认的覆盖关系做后置仲裁。
     /// 参数用 <c>__args</c> 取，避免依赖原方法参数名。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Database.RoomTypes), "GetRoomType")]
     internal static class Patch_RoomTypes_GetRoomType
     {
@@ -61,6 +63,7 @@ namespace MaterialOverhaul.Patches
     /// 对私人卧室、宴会厅追加最低装饰度与温度条件。
     /// 主条件仍由原版判定；附加条件不足时返回「主条件满足」，按原版规则降级。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomType), "isSatisfactory")]
     internal static class Patch_RoomType_IsSatisfactory
     {
@@ -82,6 +85,7 @@ namespace MaterialOverhaul.Patches
     /// 每次房间拓扑刷新前放宽探测器上限，让大型房间能建立 Room 对象；
     /// 刷新结束后丢弃本轮记下的旧房间类型（见 <see cref="RoomRetention"/>）。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomProber), "Refresh")]
     internal static class Patch_RoomProber_Refresh
     {
@@ -100,6 +104,7 @@ namespace MaterialOverhaul.Patches
     /// 原版拓扑变化时先清除旧 Room、再新建 Room，新对象没有类型，保持回差会失效。
     /// 清除前按格子记下旧类型，新房间判定时据此决定是否按保持线判定。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomProber), "ClearRoom")]
     internal static class Patch_Room_RoomProber_ClearRoom
     {
@@ -127,6 +132,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>房间建立并判定类型后，给房间内获得加成的建筑挂上「房间加成」状态。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomProber), "CreateRoom")]
     internal static class Patch_Room_RoomProber_CreateRoom
     {
@@ -145,6 +151,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>环境重判触发的单个房间重建结束后，同样丢弃记下的旧类型。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomProber), "UpdateRoom")]
     internal static class Patch_Room_RoomProber_UpdateRoom
     {
@@ -155,6 +162,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>按固定间隔重判平均温度／装饰度，只在类型变化时重建房间。</summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomProber), "Sim1000ms")]
     internal static class Patch_RoomProber_Sim1000ms
     {
@@ -179,6 +187,7 @@ namespace MaterialOverhaul.Patches
     /// 不给 <c>RoomConstraints</c> 打补丁：Mod 加载时打补丁会提前触发它的静态初始化，原版条件名
     /// （「至少两个科学建筑」等）就会在游戏语言载入前定成英文。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomDetails), "RoomDetailString")]
     internal static class Patch_RoomDetails_RoomDetailString
     {
@@ -199,6 +208,7 @@ namespace MaterialOverhaul.Patches
     ///
     /// 进入型触发（例如公园标识）仍走原版路径，不在此重复。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Workable), "CompleteWork")]
     internal static class Patch_Workable_CompleteWork
     {
@@ -269,6 +279,7 @@ namespace MaterialOverhaul.Patches
     /// 整合版中工业补丁在同一方法后置记录最终倍率，供 <c>OnWorkTick</c> 把缩放后的 dt 还原成
     /// 真实生产秒数计磨损；本补丁须先于它执行，否则房间加速会被误算成更长的生产时间。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Workable), "GetEfficiencyMultiplier")]
     [HarmonyPriority(Priority.HigherThanNormal)]
     internal static class Patch_Room_Workable_GetEfficiencyMultiplier
@@ -309,6 +320,7 @@ namespace MaterialOverhaul.Patches
     /// 数据挖掘中心的覆写会再乘温度效率，因此这里只乘房间倍率、不重复处理温度。
     /// 连续转换设备见 <see cref="Patch_Room_ElementConverter_GetSpeedMultiplier"/>。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(ComplexFabricator), "ComputeWorkProgress")]
     internal static class Patch_Room_ComplexFabricator_ComputeWorkProgress
     {
@@ -336,6 +348,7 @@ namespace MaterialOverhaul.Patches
     /// 原版 <c>ElementConverter.GetSpeedMultiplier</c> 同时决定消耗与产出速率；工业温控补丁
     /// 也在此乘温度效率，两个后置补丁按乘法叠加（顺序无关）。不改变配方投入产出比例。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(ElementConverter), "GetSpeedMultiplier")]
     internal static class Patch_Room_ElementConverter_GetSpeedMultiplier
     {
@@ -364,6 +377,7 @@ namespace MaterialOverhaul.Patches
     /// 并以 <c>IsInCorrectRoom</c> 决定能否运作；任务控制中心、地热调谐实验室、数据机房会顶替
     /// 实验室，若不放行这些设施会停工。只放行 <see cref="RoomDefinition.Beats"/> 明列的原版房间。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomTracker), "IsInCorrectRoom")]
     internal static class Patch_Room_RoomTracker_IsInCorrectRoom
     {
@@ -389,6 +403,7 @@ namespace MaterialOverhaul.Patches
     /// 与 <see cref="Patch_Room_RoomTracker_IsInCorrectRoom"/> 配套：原版 <c>OnUpdateRoom</c> 按房间 id
     /// 直接比较并挂上「不在所需房间」状态；顶替房间内移除这条状态，避免显示与实际运作不一致。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(RoomTracker), "OnUpdateRoom")]
     internal static class Patch_Room_RoomTracker_OnUpdateRoom
     {
@@ -426,6 +441,7 @@ namespace MaterialOverhaul.Patches
     /// <c>roomType == Laboratory</c> 决定，不经过 <c>RoomTracker</c>。顶替实验室的房间
     /// 补上同一个标记与状态项，使其仍享有原版加成（本 Mod 房间加成另行乘算）。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Workable), "OnUpdateRoom")]
     internal static class Patch_Room_Workable_OnUpdateRoom
     {
@@ -473,6 +489,7 @@ namespace MaterialOverhaul.Patches
     /// 原版只在娱乐室内生成复制人休息时的闲聊格（<c>MingleCellTracker</c> 直接比较
     /// <c>roomType == RecRoom</c>）。顶替娱乐室的房间按原版同一格子条件补上闲聊格。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(MingleCellTracker), "Sim1000ms")]
     internal static class Patch_Room_MingleCellTracker_Sim1000ms
     {
@@ -528,6 +545,7 @@ namespace MaterialOverhaul.Patches
     /// 房间类型追加医院／医疗中心效果，并在医疗中心结算辐射拯救者。患者离床时由
     /// <see cref="Patch_Room_Clinic_OnStopWork"/> 移除。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clinic.ClinicSM.Instance), "StartEffect")]
     internal static class Patch_Room_Clinic_StartEffect
     {
@@ -585,6 +603,7 @@ namespace MaterialOverhaul.Patches
     /// 患者仍在床上，挂在那里会把刚加上的护理员加成和房间恢复效果一起删掉。
     /// <c>Clinic.OnStopWork</c> 只在患者真正停止躺床（离床、被打断或治疗结束）时调用。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Clinic), "OnStopWork")]
     internal static class Patch_Room_Clinic_OnStopWork
     {
@@ -612,6 +631,7 @@ namespace MaterialOverhaul.Patches
     /// 给正在该诊疗床接受治疗的患者追加生命回复效果。患者离床时由
     /// <see cref="Patch_Room_Clinic_OnStopWork"/> 一并移除。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(Workable), "CompleteWork")]
     internal static class Patch_Room_Caregiver_CompleteWork
     {
@@ -677,6 +697,7 @@ namespace MaterialOverhaul.Patches
     /// 特质效果，使展览馆等没有可完成工作任务的房间也能触发。只处理特质持有者，
     /// 普通复制人的房间效果仍由设施使用完成时发放。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Room)]
     [HarmonyPatch(typeof(CavityInfo), "OnEnter")]
     internal static class Patch_Room_CavityInfo_OnEnter
     {

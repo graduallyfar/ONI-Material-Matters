@@ -51,6 +51,7 @@ namespace MaterialOverhaul.Patches
     }
 
     /// <summary>在建筑 prefab 阶段挂载本 Mod 组件，使组件随存档序列化（而非运行时临时添加）。</summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "OnPrefabInit")]
     internal static class Patch_ComplexFabricator_OnPrefabInit
     {
@@ -94,6 +95,7 @@ namespace MaterialOverhaul.Patches
     /// 非复制人路径：把温度效率乘进生产进度，越界时停止推进（返回值 0），
     /// 并按真实 dt 累计机械磨损（原版这条路径传入的就是真实时间）。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "ComputeWorkProgress")]
     internal static class Patch_ComplexFabricator_ComputeWorkProgress
     {
@@ -128,6 +130,7 @@ namespace MaterialOverhaul.Patches
     /// 复制人路径：操作效率乘数，与 ComputeWorkProgress 共用同一份温区评估。
     /// 同时记录最终倍率，供 <c>OnWorkTick</c> 把已缩放的时间还原成真实生产秒数。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(Workable), "GetEfficiencyMultiplier")]
     internal static class Patch_Workable_GetEfficiencyMultiplier
     {
@@ -178,6 +181,7 @@ namespace MaterialOverhaul.Patches
     /// <summary>
     /// 复制人路径的生产时间：只有实际推进工作才累计磨损，并把已缩放的 dt 还原成真实秒数。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricatorWorkable), "OnWorkTick")]
     internal static class Patch_ComplexFabricatorWorkable_OnWorkTick
     {
@@ -205,6 +209,7 @@ namespace MaterialOverhaul.Patches
     /// 后置补丁即使原版提前 return（总体不可运行）也会执行，因此断电、红信号与损坏停机时
     /// 仍能维护需求、原因与界面文字。只在状态变化时记录日志，不在每次模拟更新刷屏。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "Sim200ms")]
     internal static class Patch_ComplexFabricator_Sim200ms
     {

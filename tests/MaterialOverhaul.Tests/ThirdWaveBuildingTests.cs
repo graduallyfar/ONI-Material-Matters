@@ -770,6 +770,9 @@ namespace MaterialOverhaul.Tests
             // 辐射独立验证版的键同样只进辐射包，由 ProfileChecks 校验。
             foreach (string radiationKey in po.Keys.Where(k => k.StartsWith("STRINGS.RADIATION.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(radiationKey);
+            // 整合版模组界面系统开关的键只进整合包，由 ProfileChecks 与 SystemSwitchTests 校验。
+            foreach (string optionsKey in po.Keys.Where(k => k.StartsWith("STRINGS.MODOPTIONS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
+                po.Remove(optionsKey);
             TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {

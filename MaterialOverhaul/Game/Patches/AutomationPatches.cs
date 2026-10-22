@@ -23,6 +23,7 @@ namespace MaterialOverhaul.Patches
     /// 断电、手动禁用、损坏停机、输出堵塞等其它原因造成的不可运行仍走原版路径（取消取料），
     /// 避免在真正无法处理的建筑上堆积原料。
     /// </summary>
+    [Core.SystemPart(Core.ModSystem.Industrial)]
     [HarmonyPatch(typeof(ComplexFabricator), "OnOperationalChanged")]
     internal static class Patch_ComplexFabricator_OnOperationalChanged
     {

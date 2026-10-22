@@ -8,6 +8,7 @@ using MaterialOverhaul.Game;
 
 namespace MaterialOverhaul.Patches
 {
+    [Core.SystemPart(Core.ModSystem.Power)]
     [HarmonyPatch(typeof(CircuitManager), "Sim200msLast")]
     internal static class Patch_PowerSettlement_Sim
     {
