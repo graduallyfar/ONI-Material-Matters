@@ -44,10 +44,10 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
     $version = (& dotnet msbuild $projectFile "-p:SystemProfile=$mode" -getProperty:Version).Trim()
     if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw "$mode 版本读取失败。" }
     $settings = switch ($mode) {
-        'Industrial' { @{ Title = '材料革新 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false } }
-        'Power' { @{ Title = '材料革新 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false } }
-        'Room' { @{ Title = '材料革新 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true } }
-        'Combined' { @{ Title = '材料革新 · 完整整合验证'; Description = '工业、电力与房间整合验证候选；包含温控、订单、磨损、电力损耗与房间条件。游戏交互与平衡待验收。'; Industrial = $true; Power = $true; Room = $true } }
+        'Industrial' { @{ Title = '工程重构 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false } }
+        'Power' { @{ Title = '工程重构 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false } }
+        'Room' { @{ Title = '工程重构 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true } }
+        'Combined' { @{ Title = '工程重构 · 完整整合验证'; Description = '工业、电力与房间整合验证候选；包含温控、订单、磨损、电力损耗与房间条件。游戏交互与平衡待验收。'; Industrial = $true; Power = $true; Room = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
     if ($LASTEXITCODE -ne 0) { throw "$mode 构建失败。" }

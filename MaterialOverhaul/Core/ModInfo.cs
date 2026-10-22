@@ -7,7 +7,7 @@ namespace MaterialOverhaul.Core
     public static class ModInfo
     {
         public const string StaticID = "MaterialOverhaul";
-        public const string DisplayName = "Material Overhaul";
+        public const string DisplayName = "ONI Reform · 工程重构";
 #if MATERIAL_OVERHAUL_POWER_ONLY
         public const string Version = "0.0.2";
 #else
