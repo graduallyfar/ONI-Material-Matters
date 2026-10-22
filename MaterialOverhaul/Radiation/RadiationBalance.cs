@@ -47,7 +47,7 @@ namespace MaterialOverhaul.Radiation
         /// <summary>单格污染物上限；达到后不再添加，防止整数溢出。</summary>
         public const int MaxCellContaminants = 10000000;
 
-        /// <summary>原版放射性污染物：每 1000 个产生 1 rads/周期（wiki 数据，待在目标程序集核实）。</summary>
+        /// <summary>原版放射性污染物：每 1000 个产生 1 rads/周期（wiki 数据；换算在原生 Sim 中，托管程序集查不到，待游戏验证）。半衰期 1 周期已在程序集核实。</summary>
         public const float ContaminantRadsPerThousand = 1f;
 
         /// <summary>完整扫描一遍世界格子的周期（秒）；每秒扫描其中五分之一。</summary>
