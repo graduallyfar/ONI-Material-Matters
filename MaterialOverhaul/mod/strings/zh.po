@@ -70,18 +70,18 @@ msgstr "这个建筑存在机械和过热损坏。\n维修后会降低建筑温�
 #. 逻辑端口：温区输出信号
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.DESCRIPTION"
-msgid "Temperature Zone Signal"
-msgstr "最佳温度信号"
+msgid "Optimal Temperature Range"
+msgstr "最佳温区"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.ACTIVE"
-msgid "Recipe locked and temperature inside its best range; wiring selects control mode, and green does not mean producing."
-msgstr "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。"
+msgid "Sends a <b><style=\"logic_on\">Green Signal</style></b> if building <link=\"HEAT\">Temperature</link> is within the current recipe's optimal range"
+msgstr "若建筑<link=\"HEAT\">温度</link>处于当前配方的最佳温区，输出<b><style=\"logic_on\">绿色信号</style></b>"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INACTIVE"
-msgid "No locked recipe, or temperature outside the best range; unconnected wiring selects the default mode."
-msgstr "温度不在最佳温区，或配方没有温度要求时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。"
+msgid "Otherwise, sends a <b><style=\"logic_off\">Red Signal</style></b>"
+msgstr "否则，输出<b><style=\"logic_off\">红色信号</style></b>"
 
 #. 基础上限来源；v0.2.2 起最终值另计主材料百分比
 #. STRINGS.BUILDING.ATTRIBUTES.MATERIALOVERHAUL.OVERHEAT.DESCRIPTION
@@ -312,18 +312,18 @@ msgstr "配方的最佳温区超出建造材料的工作范围。\n控制模式�
 #. 「允许／暂停生产」自动化输入端口（复用原版逻辑控制端口，由本 Mod 改写说明文本）
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"
-msgid "Allow / Pause Production"
-msgstr "生产控制"
+msgid "Allow/Pause Production"
+msgstr "允许/暂停生产"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"
-msgid "Green: production allowed (materials, power and start conditions still required); unconnected defaults to allowed"
-msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。未连接时允许生产。"
+msgid "<b><style=\"logic_on\">Green Signal</style></b>: Allow production"
+msgstr "<b><style=\"logic_on\">绿色信号</style></b>：允许生产"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"
-msgid "Red: production paused; recipe preparation, preheating and top-up heating are unaffected"
-msgstr "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和维持温度不受影响。"
+msgid "<b><style=\"logic_off\">Red Signal</style></b>: Pause production; preheating continues"
+msgstr "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和保温照常"
 
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT"
@@ -470,13 +470,13 @@ msgstr "保留原版过热豁免，不会受过热损伤；内置加热仍受工
 #. 非批次工业建筑的温区输出端口说明
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_ACTIVE"
-msgid "Green when a conversion, generation or scrubbing task has its inputs ready and the building is inside its best range. Wiring this output selects control mode; the signal only reports temperature, not that it is producing."
-msgstr "有可执行的工艺且建筑温度处于最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。"
+msgid "Sends a <b><style=\"logic_on\">Green Signal</style></b> if a process is runnable and building <link=\"HEAT\">Temperature</link> is within its optimal range"
+msgstr "若有可执行的工艺且建筑<link=\"HEAT\">温度</link>处于最佳温区，输出<b><style=\"logic_on\">绿色信号</style></b>"
 
 #. STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE
 msgctxt "STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.TEMPERATURE_ZONE.INDUSTRIAL_INACTIVE"
-msgid "Red when there is no runnable process, fuel or scrubbing task, or the temperature is outside the best range. Control mode is off while this output stays unwired."
-msgstr "没有可执行的工艺，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。"
+msgid "Otherwise, sends a <b><style=\"logic_off\">Red Signal</style></b>"
+msgstr "否则，输出<b><style=\"logic_off\">红色信号</style></b>"
 
 #. STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.POWER_WIRE_COUNT"

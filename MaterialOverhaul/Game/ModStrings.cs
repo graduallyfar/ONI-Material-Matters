@@ -276,11 +276,11 @@ namespace MaterialOverhaul.Game
                 {
                     public static class TEMPERATURE_ZONE
                     {
-                        public static LocString DESCRIPTION = "最佳温度信号";
-                        public static LocString ACTIVE = "建筑温度处于当前配方的最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。";
-                        public static LocString INACTIVE = "温度不在最佳温区，或配方没有温度要求时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。";
-                        public static LocString INDUSTRIAL_ACTIVE = "有可执行的工艺且建筑温度处于最佳温区时，输出<b><style=\"logic_on\">绿色信号</style></b>。\n连接后建筑使用控制模式。";
-                        public static LocString INDUSTRIAL_INACTIVE = "没有可执行的工艺，或温度不在最佳温区时，输出<b><style=\"logic_off\">红色信号</style></b>。\n未连接时建筑使用默认模式。";
+                        public static LocString DESCRIPTION = "最佳温区";
+                        public static LocString ACTIVE = "若建筑<link=\"HEAT\">温度</link>处于当前配方的最佳温区，输出<b><style=\"logic_on\">绿色信号</style></b>";
+                        public static LocString INACTIVE = "否则，输出<b><style=\"logic_off\">红色信号</style></b>";
+                        public static LocString INDUSTRIAL_ACTIVE = "若有可执行的工艺且建筑<link=\"HEAT\">温度</link>处于最佳温区，输出<b><style=\"logic_on\">绿色信号</style></b>";
+                        public static LocString INDUSTRIAL_INACTIVE = "否则，输出<b><style=\"logic_off\">红色信号</style></b>";
                     }
 
                     /// <summary>
@@ -289,11 +289,11 @@ namespace MaterialOverhaul.Game
                     /// </summary>
                     public static class PRODUCTION_CONTROL
                     {
-                        public static LocString DESCRIPTION = "生产控制";
+                        public static LocString DESCRIPTION = "允许/暂停生产";
 
-                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产。未连接时允许生产。";
+                        public static LocString ACTIVE = "<b><style=\"logic_on\">绿色信号</style></b>：允许生产";
 
-                        public static LocString INACTIVE = "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和维持温度不受影响。";
+                        public static LocString INACTIVE = "<b><style=\"logic_off\">红色信号</style></b>：暂停生产，预热和保温照常";
                     }
                 }
             }
