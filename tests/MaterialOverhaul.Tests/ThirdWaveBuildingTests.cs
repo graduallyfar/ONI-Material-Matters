@@ -678,8 +678,8 @@ namespace MaterialOverhaul.Tests
             string[] generators = { "Generator", "PeatGenerator", "HydrogenGenerator", "MethaneGenerator", "PetroleumGenerator", "WoodGasGenerator" };
             TestRunner.CheckEqual(0, generators.Except(AutomationControlScope.AllWithoutOutput).Concat(AutomationControlScope.AllWithoutOutput.Except(generators)).Count(),
                 "按设计没有温区输出的正好是 6 栋燃料发电机");
-            // 按用户截图放到贴图上、与原版管道接口同格（不同图层，允许）的只有这三栋。
-            string[] sharesConduitCell = { "MetalRefinery", "SludgePress", "OxyliteRefinery" };
+            // 按用户截图放到贴图上、与原版管道或电力接口同格（不同图层，允许）的只有这四栋。
+            string[] sharesUtilityCell = { "MetalRefinery", "SludgePress", "OxyliteRefinery", "OilWellCap" };
             int shared = 0;
             TestRunner.CheckEqual(28, AutomationControlScope.All.Count(), "生产控制输入只用原版已有的 28 栋");
             TestRunner.CheckEqual(false, AutomationControlScope.IsEnabled("OreScrubber"), "矿石洗涤器不用电、原版无输入，不加");
@@ -708,8 +708,8 @@ namespace MaterialOverhaul.Tests
                     List<CellOffset> vanilla = Parse(row.Vanilla);
                     bool clashes = vanilla.Any(v => v.x == output.x && v.y == output.y);
                     if (clashes) shared++;
-                    TestRunner.CheckEqual(sharesConduitCell.Contains(row.Id), clashes,
-                        row.Id + (sharesConduitCell.Contains(row.Id) ? " 温区输出与原版管道接口同格（用户指定）" : " 温区输出不覆盖原版接口")
+                    TestRunner.CheckEqual(sharesUtilityCell.Contains(row.Id), clashes,
+                        row.Id + (sharesUtilityCell.Contains(row.Id) ? " 温区输出与原版管道／电力接口同格（用户指定）" : " 温区输出不覆盖原版接口")
                         + (row.Note == null ? "" : "（" + row.Note + "）"));
                 }
 
@@ -723,7 +723,7 @@ namespace MaterialOverhaul.Tests
                         TestRunner.Check(input.x != output.x || input.y != output.y, row.Id + " 原版输入与温区输出不重叠");
                 }
             }
-            TestRunner.CheckEqual(3, shared, "只有 3 栋温区输出与原版管道接口同格");
+            TestRunner.CheckEqual(4, shared, "只有 4 栋温区输出与原版管道／电力接口同格");
             TestRunner.CheckEqual(28, reused, "28 栋已有原版逻辑控制输入（18 栋 Config 写明、10 栋用电默认），保持原位");
 
             var marked = new Dictionary<string, CellOffset>
@@ -731,7 +731,8 @@ namespace MaterialOverhaul.Tests
                 { "MetalRefinery", new CellOffset(-1, 1) }, { "RockCrusher", new CellOffset(-1, 1) },
                 { "GlassForge", new CellOffset(1, 1) }, { "SupermaterialRefinery", new CellOffset(2, 1) },
                 { "Polymerizer", new CellOffset(1, 0) }, { "SludgePress", new CellOffset(1, 0) },
-                { "OxyliteRefinery", new CellOffset(1, 0) }, { "OilRefinery", new CellOffset(2, 0) }
+                { "OxyliteRefinery", new CellOffset(1, 0) }, { "OilRefinery", new CellOffset(2, 0) },
+                { "OilWellCap", new CellOffset(1, 1) }
             };
             foreach (KeyValuePair<string, CellOffset> entry in marked)
             {

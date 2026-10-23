@@ -44,8 +44,8 @@ namespace MaterialOverhaul.Game
 
         /// <summary>
         /// 温区输出端口位置。金属精炼器、岩石粉碎机、玻璃熔炉、分子熔炉、聚合物压塑器、泥浆分离器、
-        /// 氧石精炼炉、原油精炼器按用户截图标注放在贴图上（V1.0.2 开发计划 §9 #23b）；
-        /// 与原版管道接口同格时不冲突（不同图层），但不与原版自动化端口同格。
+        /// 氧石精炼炉、原油精炼器、油井按用户截图标注放在贴图上（V1.0.2 开发计划 §9 #23b），其余保持原位；
+        /// 与原版管道或电力接口同格时不冲突（不同图层），但不与原版自动化端口同格。
         /// </summary>
         private static readonly Dictionary<string, CellOffset> OutputOffsets = new Dictionary<string, CellOffset>
         {
@@ -62,7 +62,7 @@ namespace MaterialOverhaul.Game
             { "Polymerizer",new CellOffset(1,0) }, { "EthanolDistillery",new CellOffset(2,2) },
             { "FertilizerMaker",new CellOffset(2,2) }, { "AlgaeDistillery",new CellOffset(1,3) },
             { "OxyliteRefinery",new CellOffset(1,0) }, { "WaterPurifier",new CellOffset(1,2) },
-            { "Desalinator",new CellOffset(2,2) }, { "OilWellCap",new CellOffset(2,3) },
+            { "Desalinator",new CellOffset(2,2) }, { "OilWellCap",new CellOffset(1,1) },
             { "OreScrubber",new CellOffset(1,2) }
         };
 
