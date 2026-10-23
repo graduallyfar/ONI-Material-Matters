@@ -130,6 +130,19 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(165f, ContaminationModel.SelfRads(7, 165000, 7), 0.001f, "16.5 万个污染物自身 165 rads/周期");
             TestRunner.CheckClose(0f, ContaminationModel.SelfRads(3, 165000, 7), 0.001f, "其他病菌不计入自身放射");
             TestRunner.CheckClose(0f, ContaminationModel.SelfRads(ContaminationModel.NoDisease, 0, 7), 0.001f, "无病菌不计入");
+
+            // 核废料、铀矿自身放射已超过门槛；若再写入污染物，污染物抬高本格辐射，形成自我增强。
+            TestRunner.Check(ContaminationModel.CanContaminate(0f), "不放射的元素可被污染");
+            TestRunner.Check(!ContaminationModel.CanContaminate(250f), "自身放射的元素（核废料等）不添加污染物");
+            TestRunner.Check(ContaminationModel.CanContaminate(float.NaN), "无效放射值按不放射处理");
+
+            string root = FindRepoRoot();
+            if (root != null)
+            {
+                string monitor = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RadiationInducedMonitor.cs"));
+                TestRunner.Check(monitor.Contains("ContaminationModel.CanContaminate(element.radiationPer1000Mass)"),
+                    "写入污染物前排除自身放射的元素");
+            }
         }
 
         private static void ContaminantPriority()

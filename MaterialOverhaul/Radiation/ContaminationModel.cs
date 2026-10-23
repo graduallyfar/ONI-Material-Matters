@@ -61,6 +61,16 @@ namespace MaterialOverhaul.Radiation
             }
         }
 
+        /// <summary>
+        /// 格子里的物质能否被污染。核废料、铀矿等本身就会放射的元素不再添加污染物：
+        /// 它们自身的放射足以超过门槛，若再写入污染物，污染物又抬高本格辐射，会越积越多。
+        /// 它们照射到的其他物质照常污染。
+        /// </summary>
+        public static bool CanContaminate(float elementRadsPer1000Mass)
+        {
+            return !(elementRadsPer1000Mass > 0f);
+        }
+
         /// <summary>经过 dt 秒应添加的污染物个数（四舍五入）。</summary>
         public static int ContaminantsToAdd(float effectiveMassKg, float excessRads, float dtSeconds)
         {

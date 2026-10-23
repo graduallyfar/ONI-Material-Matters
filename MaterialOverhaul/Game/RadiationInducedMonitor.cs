@@ -11,7 +11,8 @@ namespace MaterialOverhaul.Game
     ///
     /// 每秒扫描世界格子的五分之一，五秒扫完一遍；只处理辐射超过门槛的格子：
     /// - 格子上的建筑与建造砖块累积受照量，一遍扫完后统一步进活化度；
-    /// - 格子里的液体、气体、天然固体按受照量添加原版放射性污染物，已有其他病菌时先清除（污染物优先）。
+    /// - 格子里的液体、气体、天然固体按受照量添加原版放射性污染物，已有其他病菌时先清除（污染物优先）；
+    ///   核废料、铀矿等本身会放射的元素不添加污染物，避免自身放射与污染物互相抬高。
     ///
     /// 计算受照时扣掉活化物自身贡献的上界（附近活化建筑的放射 + 本格污染物的放射），
     /// 活化物之间不能互相维持，离开真正的辐射源后一定会衰减。
@@ -171,6 +172,11 @@ namespace MaterialOverhaul.Game
             }
 
             Element element = Grid.Element[cell];
+            if (element == null || !ContaminationModel.CanContaminate(element.radiationPer1000Mass))
+            {
+                return;
+            }
+
             CellPhase phase = PhaseOf(element);
             float mass = ContaminationModel.EffectiveMassKg(Grid.Mass[cell], phase);
             int toAdd = ContaminationModel.ContaminantsToAdd(mass, excess, dt);
