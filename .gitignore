@@ -44,6 +44,8 @@ desktop.ini
 # ---- 本地构建输出与临时目录 ----
 _build/
 _dist/
+# 按版本存档的本机部署文件（deploy.ps1 写入）
+/deployed/
 local.props
 *.tmp
 

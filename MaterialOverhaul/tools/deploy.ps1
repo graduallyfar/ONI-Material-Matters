@@ -94,5 +94,24 @@ foreach ($file in $manifest.files.PSObject.Properties) {
 $leaked = Get-ChildItem -LiteralPath $target -Filter 'Assembly-CSharp*.dll' -ErrorAction SilentlyContinue
 if ($leaked) { throw "部署目录出现原版程序集，已中止：$($leaked.FullName -join ', ')" }
 
+# 按版本存档本次部署的文件：放在主检出的 deployed\ 下（从工作树部署也存到同一处），不提交。
+# 整合版以版本号命名，独立验证包加系统名（工业与房间同为 0.2.2）；同一版本再次部署时覆盖。
+$mainRoot = $workspaceRoot
+$commonDir = (& git -C $workspaceRoot rev-parse --path-format=absolute --git-common-dir 2>$null)
+if ($LASTEXITCODE -eq 0 -and $commonDir) { $mainRoot = Split-Path -Parent $commonDir.Trim() }
+$archiveName = if ($Profile -eq 'Combined') { $manifest.version } else { "$Profile-$($manifest.version)" }
+$archive = Join-Path (Join-Path (Join-Path $mainRoot 'deployed') $archiveName) $modFolderName
+if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Recurse -Force }
+New-Item -ItemType Directory -Path $archive -Force | Out-Null
+foreach ($name in @('MaterialOverhaul.dll', 'MaterialOverhaul.pdb', 'mod.yaml', 'mod_info.yaml', 'strings\zh.po', 'build_profile.json')) {
+    $file = Join-Path $target $name
+    if (Test-Path -LiteralPath $file) {
+        $archiveFile = Join-Path $archive $name
+        New-Item -ItemType Directory -Path (Split-Path -Parent $archiveFile) -Force | Out-Null
+        Copy-Item -LiteralPath $file -Destination $archiveFile -Force
+    }
+}
+Write-Host "本次部署已存档：$archive"
+
 Write-Host "已部署 $Profile 到 $target"
 Get-ChildItem -LiteralPath $target | Select-Object Length, Name
