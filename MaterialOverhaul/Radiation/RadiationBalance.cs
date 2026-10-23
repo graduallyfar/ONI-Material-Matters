@@ -50,6 +50,15 @@ namespace MaterialOverhaul.Radiation
         /// <summary>原版放射性污染物：每 1000 个产生 1 rads/周期（wiki 数据；换算在原生 Sim 中，托管程序集查不到，待游戏验证）。半衰期 1 周期已在程序集核实。</summary>
         public const float ContaminantRadsPerThousand = 1f;
 
+        /// <summary>
+        /// 拆除活化建筑时转成核废料的比例：活化度 ÷ 这个值（设计评审 2026-10-23，用户选定）。
+        /// 例如活化度 275 rads/周期的钢墙，拆除时 27.5% 的主建造材料变成核废料。
+        /// </summary>
+        public const float DecommissionRadsPerFullConversion = 1000f;
+
+        /// <summary>拆除时转成核废料的比例上限。</summary>
+        public const float DecommissionMaxFraction = 0.5f;
+
         /// <summary>完整扫描一遍世界格子的周期（秒）；每秒扫描其中五分之一。</summary>
         public const float ScanPassSeconds = 5f;
 
