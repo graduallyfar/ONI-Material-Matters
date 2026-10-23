@@ -49,6 +49,21 @@ namespace MaterialOverhaul.Game
                     public static LocString RECIPE_TEMP_RANGE_DETAIL = "最佳<link=\"HEAT\">温度</link>：{0} - {1}";
                     public static LocString RECIPE_TEMP_RANGE_TOOLTIP = "建筑温度在这个范围内时，配方的温度效率为100%。";
 
+                    /// <summary>
+                    /// 建筑信息卡里单独的「订单队列」面板：按添加顺序列出全部订单。
+                    /// {0} 序号、{1} 配方名、{2} 剩余批次 / 本轮已完成、{3} 本轮额度。
+                    /// </summary>
+                    public static class ORDER_QUEUE
+                    {
+                        public static LocString TITLE = "订单队列";
+                        public static LocString LIMITED = "{0}. {1} · 剩余 {2} 批";
+                        public static LocString INFINITE = "{0}. {1} · 持续生产（本轮 {2}/{3}）";
+                        public static LocString CURRENT = "（生产中）";
+                        public static LocString NEXT = "（轮到）";
+                        public static LocString MORE = "还有 {0} 张订单";
+                        public static LocString TOOLTIP = "订单按添加顺序轮换：缺料的订单暂时跳过，下次轮到再检查；\n有限订单做完后移出队列，持续生产每轮做完额度后让给下一张。";
+                    }
+
                     public static class HEATING_POWER
                     {
                         public static LocString TITLE = "加热功率";

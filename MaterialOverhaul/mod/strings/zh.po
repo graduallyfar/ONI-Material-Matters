@@ -385,6 +385,35 @@ msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.HEATRISK.TOOLTIP"
 msgid "Above the overheat threshold: damage risk. Stopping on temperature gives no heat protection."
 msgstr "建筑温度超过过热温度，可能受到损伤。"
 
+#. 信息卡：单独的订单队列面板
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.TITLE"
+msgid "Order Queue"
+msgstr "订单队列"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.LIMITED"
+msgid "{0}. {1} · {2} batches left"
+msgstr "{0}. {1} · 剩余 {2} 批"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.INFINITE"
+msgid "{0}. {1} · Continuous ({2}/{3} this round)"
+msgstr "{0}. {1} · 持续生产（本轮 {2}/{3}）"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.CURRENT"
+msgid " (in production)"
+msgstr "（生产中）"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.NEXT"
+msgid " (up next)"
+msgstr "（轮到）"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.MORE"
+msgid "{0} more orders"
+msgstr "还有 {0} 张订单"
+
+msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.ORDER_QUEUE.TOOLTIP"
+msgid "Orders rotate in the order they were added: orders missing materials are skipped and checked again next time.\nLimited orders leave the queue when done; continuous orders hand over after each round."
+msgstr "订单按添加顺序轮换：缺料的订单暂时跳过，下次轮到再检查；\n有限订单做完后移出队列，持续生产每轮做完额度后让给下一张。"
+
 #. 配置卡：配方下方的共用加热功率滑条
 msgctxt "STRINGS.UI.UISIDESCREENS.MATERIALOVERHAUL.HEATING_POWER.TITLE"
 msgid "Heating Power"

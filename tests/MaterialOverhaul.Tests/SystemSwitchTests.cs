@@ -100,8 +100,8 @@ namespace MaterialOverhaul.Tests
                 }
             }
 
-            TestRunner.CheckEqual(105, total, "共 105 个补丁类（四个系统 104 个 + 模组界面外壳 1 个）");
-            TestRunner.CheckEqual(45, counts.GetValueOrDefault("Industrial"), "工业 45 个");
+            TestRunner.CheckEqual(107, total, "共 107 个补丁类（四个系统 106 个 + 模组界面外壳 1 个）");
+            TestRunner.CheckEqual(47, counts.GetValueOrDefault("Industrial"), "工业 47 个");
             TestRunner.CheckEqual(5, counts.GetValueOrDefault("Power"), "电力 5 个");
             TestRunner.CheckEqual(48, counts.GetValueOrDefault("Room"), "房间 48 个");
             TestRunner.CheckEqual(6, counts.GetValueOrDefault("Radiation"), "辐射 6 个");

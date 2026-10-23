@@ -736,11 +736,11 @@ namespace MaterialOverhaul.Tests
 
         private static void LocalizationKeys()
         {
-            TestRunner.Section("文本：102条字段树键与中文PO一一对应");
+            TestRunner.Section("文本：110条字段树键与中文PO一一对应");
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(103, Strings.Values.Count, "字段树登记103条（电力14条）");
+            TestRunner.CheckEqual(110, Strings.Values.Count, "字段树登记110条（电力14条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -764,7 +764,7 @@ namespace MaterialOverhaul.Tests
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
             // 房间系统的 69 条键与工业/电力共用同一个 zh.po，由 ProfileChecks 按构建模式
-            // 分别校验；这里只核对工业与电力共用的 103 条，避免把房间包差异算成工业回归。
+            // 分别校验；这里只核对工业与电力共用的 110 条，避免把房间包差异算成工业回归。
             foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(roomKey);
             // 辐射独立验证版的键同样只进辐射包，由 ProfileChecks 校验。
@@ -773,7 +773,7 @@ namespace MaterialOverhaul.Tests
             // 整合版模组界面系统开关的键只进整合包，由 ProfileChecks 与 SystemSwitchTests 校验。
             foreach (string optionsKey in po.Keys.Where(k => k.StartsWith("STRINGS.MODOPTIONS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(optionsKey);
-            TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
+            TestRunner.CheckEqual(110, po.Count, "zh.po有110条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;
