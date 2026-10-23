@@ -96,7 +96,7 @@ namespace MaterialOverhaul.Patches
 
         /// <summary>
         /// 「允许／暂停生产」自动化**输入**只用原版已有的逻辑控制端口（<see cref="AutomationControlScope"/>
-        /// 的 18 栋），本处只核对、不新增；原版没有该端口的建筑不加输入。
+        /// 的 28 栋），本处只核对、不新增；原版没有该端口的矿石洗涤器不加输入。
         /// </summary>
         private static void Prefix(object[] __args)
         {
@@ -136,6 +136,10 @@ namespace MaterialOverhaul.Patches
         /// <c>unNetworkedValue = 1</c> 放行，并带原版「逻辑控制：已启用／已暂停」状态项。
         /// 端口说明文本由本 Mod 在 <c>LogicPorts.OnSpawn</c> 时改成「允许／暂停生产」。
         /// 位置不改；原版端口缺失或位置变了，只留可定位记录，不补端口。
+        ///
+        /// 原版输入可能写在 <c>def.LogicInputPorts</c>，也可能是需要电力的建筑由
+        /// <c>GeneratedBuildings.RegisterSingleLogicInputPort</c> 加在 (0,0) 的默认端口。
+        /// 后者不在 Def 上，且 Def 写了输入列表就会覆盖它，因此这里绝不往 Def 写输入。
         /// </summary>
         private static void CheckProductionControlPort(BuildingDef def)
         {
@@ -145,27 +149,47 @@ namespace MaterialOverhaul.Patches
                 return;
             }
 
+            CellOffset actual;
+            if (!TryGetVanillaControlPort(def, out actual))
+            {
+                ModLog.WarnOnce("port|control-missing|" + def.PrefabID,
+                    def.PrefabID + " 在当前游戏版本中没有原版逻辑控制输入，「允许／暂停生产」不生效，本 Mod 不补端口。");
+                return;
+            }
+
+            if (actual.x != expected.x || actual.y != expected.y)
+            {
+                ModLog.WarnOnce("port|control-moved|" + def.PrefabID,
+                    def.PrefabID + " 的原版逻辑控制输入位于 " + actual.x + "," + actual.y
+                    + "，与记录的 " + expected.x + "," + expected.y + " 不同；沿用原版位置。");
+            }
+        }
+
+        private static bool TryGetVanillaControlPort(BuildingDef def, out CellOffset offset)
+        {
+            offset = default(CellOffset);
             if (def.LogicInputPorts != null)
             {
                 foreach (LogicPorts.Port existing in def.LogicInputPorts)
                 {
-                    if (existing.id != AutomationControlScope.PortId)
+                    if (existing.id == AutomationControlScope.PortId)
                     {
-                        continue;
+                        offset = existing.cellOffset;
+                        return true;
                     }
-
-                    if (existing.cellOffset.x != expected.x || existing.cellOffset.y != expected.y)
-                    {
-                        ModLog.WarnOnce("port|control-moved|" + def.PrefabID,
-                            def.PrefabID + " 的原版逻辑控制输入位于 " + existing.cellOffset.x + "," + existing.cellOffset.y
-                            + "，与记录的 " + expected.x + "," + expected.y + " 不同；沿用原版位置。");
-                    }
-                    return;
                 }
+
+                // Def 上的输入列表会覆盖默认端口。
+                return false;
             }
 
-            ModLog.WarnOnce("port|control-missing|" + def.PrefabID,
-                def.PrefabID + " 在当前游戏版本中没有原版逻辑控制输入，「允许／暂停生产」不生效，本 Mod 不补端口。");
+            if (def.RequiresPowerInput && def.AddLogicPowerPort && !def.AlwaysOperational)
+            {
+                offset = new CellOffset(0, 0);
+                return true;
+            }
+
+            return false;
         }
 
         private static void AddTemperatureZonePort(BuildingDef def)

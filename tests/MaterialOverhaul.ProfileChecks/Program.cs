@@ -315,7 +315,7 @@ internal static partial class Program
                 Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑活化组件。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 90 : profile == "Room" ? 167 : profile == "Radiation" ? 2 : 295;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 89 : profile == "Room" ? 167 : profile == "Radiation" ? 2 : 294;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

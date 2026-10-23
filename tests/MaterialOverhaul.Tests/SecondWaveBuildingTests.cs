@@ -117,16 +117,17 @@ namespace MaterialOverhaul.Tests
         {
             string[] ids = { "MetalRefinery", "RockCrusher", "GlassForge", "SupermaterialRefinery", "ChemicalRefinery", "Kiln" };
             int[] widths = { 3, 4, 5, 4, 4, 2 }, heights = { 4, 4, 4, 5, 3, 2 };
-            bool[] vanillaInput = { false, false, false, false, true, true };
+            // 前四栋需要电力，原版默认在 (0,0) 有逻辑控制输入；后两栋在 Config 写明。
+            int[] inputX = { 0, 0, 0, 0, 0, 0 }, inputY = { 0, 0, 0, 0, 0, 1 };
             for (int i = 0; i < ids.Length; i++)
             {
                 CellOffset input, output;
-                TestRunner.CheckEqual(vanillaInput[i], AutomationControlScope.TryGetOffset(ids[i], out input),
-                    ids[i] + (vanillaInput[i] ? " 用原版输入" : " 原版无输入，不加"));
+                TestRunner.Check(AutomationControlScope.TryGetOffset(ids[i], out input), ids[i] + " 用原版输入");
+                TestRunner.Check(input.x == inputX[i] && input.y == inputY[i], ids[i] + " 输入为原版位置");
                 TestRunner.Check(AutomationControlScope.TryGetOutputOffset(ids[i], out output), ids[i] + " 输出存在");
                 int left = widths[i] / 2 - widths[i] + 1, right = widths[i] / 2;
                 TestRunner.Check(output.x >= left && output.x <= right && output.y >= 0 && output.y < heights[i], ids[i] + " 输出在占格内");
-                if (vanillaInput[i]) TestRunner.Check(input.x != output.x || input.y != output.y, ids[i] + " 输入输出不重叠");
+                TestRunner.Check(input.x != output.x || input.y != output.y, ids[i] + " 输入输出不重叠");
             }
             CellOffset chemical, kiln;
             AutomationControlScope.TryGetOffset("ChemicalRefinery", out chemical);

@@ -5,12 +5,14 @@ namespace MaterialOverhaul.Game
     /// <summary>
     /// 「允许／暂停生产」自动化输入的范围（建筑细节文档 §2.2.3、V1.0.2 开发计划 §9 #23）。
     ///
-    /// 只用原版已有的逻辑控制输入：29 栋接入建筑中原版带
-    /// <c>LogicOperationalController.CreateSingleInputPortList</c> 的 18 栋。端口本体、位置都是原版的，
-    /// 本 Mod 不移动、不新增；下表只记录原版位置，供注册时核对。原版不能用自动化控制的
-    /// 11 栋（金属精炼器、粉碎机、玻璃熔炉、分子熔炉、钻石压机、淤泥压榨机、导弹制造机、
-    /// 原油精炼器、乙醇蒸馏器、海水淡化器、矿石洗涤器）不加输入端口。乙醇蒸馏器原版虽挂了
-    /// 逻辑控制组件，但没有定义端口，同样归入不加。
+    /// 只用原版已有的逻辑控制输入，端口本体、位置都是原版的，本 Mod 不移动、不新增；
+    /// 下表只记录原版位置，供注册时核对。原版输入有两种来源：
+    ///   - 18 栋在 `*Config` 里用 <c>LogicOperationalController.CreateSingleInputPortList</c> 写明；
+    ///   - 10 栋需要电力输入，由 <c>BuildingLoader</c> 按 <c>RequiresPowerInput &amp;&amp; AddLogicPowerPort</c>
+    ///     调用 <c>GeneratedBuildings.RegisterSingleLogicInputPort</c> 统一加在 (0,0)。
+    ///     这类端口不在 <c>def.LogicInputPorts</c> 里；Def 上一旦写了输入列表，原版
+    ///     <c>InitializeLogicPorts</c> 会用它覆盖 (0,0) 端口，所以本 Mod 不能往 Def 写输入。
+    /// 矿石洗涤器不用电，原版没有输入，不加。
     ///
     /// 端口标识即原版 <see cref="LogicOperationalController.PORT_ID"/>，「未接线 → 允许生产」
     /// 沿用原版 <see cref="LogicOperationalController"/> 的语义。
@@ -19,6 +21,13 @@ namespace MaterialOverhaul.Game
     {
         private static readonly Dictionary<string, CellOffset> Offsets = new Dictionary<string, CellOffset>
         {
+            // 原版因需要电力而自带的 (0,0) 输入。
+            { "MetalRefinery", new CellOffset(0, 0) }, { "RockCrusher", new CellOffset(0, 0) },
+            { "GlassForge", new CellOffset(0, 0) }, { "SupermaterialRefinery", new CellOffset(0, 0) },
+            { "DiamondPress", new CellOffset(0, 0) }, { "SludgePress", new CellOffset(0, 0) },
+            { "MissileFabricator", new CellOffset(0, 0) }, { "OilRefinery", new CellOffset(0, 0) },
+            { "EthanolDistillery", new CellOffset(0, 0) }, { "Desalinator", new CellOffset(0, 0) },
+            // 原版 Config 写明的输入。
             { "ChemicalRefinery", new CellOffset(0, 0) },
             { "Kiln", new CellOffset(0, 1) },
             { "Chlorinator",new CellOffset(0,1) },

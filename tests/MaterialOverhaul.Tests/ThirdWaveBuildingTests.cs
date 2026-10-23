@@ -627,30 +627,31 @@ namespace MaterialOverhaul.Tests
         /// 原版端口偏移取各 `*Config` 的 LogicInputPorts／LogicOutputPorts／PowerInputOffset／
         /// UtilityInputOffset／UtilityOutputOffset（本机反编译代码核对，2026-10-17）。
         /// `ReusedLogic` 是该建筑原版已有的逻辑控制输入位置：本 Mod 复用该端口，不新增第二个。
+        /// 需要电力的建筑由 `GeneratedBuildings.RegisterSingleLogicInputPort` 默认加在 (0,0)，不写在 Config 里。
         /// </summary>
         private static readonly PortRow[] PortTable =
         {
-            new PortRow("MetalRefinery", 3, 4, "(-1,1)(1,0)", null),
-            new PortRow("GlassForge", 5, 4, "", null),
-            new PortRow("RockCrusher", 4, 4, "", null),
-            new PortRow("SupermaterialRefinery", 4, 5, "", null),
+            new PortRow("MetalRefinery", 3, 4, "(-1,1)(1,0)", "(0,0)", "需要电力，原版默认输入"),
+            new PortRow("GlassForge", 5, 4, "", "(0,0)", "需要电力，原版默认输入"),
+            new PortRow("RockCrusher", 4, 4, "", "(0,0)", "需要电力，原版默认输入"),
+            new PortRow("SupermaterialRefinery", 4, 5, "", "(0,0)", "需要电力，原版默认输入"),
             new PortRow("ChemicalRefinery", 4, 3, "(1,0)(2,1)", "(0,0)"),
             new PortRow("Kiln", 2, 2, "", "(0,1)"),
             new PortRow("Chlorinator", 3, 3, "(0,0)", "(0,1)"),
-            new PortRow("DiamondPress", 3, 5, "(0,2)", null, "原版辐射粒子存量输出"),
+            new PortRow("DiamondPress", 3, 5, "(0,2)", "(0,0)", "原版辐射粒子存量输出；需要电力，原版默认输入"),
             new PortRow("UraniumCentrifuge", 3, 4, "(0,0)", "(0,0)"),
             new PortRow("RubberMaker", 3, 3, "(0,0)(1,0)", "(0,1)"),
             new PortRow("FabricatedWoodMaker", 4, 3, "(0,0)", "(1,0)"),
-            new PortRow("SludgePress", 4, 3, "(1,0)", null),
-            new PortRow("MissileFabricator", 5, 4, "(1,0)(-1,1)", null),
-            new PortRow("OilRefinery", 4, 4, "(1,0)(0,0)(1,1)", null),
+            new PortRow("SludgePress", 4, 3, "(1,0)", "(0,0)", "需要电力，原版默认输入"),
+            new PortRow("MissileFabricator", 5, 4, "(1,0)(-1,1)", "(0,0)", "需要电力，原版默认输入"),
+            new PortRow("OilRefinery", 4, 4, "(1,0)(0,0)(1,1)", "(0,0)", "需要电力，原版默认输入"),
             new PortRow("Polymerizer", 3, 3, "(0,0)", "(0,1)"),
-            new PortRow("EthanolDistillery", 4, 3, "(2,0)(-1,0)", null),
+            new PortRow("EthanolDistillery", 4, 3, "(2,0)(-1,0)", "(0,0)", "需要电力，原版默认输入"),
             new PortRow("FertilizerMaker", 4, 3, "(1,0)(0,0)", "(-1,0)"),
             new PortRow("AlgaeDistillery", 3, 4, "(1,0)(0,0)", "(0,1)"),
             new PortRow("OxyliteRefinery", 3, 4, "(0,0)(1,0)", "(0,1)"),
             new PortRow("WaterPurifier", 4, 3, "(2,0)(-1,2)(2,2)", "(-1,0)"),
-            new PortRow("Desalinator", 4, 3, "(-1,0)(0,0)", null),
+            new PortRow("Desalinator", 4, 3, "(-1,0)(0,0)", "(0,0)", "需要电力，原版默认输入"),
             new PortRow("Generator", 3, 3, "", "(0,0)"),
             new PortRow("PeatGenerator", 3, 2, "", "(0,0)"),
             new PortRow("HydrogenGenerator", 4, 3, "(-1,0)", "(-1,0)"),
@@ -674,7 +675,8 @@ namespace MaterialOverhaul.Tests
         {
             TestRunner.Section("自动化端口：原版输入原位、原版没有的不加、温区输出在占格内");
             TestRunner.CheckEqual(29, PortTable.Length, "端口表覆盖 29 栋");
-            TestRunner.CheckEqual(18, AutomationControlScope.All.Count(), "生产控制输入只用原版已有的 18 栋");
+            TestRunner.CheckEqual(28, AutomationControlScope.All.Count(), "生产控制输入只用原版已有的 28 栋");
+            TestRunner.CheckEqual(false, AutomationControlScope.IsEnabled("OreScrubber"), "矿石洗涤器不用电、原版无输入，不加");
             TestRunner.CheckEqual(0, AutomationControlScope.All.Except(BuildingWhitelist.All).Count(), "输入名单都在白名单内");
             TestRunner.CheckEqual(0, BuildingWhitelist.All.Except(PortTable.Select(p => p.Id)).Count(), "每栋都有占格与冲突基准");
 
@@ -705,7 +707,7 @@ namespace MaterialOverhaul.Tests
                     TestRunner.Check(input.x != output.x || input.y != output.y, row.Id + " 原版输入与温区输出不重叠");
                 }
             }
-            TestRunner.CheckEqual(18, reused, "18 栋已有原版逻辑控制输入，保持原位");
+            TestRunner.CheckEqual(28, reused, "28 栋已有原版逻辑控制输入（18 栋 Config 写明、10 栋用电默认），保持原位");
 
             CellOffset diamond;
             AutomationControlScope.TryGetOutputOffset("DiamondPress", out diamond);
@@ -735,7 +737,7 @@ namespace MaterialOverhaul.Tests
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(104, Strings.Values.Count, "字段树登记104条（电力14条）");
+            TestRunner.CheckEqual(103, Strings.Values.Count, "字段树登记103条（电力14条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -759,7 +761,7 @@ namespace MaterialOverhaul.Tests
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
             // 房间系统的 69 条键与工业/电力共用同一个 zh.po，由 ProfileChecks 按构建模式
-            // 分别校验；这里只核对工业与电力共用的 104 条，避免把房间包差异算成工业回归。
+            // 分别校验；这里只核对工业与电力共用的 103 条，避免把房间包差异算成工业回归。
             foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(roomKey);
             // 辐射独立验证版的键同样只进辐射包，由 ProfileChecks 校验。
@@ -768,7 +770,7 @@ namespace MaterialOverhaul.Tests
             // 整合版模组界面系统开关的键只进整合包，由 ProfileChecks 与 SystemSwitchTests 校验。
             foreach (string optionsKey in po.Keys.Where(k => k.StartsWith("STRINGS.MODOPTIONS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(optionsKey);
-            TestRunner.CheckEqual(104, po.Count, "zh.po有104条工业/电力msgctxt");
+            TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;
@@ -779,9 +781,6 @@ namespace MaterialOverhaul.Tests
                 TestRunner.CheckEqual(entry.Value, translated, entry.Key + " 中文PO与字段默认文本一致");
             }
             TestRunner.CheckEqual(0, po.Keys.Except(Strings.Values.Keys).Count(), "zh.po 没有多余键");
-            string noAutomation;
-            TestRunner.Check(po.TryGetValue("STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE_NO_AUTOMATION", out noAutomation)
-                && !noAutomation.Contains("自动化"), "无生产控制输入的强制运行提示不提自动化");
             // 第三批新增文本确实登记了（防止把新键漏在字段树外）。
             foreach (string id in new[] { "PROCESS_BEST", "PROCESS_BEST_TOOLTIP", "INDUSTRIAL_STATUS", "GENERATION_STATUS", "IMMUNE_HEATING_TOOLTIP" })
                 TestRunner.Check(Strings.Values.ContainsKey("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL." + id), id + " 已登记");
