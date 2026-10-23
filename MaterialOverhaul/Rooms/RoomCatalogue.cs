@@ -127,8 +127,8 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumSize(24),
-                    RoomRequirement.MaximumSize(108)
+                    RoomRequirement.MinimumSize(12),
+                    RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "Hospital" },
                 EffectIds = new[] { RoomEffectIds.MedicalCenterRecovery },
@@ -226,7 +226,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumSize(18),
+                    RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
@@ -250,7 +250,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.NoIndustrialMachinery(),
                     RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
-                    RoomRequirement.MinimumSize(36),
+                    RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
@@ -274,8 +274,8 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(26f, 50f),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumSize(16),
-                    RoomRequirement.MaximumSize(64)
+                    RoomRequirement.MinimumSize(12),
+                    RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
                 EffectIds = new[] { RoomEffectIds.SpaMorale },
@@ -298,7 +298,7 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumDecor(BaseAdvancedDecor),
                     RoomRequirement.TemperatureRange(20f, 26f),
                     RoomRequirement.MinimumSize(12),
-                    RoomRequirement.MaximumSize(64)
+                    RoomRequirement.MaximumSize(96)
                 },
                 Beats = new[] { "RecRoom" },
                 EffectIds = new[] { RoomEffectIds.TeaRoomMorale },
@@ -324,8 +324,8 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireLight(),
                     RoomRequirement.MinimumDecor(20f),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumSize(12),
-                    RoomRequirement.MaximumSize(64)
+                    RoomRequirement.MinimumSize(32),
+                    RoomRequirement.MaximumSize(120)
                 },
                 Beats = new[] { "Laboratory" },
                 Priority = 1,
@@ -346,8 +346,8 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.RequireLight(),
                     RoomRequirement.MinimumDecor(20f),
                     RoomRequirement.NoIndustrialMachinery(),
-                    RoomRequirement.MinimumSize(12),
-                    RoomRequirement.MaximumSize(64)
+                    RoomRequirement.MinimumSize(32),
+                    RoomRequirement.MaximumSize(120)
                 },
                 Beats = new[] { "Laboratory" },
                 Priority = 1,
@@ -405,8 +405,8 @@ namespace MaterialOverhaul.Rooms
                 PrimaryPrefabIds = new[] { RoomBuildingCatalogue.DataMiner },
                 Additional = new[]
                 {
-                    RoomRequirement.MinimumSize(12),
-                    RoomRequirement.MaximumSize(96),
+                    RoomRequirement.MinimumSize(32),
+                    RoomRequirement.MaximumSize(120),
                     RoomRequirement.TemperatureBelow(20f)
                 },
                 RequiredDlcIds = new[] { Dlc3 },

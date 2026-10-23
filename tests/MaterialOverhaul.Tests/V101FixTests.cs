@@ -18,6 +18,7 @@ namespace MaterialOverhaul.Tests
         public static void Run()
         {
             DecorThresholds();
+            SizesMatchVanilla();
             PowerCoefficients();
             AbyssaliteConductivity();
             RoomTexts();
@@ -55,6 +56,47 @@ namespace MaterialOverhaul.Tests
             }
 
             TestRunner.CheckEqual(expected.Count, found, "带装饰度要求的房间数");
+        }
+
+        private static void SizesMatchVanilla()
+        {
+            // §9 #28：顶替原版房间的高级房间，大小与被顶替的原版房间一致（目标版本 RoomTypes）。
+            TestRunner.Section("高级房间大小与被顶替的原版房间一致");
+            var vanilla = new Dictionary<string, int[]>(StringComparer.Ordinal)
+            {
+                { "Hospital", new[] { 12, 96 } }, { "RecRoom", new[] { 12, 96 } }, { "Laboratory", new[] { 32, 120 } }
+            };
+
+            int checkedRooms = 0;
+            foreach (RoomDefinition definition in RoomCatalogue.NewRooms.Where(d => d.Beats != null && d.Beats.Length > 0))
+            {
+                int[] size;
+                if (!vanilla.TryGetValue(definition.Beats[0], out size))
+                {
+                    TestRunner.Check(false, definition.Id + " 顶替的原版房间未列入大小基准：" + definition.Beats[0]);
+                    continue;
+                }
+
+                RoomRequirement min = definition.Additional.FirstOrDefault(r => r.Kind == RoomRequirementKind.MinimumSize);
+                RoomRequirement max = definition.Additional.FirstOrDefault(r => r.Kind == RoomRequirementKind.MaximumSize);
+                TestRunner.CheckEqual(size[0], min == null ? -1 : min.IntValue, definition.Id + " 下限同 " + definition.Beats[0]);
+                TestRunner.CheckEqual(size[1], max == null ? -1 : max.IntValue, definition.Id + " 上限同 " + definition.Beats[0]);
+                checkedRooms++;
+            }
+
+            TestRunner.CheckEqual(11, checkedRooms, "顶替原版房间的高级房间 11 间");
+
+            var custom = new Dictionary<string, int[]>(StringComparer.Ordinal)
+            {
+                { RoomCatalogue.IndustrialAreaId, new[] { 32, 1000 } }, { RoomCatalogue.SpaceportId, new[] { 64, 2400 } },
+                { RoomCatalogue.CargoStationId, new[] { 32, 360 } }
+            };
+            foreach (RoomDefinition definition in RoomCatalogue.NewRooms.Where(d => custom.ContainsKey(d.Id)))
+            {
+                int[] size = custom[definition.Id];
+                TestRunner.CheckEqual(size[0], definition.Additional.First(r => r.Kind == RoomRequirementKind.MinimumSize).IntValue, definition.Id + " 下限保持");
+                TestRunner.CheckEqual(size[1], definition.Additional.First(r => r.Kind == RoomRequirementKind.MaximumSize).IntValue, definition.Id + " 上限保持");
+            }
         }
 
         private static void PowerCoefficients()
