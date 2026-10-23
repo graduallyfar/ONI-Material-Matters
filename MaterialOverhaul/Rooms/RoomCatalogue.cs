@@ -70,7 +70,8 @@ namespace MaterialOverhaul.Rooms
                     RoomRequirement.MinimumSize(12),
                     RoomRequirement.MaximumSize(64)
                 },
-                Beats = new[] { "Park", "NatureReserve" },
+                // 有满足条件的野生植物时保持原版公园／自然保护区；两者都不成立时才是人造公园。
+                Beats = null,
                 EffectIds = new[] { RoomEffectIds.ArtificialParkMorale },
                 Priority = 1,
                 SortKey = 101

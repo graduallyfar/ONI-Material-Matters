@@ -227,6 +227,7 @@ namespace MaterialOverhaul.Game
                     public static LocString MEDICAL_CENTER_BONUS = "患者优先入院，可救治致命辐射病（会留下后遗症）";
                     public static LocString RADIATION_RESCUE = "可救治致命辐射病，但会留下后遗症";
                     public static LocString GEOTUNER_EXTRA_SLOT = "该喷泉已有 {0} 台调谐仪，地质研究室内最多 {1} 台。";
+                    public static LocString PREFERENCE_TRAITS = "偏好特质：{0}（持有者在这里获得专属加成）";
                 }
 
                 /// <summary>建筑与火箭状态栏里的房间加成条目。只写公开的基础加成，不写科学翻倍等隐藏机制。</summary>

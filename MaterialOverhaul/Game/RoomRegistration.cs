@@ -303,14 +303,17 @@ namespace MaterialOverhaul.Game
 
             if (currentIsMine)
             {
-                if (mine != null && !ReferenceEquals(mine, current))
-                {
-                    return mine;
-                }
-
                 if (mine != null)
                 {
-                    return null;
+                    // 原版房间同样成立且不在明列顶替范围内时让位原版（例如有野生植物时保持公园／自然保护区，
+                    // 有厕所时保持卫生间），与「当前不是本 Mod 房间」时的仲裁一致。
+                    RoomType original = SelectOriginalRoom(room);
+                    if (original != null && original.Id != "Neutral" && !RoomEvaluator.Beats(DefinitionOf(mine.Id), original.Id))
+                    {
+                        return original;
+                    }
+
+                    return ReferenceEquals(mine, current) ? null : mine;
                 }
 
                 RoomType fallback = SelectOriginalRoom(room);
@@ -583,6 +586,12 @@ namespace MaterialOverhaul.Game
             if (RoomText.HasSpecialEffectLine(definition.Id))
             {
                 details.Add(new RoomDetails.Detail(room => RoomText.SpecialEffectLine(room)));
+            }
+
+            if (RoomTraitCatalogue.ForRoom(definition.Id).Length > 0)
+            {
+                string roomId = definition.Id;
+                details.Add(new RoomDetails.Detail(room => RoomText.PreferenceTraitLine(roomId)));
             }
 
             return new RoomType(

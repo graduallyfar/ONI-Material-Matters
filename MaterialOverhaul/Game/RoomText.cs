@@ -180,6 +180,26 @@ namespace MaterialOverhaul.Game
                 ((multiplier - 1f) * 100f).ToString("0"));
         }
 
+        /// <summary>对应偏好特质的显示行，例如「偏好特质：海滨达人、冒险家（…）」；没有对应特质的房间返回空字符串。</summary>
+        public static string PreferenceTraitLine(string roomTypeId)
+        {
+            RoomTraitSpec[] specs = RoomTraitCatalogue.ForRoom(roomTypeId);
+            if (specs.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var names = new string[specs.Length];
+            for (int i = 0; i < specs.Length; i++)
+            {
+                names[i] = Strings.Get("STRINGS.ROOMS.MATERIALOVERHAUL.TRAITS." + specs[i].StringToken + ".NAME");
+            }
+
+            return string.Format(
+                Strings.Get("STRINGS.ROOMS.MATERIALOVERHAUL.DETAILS.PREFERENCE_TRAITS"),
+                string.Join("、", names));
+        }
+
         /// <summary>具有专项效果的房间（科研、航天、货运、医疗中心）是否显示专项说明行。</summary>
         public static bool HasSpecialEffectLine(string roomTypeId)
         {

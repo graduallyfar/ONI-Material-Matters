@@ -98,6 +98,26 @@ namespace MaterialOverhaul.Rooms
             return null;
         }
 
+        /// <summary>对应某个房间的全部偏好特质（海滨乐园有两项），按映射表顺序；没有时返回空数组。</summary>
+        public static RoomTraitSpec[] ForRoom(string roomId)
+        {
+            if (string.IsNullOrEmpty(roomId))
+            {
+                return new RoomTraitSpec[0];
+            }
+
+            var matches = new System.Collections.Generic.List<RoomTraitSpec>();
+            for (int i = 0; i < AllValue.Length; i++)
+            {
+                if (string.Equals(AllValue[i].RoomId, roomId, StringComparison.Ordinal))
+                {
+                    matches.Add(AllValue[i]);
+                }
+            }
+
+            return matches.ToArray();
+        }
+
         public static int Count
         {
             get { return AllValue.Length; }
