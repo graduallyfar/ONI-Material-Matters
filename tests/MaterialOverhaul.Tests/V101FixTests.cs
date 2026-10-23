@@ -26,11 +26,11 @@ namespace MaterialOverhaul.Tests
 
         private static void DecorThresholds()
         {
-            // V1.0.1 下调后，V1.0.2（#18）把基地内高级房间统一为 +120；非基地功能房间仍为 +20。
+            // V1.0.1 下调后，V1.0.2（#18）把基地内高级房间统一为 +120；非基地功能房间仍为 +20；工业区取消装饰度（§9 #27）。
             TestRunner.Section("房间平均装饰度门槛（V1.0.2）");
             var expected = new Dictionary<string, float>(StringComparer.Ordinal)
             {
-                { RoomCatalogue.IndustrialAreaId, 20f }, { RoomCatalogue.MissionControlId, 20f }, { RoomCatalogue.GeoTunerLabId, 20f },
+                { RoomCatalogue.MissionControlId, 20f }, { RoomCatalogue.GeoTunerLabId, 20f },
                 { RoomCatalogue.MedicalCenterId, 120f }, { "MO_BeachParadise", 120f }, { "MO_WindTunnel", 120f }, { "MO_Spa", 120f },
                 { "MO_DanceHall", 120f }, { "MO_ArcadeHall", 120f }, { "MO_TeaRoom", 120f },
                 { "MO_Gallery", 120f },
