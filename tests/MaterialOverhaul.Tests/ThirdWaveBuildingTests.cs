@@ -672,26 +672,25 @@ namespace MaterialOverhaul.Tests
 
         private static void Ports()
         {
-            TestRunner.Section("自动化端口：29栋齐全、在占格内、不覆盖原版接口");
+            TestRunner.Section("自动化端口：原版输入原位、原版没有的不加、温区输出在占格内");
             TestRunner.CheckEqual(29, PortTable.Length, "端口表覆盖 29 栋");
-            TestRunner.CheckEqual(29, AutomationControlScope.All.Count(), "输入端口表 29 栋");
-            TestRunner.CheckEqual(0, BuildingWhitelist.All.Except(AutomationControlScope.All).Count(), "白名单都有输入端口位置");
+            TestRunner.CheckEqual(18, AutomationControlScope.All.Count(), "生产控制输入只用原版已有的 18 栋");
+            TestRunner.CheckEqual(0, AutomationControlScope.All.Except(BuildingWhitelist.All).Count(), "输入名单都在白名单内");
             TestRunner.CheckEqual(0, BuildingWhitelist.All.Except(PortTable.Select(p => p.Id)).Count(), "每栋都有占格与冲突基准");
 
             int reused = 0;
             foreach (PortRow row in PortTable)
             {
                 CellOffset input, output;
-                TestRunner.Check(AutomationControlScope.TryGetOffset(row.Id, out input), row.Id + " 配置了输入端口");
+                bool hasInput = AutomationControlScope.TryGetOffset(row.Id, out input);
                 TestRunner.Check(AutomationControlScope.TryGetOutputOffset(row.Id, out output), row.Id + " 配置了温区输出");
-                TestRunner.CheckEqual(true, AutomationControlScope.IsEnabled(row.Id), row.Id + " 启用生产控制输入");
+                TestRunner.CheckEqual(row.ReusedLogic != null, hasInput,
+                    row.Id + (row.ReusedLogic != null ? " 原版有逻辑控制输入，启用生产控制" : " 原版没有逻辑控制输入，不加输入"));
+                TestRunner.CheckEqual(hasInput, AutomationControlScope.IsEnabled(row.Id), row.Id + " IsEnabled 与名单一致");
 
                 int left = row.W / 2 - row.W + 1, right = row.W / 2;
-                TestRunner.Check(input.x >= left && input.x <= right && input.y >= 0 && input.y < row.H,
-                    row.Id + " 输入在占格内(" + row.W + "x" + row.H + ")");
                 TestRunner.Check(output.x >= left && output.x <= right && output.y >= 0 && output.y < row.H,
                     row.Id + " 温区输出在占格内(" + row.W + "x" + row.H + ")");
-                TestRunner.Check(input.x != output.x || input.y != output.y, row.Id + " 输入与输出不重叠");
 
                 List<CellOffset> vanilla = Parse(row.Vanilla);
                 bool clashes = vanilla.Any(v => v.x == output.x && v.y == output.y);
@@ -702,15 +701,11 @@ namespace MaterialOverhaul.Tests
                     reused++;
                     List<CellOffset> logic = Parse(row.ReusedLogic);
                     TestRunner.Check(logic.Any(v => v.x == input.x && v.y == input.y),
-                        row.Id + " 复用原版逻辑控制输入位置，不新增第二个端口");
-                }
-                else
-                {
-                    TestRunner.Check(!vanilla.Any(v => v.x == input.x && v.y == input.y),
-                        row.Id + " 新增输入不与原版接口重叠");
+                        row.Id + " 记录的输入位置就是原版位置");
+                    TestRunner.Check(input.x != output.x || input.y != output.y, row.Id + " 原版输入与温区输出不重叠");
                 }
             }
-            TestRunner.CheckEqual(18, reused, "18 栋已有原版逻辑控制输入，直接复用位置");
+            TestRunner.CheckEqual(18, reused, "18 栋已有原版逻辑控制输入，保持原位");
 
             CellOffset diamond;
             AutomationControlScope.TryGetOutputOffset("DiamondPress", out diamond);
@@ -740,7 +735,7 @@ namespace MaterialOverhaul.Tests
             LocString.CreateLocStringKeys(typeof(ModStrings.UI), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDINGS), "STRINGS.");
             LocString.CreateLocStringKeys(typeof(ModStrings.BUILDING), "STRINGS.");
-            TestRunner.CheckEqual(103, Strings.Values.Count, "字段树登记103条（电力14条）");
+            TestRunner.CheckEqual(104, Strings.Values.Count, "字段树登记104条（电力14条）");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
@@ -764,7 +759,7 @@ namespace MaterialOverhaul.Tests
                 if (str.Success && key != null) { po[key] = Unescape(str.Groups[1].Value); key = null; }
             }
             // 房间系统的 69 条键与工业/电力共用同一个 zh.po，由 ProfileChecks 按构建模式
-            // 分别校验；这里只核对工业与电力共用的 103 条，避免把房间包差异算成工业回归。
+            // 分别校验；这里只核对工业与电力共用的 104 条，避免把房间包差异算成工业回归。
             foreach (string roomKey in po.Keys.Where(k => k.StartsWith("STRINGS.ROOMS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(roomKey);
             // 辐射独立验证版的键同样只进辐射包，由 ProfileChecks 校验。
@@ -773,7 +768,7 @@ namespace MaterialOverhaul.Tests
             // 整合版模组界面系统开关的键只进整合包，由 ProfileChecks 与 SystemSwitchTests 校验。
             foreach (string optionsKey in po.Keys.Where(k => k.StartsWith("STRINGS.MODOPTIONS.MATERIALOVERHAUL.", StringComparison.Ordinal)).ToList())
                 po.Remove(optionsKey);
-            TestRunner.CheckEqual(103, po.Count, "zh.po有103条工业/电力msgctxt");
+            TestRunner.CheckEqual(104, po.Count, "zh.po有104条工业/电力msgctxt");
             foreach (KeyValuePair<string, string> entry in Strings.Values)
             {
                 string translated;
@@ -784,6 +779,9 @@ namespace MaterialOverhaul.Tests
                 TestRunner.CheckEqual(entry.Value, translated, entry.Key + " 中文PO与字段默认文本一致");
             }
             TestRunner.CheckEqual(0, po.Keys.Except(Strings.Values.Keys).Count(), "zh.po 没有多余键");
+            string noAutomation;
+            TestRunner.Check(po.TryGetValue("STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE_NO_AUTOMATION", out noAutomation)
+                && !noAutomation.Contains("自动化"), "无生产控制输入的强制运行提示不提自动化");
             // 第三批新增文本确实登记了（防止把新键漏在字段树外）。
             foreach (string id in new[] { "PROCESS_BEST", "PROCESS_BEST_TOOLTIP", "INDUSTRIAL_STATUS", "GENERATION_STATUS", "IMMUNE_HEATING_TOOLTIP" })
                 TestRunner.Check(Strings.Values.ContainsKey("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL." + id), id + " 已登记");

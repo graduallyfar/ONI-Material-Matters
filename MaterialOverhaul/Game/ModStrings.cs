@@ -30,6 +30,7 @@ namespace MaterialOverhaul.Game
                         public static LocString ENABLE = "启用强制运行";
                         public static LocString DISABLE = "禁用强制运行";
                         public static LocString TOOLTIP_ENABLE = "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复；自动化信号仍能暂停生产。";
+                        public static LocString TOOLTIP_ENABLE_NO_AUTOMATION = "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复。";
                         public static LocString TOOLTIP_DISABLE = "恢复温区限制，保留当前生产进度。";
                         public static LocString TOOLTIP_NO_HEATING = "忽略温区限制继续生产。\n这个建筑没有内置加热，需要靠生产热量或外部热源升温。";
                     }

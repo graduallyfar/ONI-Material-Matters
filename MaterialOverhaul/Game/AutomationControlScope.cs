@@ -3,39 +3,34 @@ using System.Collections.Generic;
 namespace MaterialOverhaul.Game
 {
     /// <summary>
-    /// 「允许／暂停生产」自动化输入的范围与端口位置（建筑细节文档 §2.2.3、V0.0.3 开发计划 §10.4）。
+    /// 「允许／暂停生产」自动化输入的范围（建筑细节文档 §2.2.3、V1.0.2 开发计划 §9 #23）。
     ///
-    /// 本版覆盖全部 29 栋接入建筑；已有原版逻辑控制输入的建筑直接复用其位置（见 §3 表格说明）。
-    /// 粉碎机、窑炉、发电机与洗涤器等没有内置加热；名单以外不添加端口。
+    /// 只用原版已有的逻辑控制输入：29 栋接入建筑中原版带
+    /// <c>LogicOperationalController.CreateSingleInputPortList</c> 的 18 栋。端口本体、位置都是原版的，
+    /// 本 Mod 不移动、不新增；下表只记录原版位置，供注册时核对。原版不能用自动化控制的
+    /// 11 栋（金属精炼器、粉碎机、玻璃熔炉、分子熔炉、钻石压机、淤泥压榨机、导弹制造机、
+    /// 原油精炼器、乙醇蒸馏器、海水淡化器、矿石洗涤器）不加输入端口。乙醇蒸馏器原版虽挂了
+    /// 逻辑控制组件，但没有定义端口，同样归入不加。
     ///
-    /// 端口标识复用原版 <see cref="LogicOperationalController.PORT_ID"/> 与
-    /// <see cref="LogicOperationalController"/> 组件，因此「未接线 → 允许生产」的默认语义
-    /// 与原版逻辑控制建筑完全一致，不额外发明一套未接线规则。
+    /// 端口标识即原版 <see cref="LogicOperationalController.PORT_ID"/>，「未接线 → 允许生产」
+    /// 沿用原版 <see cref="LogicOperationalController"/> 的语义。
     /// </summary>
     internal static class AutomationControlScope
     {
         private static readonly Dictionary<string, CellOffset> Offsets = new Dictionary<string, CellOffset>
         {
-            // 金属精炼器 3×4，输入保留顶排中间；与液体接口和温区输出 (1,3) 不重叠。
-            { "MetalRefinery", new CellOffset(0, 3) },
-            { "RockCrusher", new CellOffset(0, 3) },
-            { "GlassForge", new CellOffset(-1, 3) },
-            { "SupermaterialRefinery", new CellOffset(0, 4) },
-            // 复用这两栋原版已存在的输入位置与逻辑控制组件。
             { "ChemicalRefinery", new CellOffset(0, 0) },
             { "Kiln", new CellOffset(0, 1) },
-            { "Chlorinator",new CellOffset(0,1) }, { "DiamondPress",new CellOffset(0,4) },
+            { "Chlorinator",new CellOffset(0,1) },
             { "UraniumCentrifuge",new CellOffset(0,0) }, { "RubberMaker",new CellOffset(0,1) },
-            { "FabricatedWoodMaker",new CellOffset(1,0) }, { "SludgePress",new CellOffset(0,2) },
-            { "MissileFabricator",new CellOffset(0,3) }, { "OilRefinery",new CellOffset(0,3) },
-            { "Polymerizer",new CellOffset(0,1) }, { "EthanolDistillery",new CellOffset(0,2) },
+            { "FabricatedWoodMaker",new CellOffset(1,0) },
+            { "Polymerizer",new CellOffset(0,1) },
             { "FertilizerMaker",new CellOffset(-1,0) }, { "AlgaeDistillery",new CellOffset(0,1) },
             { "OxyliteRefinery",new CellOffset(0,1) }, { "WaterPurifier",new CellOffset(-1,0) },
-            { "Desalinator",new CellOffset(0,2) }, { "Generator",new CellOffset(0,0) },
+            { "Generator",new CellOffset(0,0) },
             { "PeatGenerator",new CellOffset(0,0) }, { "HydrogenGenerator",new CellOffset(-1,0) },
             { "MethaneGenerator",new CellOffset(0,0) }, { "PetroleumGenerator",new CellOffset(0,0) },
-            { "WoodGasGenerator",new CellOffset(1,1) }, { "OilWellCap",new CellOffset(0,0) },
-            { "OreScrubber",new CellOffset(0,2) }
+            { "WoodGasGenerator",new CellOffset(1,1) }, { "OilWellCap",new CellOffset(0,0) }
         };
 
         private static readonly Dictionary<string, CellOffset> OutputOffsets = new Dictionary<string, CellOffset>
@@ -78,6 +73,7 @@ namespace MaterialOverhaul.Game
             get { return LogicOperationalController.PORT_ID; }
         }
 
+        /// <summary>原版逻辑控制输入的位置（只用于核对，不据此新增端口）。</summary>
         public static bool TryGetOffset(string prefabId, out CellOffset offset)
         {
             offset = default(CellOffset);

@@ -88,15 +88,15 @@ namespace MaterialOverhaul.Patches
         ///   - MetalRefinery 3×4：液体输入 (-1,1)、液体输出 (1,0)，都在左下侧
         ///   - GlassForge    5×4：液体输出 (1,3)，在顶排中段
         ///   - RockCrusher   4×4：无其它端口
-        ///   - SupermaterialRefinery 4×5：输出 (2,4)，新增输入 (0,4)
+        ///   - SupermaterialRefinery 4×5：输出 (2,4)
         ///   - ChemicalRefinery 4×3：输出 (2,2)，避开液体输出 (2,1)，复用输入 (0,0)
         ///   - Kiln 2×2：输出 (1,1)，复用原版输入 (0,1)
         /// 位置集中在 AutomationControlScope，与其它接口不重叠，且均在建筑占格内。
         /// </summary>
 
         /// <summary>
-        /// 「允许／暂停生产」自动化**输入**端口的位置来自 <see cref="AutomationControlScope"/>：
-        /// 本版覆盖接入的 29 栋，已有原版逻辑控制输入的建筑直接复用其位置。
+        /// 「允许／暂停生产」自动化**输入**只用原版已有的逻辑控制端口（<see cref="AutomationControlScope"/>
+        /// 的 18 栋），本处只核对、不新增；原版没有该端口的建筑不加输入。
         /// </summary>
         private static void Prefix(object[] __args)
         {
@@ -120,7 +120,7 @@ namespace MaterialOverhaul.Patches
                     return;
                 }
 
-                AddProductionControlPort(def);
+                CheckProductionControlPort(def);
                 AddTemperatureZonePort(def);
             }
             catch (Exception e)
@@ -130,45 +130,42 @@ namespace MaterialOverhaul.Patches
         }
 
         /// <summary>
-        /// 添加「允许／暂停生产」输入端口。
+        /// 核对原版「逻辑控制」输入端口，用作「允许／暂停生产」。
         ///
-        /// 复用原版 <see cref="LogicOperationalController"/> 的端口标识与组件：
-        /// 它的「未接线按 <c>unNetworkedValue = 1</c> 处理」语义正是本设计要的默认放行，
-        /// 并且会顺带给出原版的「逻辑控制：已启用／已暂停」状态项。
+        /// 端口与 <see cref="LogicOperationalController"/> 组件都是原版的：未接线按
+        /// <c>unNetworkedValue = 1</c> 放行，并带原版「逻辑控制：已启用／已暂停」状态项。
         /// 端口说明文本由本 Mod 在 <c>LogicPorts.OnSpawn</c> 时改成「允许／暂停生产」。
+        /// 位置不改；原版端口缺失或位置变了，只留可定位记录，不补端口。
         /// </summary>
-        private static void AddProductionControlPort(BuildingDef def)
+        private static void CheckProductionControlPort(BuildingDef def)
         {
-            CellOffset offset;
-            if (!AutomationControlScope.TryGetOffset(def.PrefabID, out offset))
+            CellOffset expected;
+            if (!AutomationControlScope.TryGetOffset(def.PrefabID, out expected))
             {
                 return;
             }
 
-            if (def.LogicInputPorts == null)
+            if (def.LogicInputPorts != null)
             {
-                def.LogicInputPorts = new System.Collections.Generic.List<LogicPorts.Port>();
-            }
-
-            foreach (LogicPorts.Port existing in def.LogicInputPorts)
-            {
-                if (existing.id == AutomationControlScope.PortId)
+                foreach (LogicPorts.Port existing in def.LogicInputPorts)
                 {
+                    if (existing.id != AutomationControlScope.PortId)
+                    {
+                        continue;
+                    }
+
+                    if (existing.cellOffset.x != expected.x || existing.cellOffset.y != expected.y)
+                    {
+                        ModLog.WarnOnce("port|control-moved|" + def.PrefabID,
+                            def.PrefabID + " 的原版逻辑控制输入位于 " + existing.cellOffset.x + "," + existing.cellOffset.y
+                            + "，与记录的 " + expected.x + "," + expected.y + " 不同；沿用原版位置。");
+                    }
                     return;
                 }
             }
 
-            def.LogicInputPorts.Add(LogicPorts.Port.InputPort(
-                AutomationControlScope.PortId,
-                offset,
-                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.DESCRIPTION"),
-                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.ACTIVE"),
-                Strings.Get("STRINGS.BUILDING.LOGICPORTS.MATERIALOVERHAUL.PRODUCTION_CONTROL.INACTIVE"),
-                show_wire_missing_icon: false,
-                display_custom_name: true));
-
-            ModLog.Info("已为 " + def.PrefabID + " 添加「允许／暂停生产」自动化输入端口，位置 "
-                + offset.x + "," + offset.y + "。");
+            ModLog.WarnOnce("port|control-missing|" + def.PrefabID,
+                def.PrefabID + " 在当前游戏版本中没有原版逻辑控制输入，「允许／暂停生产」不生效，本 Mod 不补端口。");
         }
 
         private static void AddTemperatureZonePort(BuildingDef def)

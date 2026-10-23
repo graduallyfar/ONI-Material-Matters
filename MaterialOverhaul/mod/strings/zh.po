@@ -23,6 +23,12 @@ msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE"
 msgid "Keeps producing past the working range and keeps heating; materials, power, automation permission and building health are still required."
 msgstr "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复；自动化信号仍能暂停生产。"
 
+#. 强制运行提示：有内置加热、但原版没有逻辑控制输入的建筑
+#. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE_NO_AUTOMATION
+msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_ENABLE_NO_AUTOMATION"
+msgid "Keeps producing past the working range and keeps heating; materials, power and building health are still required."
+msgstr "忽略温区限制继续生产，并持续加热。\n过热受损后停止加热，修好后恢复。"
+
 #. STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE
 msgctxt "STRINGS.UI.USERMENUACTIONS.MATERIALOVERHAUL.FORCEDRUN.TOOLTIP_DISABLE"
 msgid "Turning it off re-evaluates production permission from the output port wiring at that moment and keeps the current batch."
