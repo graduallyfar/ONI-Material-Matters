@@ -20,6 +20,7 @@ namespace MaterialOverhaul.Tests
             Contamination();
             ContaminantPriority();
             SourceIndex();
+            Decommission();
             ProfileIsolation();
         }
 
@@ -129,6 +130,19 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(165f, ContaminationModel.SelfRads(7, 165000, 7), 0.001f, "16.5 万个污染物自身 165 rads/周期");
             TestRunner.CheckClose(0f, ContaminationModel.SelfRads(3, 165000, 7), 0.001f, "其他病菌不计入自身放射");
             TestRunner.CheckClose(0f, ContaminationModel.SelfRads(ContaminationModel.NoDisease, 0, 7), 0.001f, "无病菌不计入");
+
+            // 核废料、铀矿自身放射已超过门槛；若再写入污染物，污染物抬高本格辐射，形成自我增强。
+            TestRunner.Check(ContaminationModel.CanContaminate(0f), "不放射的元素可被污染");
+            TestRunner.Check(!ContaminationModel.CanContaminate(250f), "自身放射的元素（核废料等）不添加污染物");
+            TestRunner.Check(ContaminationModel.CanContaminate(float.NaN), "无效放射值按不放射处理");
+
+            string root = FindRepoRoot();
+            if (root != null)
+            {
+                string monitor = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RadiationInducedMonitor.cs"));
+                TestRunner.Check(monitor.Contains("ContaminationModel.CanContaminate(element.radiationPer1000Mass)"),
+                    "写入污染物前排除自身放射的元素");
+            }
         }
 
         private static void ContaminantPriority()
@@ -198,6 +212,32 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckClose(total, dense.UpperBound(c, width, 3), 0.001f, "大量源时逐格求和一致");
         }
 
+        private static void Decommission()
+        {
+            TestRunner.Section("拆除活化建筑转成核废料");
+            TestRunner.CheckClose(0f, DecommissionModel.WasteFraction(5f), 0.0001f, "活化度低于 10 rads 不转换");
+            TestRunner.CheckClose(0f, DecommissionModel.WasteFraction(float.NaN), 0.0001f, "无效活化度不转换");
+            TestRunner.CheckClose(0.01f, DecommissionModel.WasteFraction(10f), 0.00001f, "10 rads 转 1%");
+            TestRunner.CheckClose(0.275f, DecommissionModel.WasteFraction(275f), 0.00001f, "275 rads 转 27.5%");
+            TestRunner.CheckClose(0.5f, DecommissionModel.WasteFraction(800f), 0.00001f, "转换比例最多 50%");
+            TestRunner.CheckClose(27.5f, DecommissionModel.WasteMass(100f, 275f), 0.0001f, "100 kg 主材在 275 rads 时转出 27.5 kg");
+            TestRunner.CheckClose(0f, DecommissionModel.WasteMass(0f, 275f), 0.0001f, "没有主材不产生核废料");
+            TestRunner.CheckEqual(275000, DecommissionModel.WasteContaminants(275f), "污染物按每 1000 个 = 1 rads/周期");
+            TestRunner.CheckEqual(0, DecommissionModel.WasteContaminants(5f), "不转换时不带污染物");
+            TestRunner.CheckEqual(RadiationBalance.MaxCellContaminants, DecommissionModel.WasteContaminants(1e9f), "污染物不超过单格上限");
+
+            string root = FindRepoRoot();
+            if (root == null)
+            {
+                return;
+            }
+
+            string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RadiationPatches.cs"));
+            TestRunner.Check(patches.Contains("new[] { typeof(float), typeof(byte), typeof(int), typeof(WorkerBase) }"), "拆除结算挂在原版私有生成建材方法上");
+            TestRunner.Check(patches.Contains("ref float src_mass"), "从主建材里扣出核废料质量");
+            TestRunner.Check(patches.Contains("SimHashes.NuclearWaste.CreateTag()"), "扣出的部分以原版核废料掉落");
+        }
+
         private static void ProfileIsolation()
         {
             TestRunner.Section("辐射并入整合版，其他独立版不含辐射（源码结构）");
@@ -235,7 +275,7 @@ namespace MaterialOverhaul.Tests
                 "整合版与辐射版都登记辐射文本键");
 
             string patches = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "Patches", "RadiationPatches.cs"));
-            TestRunner.CheckEqual(4, Regex.Matches(patches, "\\[HarmonyPatch\\(").Count, "辐射独立版共 4 个补丁");
+            TestRunner.CheckEqual(6, Regex.Matches(patches, "\\[HarmonyPatch\\(").Count, "辐射独立版共 6 个补丁");
             TestRunner.Check(patches.Contains("typeof(BuildingLoader), \"CreateBuildingComplete\""), "活化组件挂在完成建筑上");
 
             string monitor = File.ReadAllText(Path.Combine(root, "MaterialOverhaul", "Game", "RadiationInducedMonitor.cs"));

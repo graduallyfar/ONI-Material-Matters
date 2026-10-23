@@ -6,8 +6,9 @@ namespace MaterialOverhaul.Hardness
     /// 磨损与伤害的转换配置。数值集中定义在 <see cref="Balance"/>，本类只负责把它们交给
     /// <see cref="WearAccumulator"/>，让「磨损速率」与「伤害转换」只有一处来源。
     ///
-    /// 本版取值（V0.0.3 开发计划 §2.1，均为**暂定值**）：
-    ///   - 磨损速率 1 磨损单位／实际生产秒；硬度差只决定有无磨损，不增加差值倍率；
+    /// 本版取值（均为**暂定值**）：
+    ///   - 磨损速率 1 磨损单位／实际生产秒 × 硬度差倍率 2·(要求 − 实际)/要求：
+    ///     差一半时为 1 倍，硬度 0 时为 2 倍，刚好不达标时接近 0（设计评审 2026-10-23）；
     ///   - 伤害转换 0.05 HP／磨损单位，即实际生产 20 s 扣 1 HP，全部小数余额保留。
     ///
     /// 字段保留可写，供测试与调试覆盖；游戏内默认值一律来自 <see cref="Balance"/>。
@@ -36,6 +37,27 @@ namespace MaterialOverhaul.Hardness
         {
             if (accumulator == null || damagePerWearUnit <= 0f || WearPerProductionSecond <= 0f) return;
             accumulator.AccumulateProduction(productionSeconds, WearPerProductionSecond, damagePerWearUnit);
+        }
+
+        /// <summary>
+        /// 硬度差倍率：2·(要求 − 实际)/要求，限制在 [0, 2]。硬度达标或没有要求时为 0。
+        /// </summary>
+        public static float DeficitWearFactor(int actualHardness, int requiredHardness)
+        {
+            if (requiredHardness <= 0 || actualHardness >= requiredHardness)
+            {
+                return 0f;
+            }
+
+            int actual = actualHardness < 0 ? 0 : actualHardness;
+            return 2f * (requiredHardness - actual) / requiredHardness;
+        }
+
+        /// <summary>按硬度差倍率累计磨损：磨损单位速率 = 基础速率 × 倍率。</summary>
+        public static void AccumulateProduction(WearAccumulator accumulator, float productionSeconds, float damagePerWearUnit, float deficitFactor)
+        {
+            if (accumulator == null || damagePerWearUnit <= 0f || WearPerProductionSecond <= 0f || !(deficitFactor > 0f)) return;
+            accumulator.AccumulateProduction(productionSeconds, WearPerProductionSecond * deficitFactor, damagePerWearUnit);
         }
 
         /// <summary>把伤害余额换算回磨损单位数（显示用）。</summary>

@@ -118,7 +118,7 @@ namespace MaterialOverhaul.Tests
 
         private static void NearestAndCharging()
         {
-            TestRunner.Section("实际接入：最近电池放电、欠供接续、同轮充电和信息卡");
+            TestRunner.Section("实际接入：发电机先于近处电池供电、欠供接续、同轮充电和信息卡");
             var manager = Start(); Line(manager, 0, 5);
             var far = new Generator { PowerCell = 0, Joules = 1000 };
             var battery = new Battery { PowerCell = 3, Joules = 1 };
@@ -128,9 +128,9 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(!PowerSettlement.TryConsumer(consumer, 100, out _), "no settlement before native 0.2 second threshold");
             PowerSettlement.Begin(.2f, 0);
             TestRunner.Check(PowerSettlement.TryConsumer(consumer, 100, out float remaining), "consumer handled");
-            Close(0, remaining, "far source covers nearest battery shortfall");
-            Close(0, battery.Joules, "nearest battery really debited ahead of far generator");
-            TestRunner.Check(far.Joules < 901 && far.Joules > 899, "far source covers remaining delivery plus its path loss");
+            Close(0, remaining, "far generator covers the whole request");
+            Close(1, battery.Joules, "nearer battery is not discharged while a generator can supply");
+            TestRunner.Check(far.Joules < 900 && far.Joules > 899, "far generator pays delivery plus its path loss");
             float afterConsumer = far.Joules;
             PowerSettlement.TryConsumer(consumer, remaining, out _);
             Close(afterConsumer, far.Joules, "native retry helpers never debit consumer twice");
@@ -145,6 +145,17 @@ namespace MaterialOverhaul.Tests
             MaterialOverhaul.Patches.Patch_PowerInfoCard_WireCount.Prefix(panel, target);
             TestRunner.Check(panel.Rows["MaterialOverhaul.PowerLoss"].Text.Contains(" W"), "real loss shown in info card");
             TestRunner.Check(panel.Rows["MaterialOverhaul.PowerDelivered"].Text.Contains(" W"), "all receiving transfers shown");
+
+            TestRunner.Section("发电机不足时，电池补足缺口");
+            var weak = new Generator { PowerCell = 0, Joules = 40 };
+            var reserve = new Battery { PowerCell = 3, Joules = 500 };
+            Rebuild(manager, new[] { weak }, new IEnergyConsumer[] { consumer, reserve });
+            PowerSettlement.Begin(.2f, 0);
+            TestRunner.Check(PowerSettlement.TryConsumer(consumer, 100, out float shortfall), "consumer handled with weak generator");
+            Close(0, shortfall, "battery covers what the generator cannot");
+            TestRunner.Check(weak.Joules < .001f, "generator budget spent before the battery");
+            TestRunner.Check(reserve.Joules < 500 && reserve.Joules > 400, "battery only pays the remaining shortfall");
+            PowerSettlement.End();
 
             TestRunner.Section("普通电池不相互充电；闲置电网不产生待机线路损耗");
             var other = new Battery { PowerCell = 4, Joules = 0 };

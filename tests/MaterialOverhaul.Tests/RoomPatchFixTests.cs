@@ -26,6 +26,12 @@ namespace MaterialOverhaul.Tests
             string stopWork = Region(rooms, "[HarmonyPatch(typeof(Clinic), \"OnStopWork\")]", "[HarmonyPatch");
             TestRunner.Check(stopWork.Contains("RoomRecoveryEffect.RemoveAll"), "患者离床（Clinic.OnStopWork）时移除恢复效果");
 
+            // 1b. 已是本 Mod 房间时，原版房间同样成立且未被明列顶替，就让位原版（人造公园／淋浴间）。
+            string choose = Region(registration, "public static RoomType Choose(", "private static RoomType SelectOriginalRoom(");
+            TestRunner.Check(choose.Contains("RoomType original = SelectOriginalRoom(room);")
+                && choose.Contains("!RoomEvaluator.Beats(DefinitionOf(mine.Id), original.Id)"),
+                "当前为本 Mod 房间时也按明列顶替关系让位原版房间");
+
             // 2. 顶替房间保留原版实验室 +10% 与娱乐室闲聊格。
             string lab = Region(rooms, "[HarmonyPatch(typeof(Workable), \"OnUpdateRoom\")]", "[HarmonyPatch");
             TestRunner.Check(lab.Contains("CountsAsRoom(room, Db.Get().RoomTypes.Laboratory.Id)")

@@ -295,6 +295,12 @@ namespace MaterialOverhaul.Tests
             TestRunner.Check(RoomEvaluator.Beats(Find(RoomCatalogue.DataCenterId), "Laboratory"), "数据机房顶替实验室");
             TestRunner.Check(!RoomEvaluator.Beats(Find(RoomCatalogue.MissionControlId), "RecRoom"), "任务控制中心不顶替娱乐室");
             TestRunner.Check(!RoomEvaluator.Beats(dance, "Laboratory"), "舞厅不顶替实验室");
+            TestRunner.Check(!RoomEvaluator.Beats(Find("MO_ArtificialPark"), "Park"), "人造公园不顶替原版公园");
+            TestRunner.Check(!RoomEvaluator.Beats(Find("MO_ArtificialPark"), "NatureReserve"), "人造公园不顶替自然保护区");
+            TestRunner.CheckEqual(2, RoomTraitCatalogue.ForRoom("MO_BeachParadise").Length, "海滨乐园悬停列出两项偏好特质");
+            TestRunner.CheckEqual("MO_BeachBum", RoomTraitCatalogue.ForRoom("MO_BeachParadise")[0].TraitId, "按映射表顺序列出");
+            TestRunner.CheckEqual(1, RoomTraitCatalogue.ForRoom("MO_DanceHall").Length, "舞厅对应一项偏好特质");
+            TestRunner.CheckEqual(0, RoomTraitCatalogue.ForRoom(RoomCatalogue.IndustrialAreaId).Length, "工业区没有偏好特质行");
         }
 
         private static void CatalogueIntegrity()

@@ -189,7 +189,8 @@ namespace MaterialOverhaul.Tests
             foreach (string building in BuildingProfiles.All.Keys)
             {
                 byte hardness; float fraction;
-                TestRunner.Check(HardnessRequirementTable.TryGet(building, out hardness) && hardness == 25, building + " 硬度25");
+                int expected = ThirdWaveBuildingTests.ExpectedHardness(building);
+                TestRunner.Check(HardnessRequirementTable.TryGet(building, out hardness) && hardness == expected, building + " 硬度" + expected);
                 TestRunner.Check(OverheatRuleTable.TryGet(building, out fraction) && fraction == .75f, building + " 材料上限规则");
             }
             RecipeZoneSpec sand = RecipeZoneCatalogue.All.First(s => s.InputOptions != null);

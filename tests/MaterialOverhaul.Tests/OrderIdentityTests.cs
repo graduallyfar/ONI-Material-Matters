@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Orders;
 
@@ -26,6 +28,7 @@ namespace MaterialOverhaul.Tests
             EditDoesNotMerge();
             SaveLoadKeepsIdentity();
             SerializedRoundTrip();
+            QueuePanel();
         }
 
         private static void IdentitiesAreDistinct()
@@ -276,6 +279,28 @@ namespace MaterialOverhaul.Tests
             TestRunner.CheckEqual(2, roundTripped.Orders[0].BatchesDoneThisRound, "本轮进度一致");
             TestRunner.CheckEqual(5, roundTripped.Orders[1].Remaining, "有限数量一致");
             TestRunner.CheckEqual(Balance.MaxInfiniteBatchQuota, 99, "无限额度上限为 99");
+        }
+
+        private static void QueuePanel()
+        {
+            TestRunner.Section("信息卡单独的订单队列面板");
+            DirectoryInfo dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "MaterialOverhaul", "MaterialOverhaul.csproj")))
+            {
+                dir = dir.Parent;
+            }
+            TestRunner.Check(dir != null, "能找到仓库根目录");
+            if (dir == null)
+            {
+                return;
+            }
+
+            string source = File.ReadAllText(Path.Combine(dir.FullName, "MaterialOverhaul", "Game", "Patches", "OrderQueuePanelPatches.cs"));
+            TestRunner.Check(source.Contains("[HarmonyPatch(typeof(SimpleInfoScreen), \"OnPrefabInit\")]"), "面板在信息卡建好时创建");
+            TestRunner.Check(source.Contains("Method(\"CreateCollapsableSection\""), "用原版可折叠面板，样式与其他面板一致");
+            TestRunner.Check(source.Contains("status.transform.GetSiblingIndex() + 1"), "面板紧跟状态面板");
+            TestRunner.Check(source.Contains("fab.HasOrderData") && source.Contains("panel.Commit()"), "没有订单时提交空面板，原版会把它隐藏");
+            TestRunner.Check(source.Contains("i == locked") && source.Contains("i == queue.Cursor"), "标出生产中的批次与下一张轮到的订单");
         }
     }
 }

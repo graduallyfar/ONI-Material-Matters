@@ -69,6 +69,23 @@ namespace MaterialOverhaul.Game
             return primaryElement.Element.hardness < required;
         }
 
+        /// <summary>当前主建造材料对应的硬度差倍率；没有要求或硬度达标时为 0。</summary>
+        public float HardnessWearFactor()
+        {
+            if (primaryElement == null || primaryElement.Element == null)
+            {
+                return 0f;
+            }
+
+            byte required;
+            if (!HardnessRequirementTable.TryGet(PrefabId, out required))
+            {
+                return 0f;
+            }
+
+            return DamageConversion.DeficitWearFactor(primaryElement.Element.hardness, required);
+        }
+
         /* ---- 生产计时 ---- */
 
         /// <summary>记录本步复制人操作效率的最终倍率（含温度效率与属性加成）。</summary>
@@ -113,7 +130,7 @@ namespace MaterialOverhaul.Game
             }
 
             float capped = realSeconds > Balance.MaxWearSecondsPerTick ? Balance.MaxWearSecondsPerTick : realSeconds;
-            DamageConversion.AccumulateProduction(wear, capped, MechanicalDamagePerWearUnit);
+            DamageConversion.AccumulateProduction(wear, capped, MechanicalDamagePerWearUnit, HardnessWearFactor());
             SyncWearField();
         }
 

@@ -128,9 +128,11 @@ namespace MaterialOverhaul.Game
                     { circuit.Reason = PowerText.Get("POWER_REASON_RANGE", "路径损耗超出数值范围"); return; }
                     routes.Add(new Route { Source = source, Length = length, Coefficients = coefficients });
                 }
+                // 与原版一致：发电机和变压器输出端先供电，电池只补缺口；同类之间再按线路距离。
                 routes.Sort((a, b) =>
                 {
-                    int order = a.Length.CompareTo(b.Length);
+                    int order = a.Source.IsBattery.CompareTo(b.Source.IsBattery);
+                    if (order == 0) order = a.Length.CompareTo(b.Length);
                     if (order == 0) order = a.Source.Endpoint.PowerCell.CompareTo(b.Source.Endpoint.PowerCell);
                     return order != 0 ? order : a.Source.Id.CompareTo(b.Source.Id);
                 });

@@ -671,7 +671,7 @@ namespace MaterialOverhaul.Game
             return string.Format(
                 LocalizedOr("STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.HARDNESS_WEAK", "建造材料：{0} · 硬度：{1}（要求：{2}）\n生命值：{3}\n机械磨损：{4}单位/工作秒，每单位损失{5}生命值。"),
                 material, actual, required, hp,
-                DamageConversion.WearPerProductionSecond.ToString("F2"),
+                (DamageConversion.WearPerProductionSecond * HardnessWearFactor()).ToString("F2"),
                 MechanicalDamagePerWearUnit.ToString("F3"));
         }
     }
