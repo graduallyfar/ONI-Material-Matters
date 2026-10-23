@@ -208,7 +208,8 @@ namespace MaterialOverhaul.Game
         /// </summary>
         public static string ZoneLimitText(MaterialOverhaulFab fab)
         {
-            if (fab == null || !fab.ZoneConfigured)
+            // 没有温区输出的燃料发电机进不了控制模式，这条提示对它们没有意义。
+            if (fab == null || !fab.ZoneConfigured || AutomationControlScope.IsWithoutOutput(fab.PrefabId))
             {
                 return string.Empty;
             }
@@ -271,7 +272,8 @@ namespace MaterialOverhaul.Game
                     GameUtil.GetFormattedTemperature(actual));
             }
 
-            if (zone.ControlRangeUnreachable)
+            bool controlNotes = !AutomationControlScope.IsWithoutOutput(fab.PrefabId);
+            if (controlNotes && zone.ControlRangeUnreachable)
             {
                 text = text + "\n" + string.Format(
                     fab.SupportsBuiltInHeating
@@ -281,7 +283,7 @@ namespace MaterialOverhaul.Game
                     GameUtil.GetFormattedTemperature(zone.BestMin),
                     GameUtil.GetFormattedTemperature(zone.Max));
             }
-            else if (zone.ControlRangeLimited)
+            else if (controlNotes && zone.ControlRangeLimited)
             {
                 text = text + "\n" + string.Format(
                     Localized("ZONE_LIMITED_DETAIL",

@@ -42,7 +42,8 @@ namespace MaterialOverhaul.Game
                     }
                 }
             }
-            if (!found)
+            // 燃料发电机按设计没有温区输出，直接按未接线（默认模式）处理，不报警。
+            if (!found && !AutomationControlScope.IsWithoutOutput(PrefabId))
             {
                 ModLog.WarnOnce("mode|no-output|" + PrefabId + "|" + Grid.PosToCell(this),
                     PrefabId + "：缺少温区输出端口，无法按接线选择模式，回退默认模式。");

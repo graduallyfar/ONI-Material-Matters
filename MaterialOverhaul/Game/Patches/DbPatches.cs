@@ -84,14 +84,9 @@ namespace MaterialOverhaul.Patches
         /// 由 `LogicPorts.GetActualCell` 经 `Grid.OffsetCell(Grid.PosToCell(建筑位置), offset)` 换算；
         /// 建筑可旋转时偏移会跟着旋转（首发三栋配方建筑不可旋转）。
         ///
-        /// 位置取自各建筑的**右上角**，依据是目标版本里这些建筑已有的端口分布：
-        ///   - MetalRefinery 3×4：液体输入 (-1,1)、液体输出 (1,0)，都在左下侧
-        ///   - GlassForge    5×4：液体输出 (1,3)，在顶排中段
-        ///   - RockCrusher   4×4：无其它端口
-        ///   - SupermaterialRefinery 4×5：输出 (2,4)
-        ///   - ChemicalRefinery 4×3：输出 (2,2)，避开液体输出 (2,1)，复用输入 (0,0)
-        ///   - Kiln 2×2：输出 (1,1)，复用原版输入 (0,1)
-        /// 位置集中在 AutomationControlScope，与其它接口不重叠，且均在建筑占格内。
+        /// 位置集中在 AutomationControlScope，均在建筑占格内，不与原版自动化端口同格；
+        /// 其中 8 栋按用户截图放在贴图上，可能与原版管道接口同格（不同图层，不冲突）。
+        /// 燃料发电机按设计不加输出。
         /// </summary>
 
         /// <summary>
@@ -194,6 +189,13 @@ namespace MaterialOverhaul.Patches
 
         private static void AddTemperatureZonePort(BuildingDef def)
         {
+            if (AutomationControlScope.IsWithoutOutput(def.PrefabID))
+            {
+                ModLog.InfoOnce("port|without-output|" + def.PrefabID,
+                    def.PrefabID + " 按设计不加温区输出端口，只保留原版启停输入，始终使用默认模式。");
+                return;
+            }
+
             if (!AutomationControlScope.TryGetOutputOffset(def.PrefabID, out CellOffset offset))
             {
                 // 名单内但还没有确定端口位置的建筑：不加端口，并留下可定位记录（不静默）。

@@ -345,6 +345,12 @@ msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_TOOLTIP"
 msgid "Output port unconnected: produces across the whole working band. Input wiring and signal colours do not select the mode."
 msgstr "在工作温区内生产。\n连接温区信号输出后切换为控制模式。"
 
+#. 燃料发电机没有温区输出时的默认模式提示
+#. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_ONLY_TOOLTIP
+msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.DEFAULT_ONLY_TOOLTIP"
+msgid "No temperature-zone output: always runs in default mode across the whole working band."
+msgstr "在工作温区内生产。\n没有温区信号输出，始终使用默认模式。"
+
 #. STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP
 msgctxt "STRINGS.BUILDING.STATUSITEMS.MATERIALOVERHAUL.RUNMODE.CONTROL_TOOLTIP"
 msgid "Output port connected: produces only inside the best range. Signal colours do not select the mode; green does not mean producing."

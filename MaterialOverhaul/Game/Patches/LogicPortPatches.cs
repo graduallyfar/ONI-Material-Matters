@@ -94,6 +94,15 @@ namespace MaterialOverhaul.Patches
                             : string.Empty)
                         + "。");
                 }
+                else if (AutomationControlScope.IsWithoutOutput(prefabId.PrefabTag.ToString()))
+                {
+                    ModLog.Info(prefabId.PrefabTag + "：按设计没有温区输出"
+                        + (hasControl
+                            ? "；生产控制输入「" + Strings.Get(KeyControlDescription) + "」@格子 "
+                                + __instance.GetPortCell(AutomationControlScope.PortId)
+                            : string.Empty)
+                        + "。");
+                }
                 else
                 {
                     ModLog.WarnOnce("port|spawn-missing|" + prefabId.PrefabTag,

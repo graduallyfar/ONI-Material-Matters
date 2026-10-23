@@ -197,6 +197,7 @@ namespace MaterialOverhaul.Game
                         public static LocString CONTROL = "控制模式";
                         public static LocString PENDING = "等待自动化连接";
                         public static LocString DEFAULT_TOOLTIP = "在工作温区内生产。\n连接温区信号输出后切换为控制模式。";
+                        public static LocString DEFAULT_ONLY_TOOLTIP = "在工作温区内生产。\n没有温区信号输出，始终使用默认模式。";
                         public static LocString CONTROL_TOOLTIP = "只在配方最佳温区内生产。\n断开温区信号输出后切换为默认模式。";
                         public static LocString PENDING_TOOLTIP = "正在确认温区信号输出的连接，确认前不生产也不加热。";
                         public static LocString FORCED = "强制运行";

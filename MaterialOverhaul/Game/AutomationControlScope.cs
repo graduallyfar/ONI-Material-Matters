@@ -42,32 +42,53 @@ namespace MaterialOverhaul.Game
             { "WoodGasGenerator",new CellOffset(1,1) }, { "OilWellCap",new CellOffset(0,0) }
         };
 
+        /// <summary>
+        /// 温区输出端口位置。金属精炼器、岩石粉碎机、玻璃熔炉、分子熔炉、聚合物压塑器、泥浆分离器、
+        /// 氧石精炼炉、原油精炼器按用户截图标注放在贴图上（V1.0.2 开发计划 §9 #23b）；
+        /// 与原版管道接口同格时不冲突（不同图层），但不与原版自动化端口同格。
+        /// </summary>
         private static readonly Dictionary<string, CellOffset> OutputOffsets = new Dictionary<string, CellOffset>
         {
-            { "MetalRefinery", new CellOffset(1, 3) },
-            { "RockCrusher", new CellOffset(2, 3) },
-            { "GlassForge", new CellOffset(2, 3) },
-            { "SupermaterialRefinery", new CellOffset(2, 4) },
+            { "MetalRefinery", new CellOffset(-1, 1) },
+            { "RockCrusher", new CellOffset(-1, 1) },
+            { "GlassForge", new CellOffset(1, 1) },
+            { "SupermaterialRefinery", new CellOffset(2, 1) },
             { "ChemicalRefinery", new CellOffset(2, 2) },
             { "Kiln", new CellOffset(1, 1) },
             { "Chlorinator",new CellOffset(1,2) }, { "DiamondPress",new CellOffset(1,4) },
             { "UraniumCentrifuge",new CellOffset(0,3) }, { "RubberMaker",new CellOffset(1,2) },
-            { "FabricatedWoodMaker",new CellOffset(2,2) }, { "SludgePress",new CellOffset(2,2) },
-            { "MissileFabricator",new CellOffset(2,3) }, { "OilRefinery",new CellOffset(2,3) },
-            { "Polymerizer",new CellOffset(1,2) }, { "EthanolDistillery",new CellOffset(2,2) },
+            { "FabricatedWoodMaker",new CellOffset(2,2) }, { "SludgePress",new CellOffset(1,0) },
+            { "MissileFabricator",new CellOffset(2,3) }, { "OilRefinery",new CellOffset(2,0) },
+            { "Polymerizer",new CellOffset(1,0) }, { "EthanolDistillery",new CellOffset(2,2) },
             { "FertilizerMaker",new CellOffset(2,2) }, { "AlgaeDistillery",new CellOffset(1,3) },
-            { "OxyliteRefinery",new CellOffset(1,3) }, { "WaterPurifier",new CellOffset(1,2) },
-            { "Desalinator",new CellOffset(2,2) }, { "Generator",new CellOffset(1,2) },
-            { "PeatGenerator",new CellOffset(1,1) }, { "HydrogenGenerator",new CellOffset(2,2) },
-            { "MethaneGenerator",new CellOffset(1,2) }, { "PetroleumGenerator",new CellOffset(1,3) },
-            { "WoodGasGenerator",new CellOffset(0,1) }, { "OilWellCap",new CellOffset(2,3) },
+            { "OxyliteRefinery",new CellOffset(1,0) }, { "WaterPurifier",new CellOffset(1,2) },
+            { "Desalinator",new CellOffset(2,2) }, { "OilWellCap",new CellOffset(2,3) },
             { "OreScrubber",new CellOffset(1,2) }
+        };
+
+        /// <summary>
+        /// 燃料发电机不加温区输出（用户 2026-10-23 指示），只保留原版启停输入，始终按默认模式运行。
+        /// </summary>
+        private static readonly HashSet<string> WithoutOutput = new HashSet<string>
+        {
+            "Generator", "PeatGenerator", "HydrogenGenerator", "MethaneGenerator", "PetroleumGenerator", "WoodGasGenerator"
         };
 
         public static bool TryGetOutputOffset(string prefabId, out CellOffset offset)
         {
             offset = default(CellOffset);
             return !string.IsNullOrEmpty(prefabId) && OutputOffsets.TryGetValue(prefabId, out offset);
+        }
+
+        /// <summary>该建筑按设计没有温区输出（不是漏配位置）。</summary>
+        public static bool IsWithoutOutput(string prefabId)
+        {
+            return !string.IsNullOrEmpty(prefabId) && WithoutOutput.Contains(prefabId);
+        }
+
+        public static IEnumerable<string> AllWithoutOutput
+        {
+            get { return WithoutOutput; }
         }
 
         /// <summary>该建筑是否启用「允许／暂停生产」自动化输入端口。</summary>
