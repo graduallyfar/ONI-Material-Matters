@@ -27,7 +27,7 @@ namespace MaterialOverhaul.Tests
 
         private static void DecorThresholds()
         {
-            // V1.0.1 下调后，V1.0.2（#18）把基地内高级房间统一为 +120；非基地功能房间仍为 +20；工业区取消装饰度（§9 #27）。
+            // V1.0.1 下调后，V1.0.2（#18）把基地内高级房间统一为 +120；非基地功能房间仍为 +20；工业区取消装饰度（V1.0.3 #27）。
             TestRunner.Section("房间平均装饰度门槛（V1.0.2）");
             var expected = new Dictionary<string, float>(StringComparer.Ordinal)
             {
@@ -60,7 +60,7 @@ namespace MaterialOverhaul.Tests
 
         private static void SizesMatchVanilla()
         {
-            // §9 #28：顶替原版房间的高级房间，大小与被顶替的原版房间一致（目标版本 RoomTypes）。
+            // V1.0.3 #28：顶替原版房间的高级房间，大小与被顶替的原版房间一致（目标版本 RoomTypes）。
             TestRunner.Section("高级房间大小与被顶替的原版房间一致");
             var vanilla = new Dictionary<string, int[]>(StringComparer.Ordinal)
             {

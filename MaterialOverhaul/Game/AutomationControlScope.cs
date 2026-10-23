@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace MaterialOverhaul.Game
 {
     /// <summary>
-    /// 「允许／暂停生产」自动化输入的范围（建筑细节文档 §2.2.3、V1.0.2 开发计划 §9 #23）。
+    /// 「允许／暂停生产」自动化输入的范围（建筑细节文档 §2.2.3、V1.0.3 开发计划 #23）。
     ///
     /// 只用原版已有的逻辑控制输入，端口本体、位置都是原版的，本 Mod 不移动、不新增；
     /// 下表只记录原版位置，供注册时核对。原版输入有两种来源：
@@ -44,7 +44,7 @@ namespace MaterialOverhaul.Game
 
         /// <summary>
         /// 温区输出端口位置。金属精炼器、岩石粉碎机、玻璃熔炉、分子熔炉、聚合物压塑器、泥浆分离器、
-        /// 氧石精炼炉、原油精炼器、油井按用户截图标注放在贴图上（V1.0.2 开发计划 §9 #23b），其余保持原位；
+        /// 氧石精炼炉、原油精炼器、油井按用户截图标注放在贴图上（V1.0.3 开发计划 #23b），其余保持原位；
         /// 与原版管道或电力接口同格时不冲突（不同图层），但不与原版自动化端口同格。
         /// </summary>
         private static readonly Dictionary<string, CellOffset> OutputOffsets = new Dictionary<string, CellOffset>

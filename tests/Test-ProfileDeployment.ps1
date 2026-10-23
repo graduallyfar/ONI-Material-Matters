@@ -45,7 +45,7 @@ foreach ($mode in @('Power', 'Industrial', 'Combined', 'Power')) {
     & $deploy -Profile $mode -ModsDir $mods -SkipBuild | Out-Null
     $manifest = Get-Content -LiteralPath (Join-Path $target 'build_profile.json') -Raw | ConvertFrom-Json
     Assert ($manifest.profile -eq $mode) "$mode 身份应与请求一致。"
-    $expectedVersion = if ($mode -eq 'Power') { '0.0.2' } elseif ($mode -eq 'Combined') { '1.0.2' } else { '0.2.2' }
+    $expectedVersion = if ($mode -eq 'Power') { '0.0.2' } elseif ($mode -eq 'Combined') { '1.0.3' } else { '0.2.2' }
     Assert ($manifest.version -eq $expectedVersion) "$mode 应使用对应系统版本号。"
     Assert ($manifest.industrialEnabled -eq ($mode -ne 'Power')) "$mode 工业启用状态不符。"
     Assert ($manifest.powerEnabled -eq ($mode -ne 'Industrial')) "$mode 电力启用状态不符。"

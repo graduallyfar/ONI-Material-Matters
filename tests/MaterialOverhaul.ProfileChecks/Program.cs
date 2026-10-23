@@ -144,7 +144,7 @@ internal static partial class Program
         Check(profile is "Industrial" or "Power" or "Room" or "Combined" or "Radiation", "未知构建模式：" + profile);
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "build_profile.json")));
         JsonElement root = manifest.RootElement;
-        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.2", "Radiation" => "0.0.1", _ => "0.2.2" };
+        string expectedVersion = profile switch { "Power" => "0.0.2", "Combined" => "1.0.3", "Radiation" => "0.0.1", _ => "0.2.2" };
         Check(root.GetProperty("version").GetString() == expectedVersion, "包版本与系统专属版本不符。");
         Check(File.ReadAllText(Path.Combine(directory, "mod_info.yaml")).Contains("version: \"" + expectedVersion + "\""), "模组元数据版本不符。");
         Check(root.GetProperty("profile").GetString() == profile, "包的模式与请求模式不符。");
