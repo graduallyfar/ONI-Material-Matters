@@ -223,7 +223,7 @@ namespace MaterialOverhaul.Tests
                 TestRunner.CheckEqual(row.Heating, p.BuiltInHeating, row.Id + " 内置加热");
                 TestRunner.CheckEqual(row.Immune, p.PreserveOverheatImmunity, row.Id + " 原版过热豁免");
                 TestRunner.CheckClose(row.Wear, p.DamagePerWearUnit, 0.0001f, row.Id + " 磨损 HP／生产秒");
-                TestRunner.CheckEqual(25, p.RequiredHardness, row.Id + " 要求硬度 25");
+                TestRunner.CheckEqual(ExpectedHardness(row.Id), p.RequiredHardness, row.Id + " 要求硬度分档");
                 if (row.Kind == ProductionKind.Batch)
                 {
                     // 批次建筑的最佳区来自配方候选，不写进建筑参数；非批次才用建筑级工艺温区。
@@ -885,6 +885,42 @@ namespace MaterialOverhaul.Tests
             var scrubber = new WearAccumulator();
             DamageConversion.AccumulateProduction(scrubber, 200f, BuildingProfiles.All["OreScrubber"].DamagePerWearUnit);
             TestRunner.CheckClose(1f, scrubber.DamageBalance, 0.0001f, "洗涤器 0.005 HP/s：200 s 扣 1 HP");
+
+            TestRunner.Section("硬度差倍率：2·(要求 − 实际)/要求");
+            TestRunner.CheckClose(0f, DamageConversion.DeficitWearFactor(25, 25), 0.0001f, "硬度达标无磨损");
+            TestRunner.CheckClose(0f, DamageConversion.DeficitWearFactor(50, 25), 0.0001f, "硬度超标无磨损");
+            TestRunner.CheckClose(1f, DamageConversion.DeficitWearFactor(25, 50), 0.0001f, "铜矿造粉碎机（25/50）为 1 倍");
+            TestRunner.CheckClose(1.2f, DamageConversion.DeficitWearFactor(10, 25), 0.0001f, "砂岩造精炼器（10/25）为 1.2 倍");
+            TestRunner.CheckClose(2f, DamageConversion.DeficitWearFactor(0, 25), 0.0001f, "硬度 0 为 2 倍");
+            TestRunner.CheckClose(0f, DamageConversion.DeficitWearFactor(5, 0), 0.0001f, "没有要求不磨损");
+            var crusher = new WearAccumulator();
+            DamageConversion.AccumulateProduction(crusher, 50f, BuildingProfiles.All["RockCrusher"].DamagePerWearUnit,
+                DamageConversion.DeficitWearFactor(25, BuildingProfiles.All["RockCrusher"].RequiredHardness));
+            TestRunner.CheckClose(1f, crusher.DamageBalance, 0.0001f, "铜矿粉碎机 0.02 HP/s × 1 倍：50 s 扣 1 HP");
+            var soft = new WearAccumulator();
+            DamageConversion.AccumulateProduction(soft, 50f, 0.02f, 0f);
+            TestRunner.CheckClose(0f, soft.DamageBalance, 0.0001f, "倍率 0 不累计");
+        }
+
+        /// <summary>要求硬度分档（设计评审 2026-10-23）：机械冲击与钻探 50，低负荷流体或化学处理 10，其余 25。</summary>
+        internal static int ExpectedHardness(string id)
+        {
+            switch (id)
+            {
+                case "RockCrusher":
+                case "DiamondPress":
+                case "OilWellCap":
+                    return 50;
+                case "WaterPurifier":
+                case "Desalinator":
+                case "AlgaeDistillery":
+                case "FertilizerMaker":
+                case "OxyliteRefinery":
+                case "OreScrubber":
+                    return 10;
+                default:
+                    return 25;
+            }
         }
     }
 }
