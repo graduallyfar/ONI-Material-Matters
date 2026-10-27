@@ -13,7 +13,7 @@ namespace MaterialOverhaul.Rooms
     {
         /// <summary>
         /// 加入正面特质池时的稀有度，对应原版 <c>DUPLICANTSTATS.RARITY_COMMON</c>（1）。
-        /// 工作初值：特质只在对应房间生效、不提供永久属性，弱于原版正面特质，因此取最低档，
+        /// 暂定（2026-10-27 确认）：特质只在对应房间生效、不提供永久属性，弱于原版正面特质，因此取最低档，
         /// 与较轻的负面特质配对。原版按稀有度先选档、档内均分。
         /// </summary>
         public const int PoolRarity = 1;

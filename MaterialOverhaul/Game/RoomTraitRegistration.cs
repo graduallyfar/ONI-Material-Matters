@@ -58,7 +58,7 @@ namespace MaterialOverhaul.Game
             }
 
             ModLog.Info("房间特质：创建 " + created + " 项娱乐偏好特质并加入正面特质池（稀有度 "
-                + RoomTraitCatalogue.PoolRarity + "，工作初值；特质本身不提供永久属性）。");
+                + RoomTraitCatalogue.PoolRarity + "，暂定；特质本身不提供永久属性）。");
         }
     }
 }
