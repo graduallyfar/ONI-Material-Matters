@@ -143,6 +143,10 @@ internal static partial class Program
         Field("MissionControlCluster+Instance", "boostableClustercraft", "List<Clustercraft>");
         Field("GeoTunerSideScreen", "targetGeotuner", "Instance");
 
+        // 偏好特质加入原版正面特质池（随机生成只抽 GOODTRAITS／BADTRAITS）。
+        Field("TUNING.DUPLICANTSTATS", "GOODTRAITS", "List<TraitVal>");
+        Field("TUNING.DUPLICANTSTATS", "RARITY_COMMON", "Int32");
+
         // 房间效果引用的原版类型。
         Check(types.ContainsKey("Klei.AI.Effect"), "原版类型缺失：Klei.AI.Effect");
         Check(types.ContainsKey("Klei.AI.AttributeModifier"), "原版类型缺失：Klei.AI.AttributeModifier");

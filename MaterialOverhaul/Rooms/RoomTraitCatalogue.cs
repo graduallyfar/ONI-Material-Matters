@@ -5,12 +5,19 @@ namespace MaterialOverhaul.Rooms
     /// <summary>
     /// 六项娱乐偏好特质与对应房间加成的映射（房间系统设计 §4.1.3）。
     ///
-    /// 工作口径（D13 未确认）：这些特质在目标游戏中没有同名定义，由本 Mod 创建为
-    /// 先天性特质并加入原版先天性特质池；特质持有者在对应房间内获得专用效果。
+    /// 这些特质在目标游戏中没有同名定义，由本 Mod 创建为正面特质并加入原版正面特质池
+    /// （2026-10-27 确认），与原版正面特质一起随机抽取；特质持有者在对应房间内获得专用效果。
     /// 同时拥有两项相关特质时取映射表中的第一项，不叠加。
     /// </summary>
     public static class RoomTraitCatalogue
     {
+        /// <summary>
+        /// 加入正面特质池时的稀有度，对应原版 <c>DUPLICANTSTATS.RARITY_COMMON</c>（1）。
+        /// 工作初值：特质只在对应房间生效、不提供永久属性，弱于原版正面特质，因此取最低档，
+        /// 与较轻的负面特质配对。原版按稀有度先选档、档内均分。
+        /// </summary>
+        public const int PoolRarity = 1;
+
         private static readonly RoomTraitSpec[] AllValue =
         {
             new RoomTraitSpec

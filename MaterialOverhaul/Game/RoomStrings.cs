@@ -126,7 +126,7 @@ namespace MaterialOverhaul.Game
                 }
 
                 /// <summary>
-                /// 本 Mod 创建的六项娱乐偏好特质。工作口径（D13 未确认）：加入原版先天性特质池，
+                /// 本 Mod 创建的六项娱乐偏好特质。加入原版正面特质池随机抽取，
                 /// 在对应房间内获得专用效果；同时拥有两项相关特质时取映射表第一项。
                 /// </summary>
                 public static class TRAITS
