@@ -24,11 +24,19 @@ namespace MaterialOverhaul.Tests
                 .Where(pair => pair.Key.StartsWith(Prefix, StringComparison.Ordinal))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            TestRunner.CheckEqual(130, roomKeys.Count, "房间字段树登记 130 条");
+            TestRunner.CheckEqual(142, roomKeys.Count, "房间字段树登记 142 条");
             foreach (KeyValuePair<string, string> entry in roomKeys)
             {
                 TestRunner.Check(!string.IsNullOrEmpty(entry.Value), entry.Key + " 有默认文本");
                 TestRunner.Check(!entry.Value.Contains("MISSING"), entry.Key + " 默认文本不是 MISSING");
+            }
+
+            // 偏好特质没有属性修饰，特质列表下方的说明行与悬停全靠这两条文本。
+            foreach (MaterialOverhaul.Rooms.RoomTraitSpec spec in MaterialOverhaul.Rooms.RoomTraitCatalogue.All)
+            {
+                string traitPrefix = Prefix + "TRAITS." + spec.StringToken;
+                TestRunner.Check(roomKeys.ContainsKey(traitPrefix + ".SHORT_DESC"), spec.TraitId + " 有特质说明行");
+                TestRunner.Check(roomKeys.ContainsKey(traitPrefix + ".SHORT_DESC_TOOLTIP"), spec.TraitId + " 有说明行悬停");
             }
 
             string root = FindRepoRoot();
@@ -42,7 +50,7 @@ namespace MaterialOverhaul.Tests
             Dictionary<string, string> roomPo = po
                 .Where(pair => pair.Key.StartsWith(Prefix, StringComparison.Ordinal))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
-            TestRunner.CheckEqual(130, roomPo.Count, "zh.po 有 130 条房间键");
+            TestRunner.CheckEqual(142, roomPo.Count, "zh.po 有 142 条房间键");
             TestRunner.Check(roomKeys.Keys.OrderBy(k => k).SequenceEqual(roomPo.Keys.OrderBy(k => k)),
                 "房间字段树键与 PO 键集合一致");
 

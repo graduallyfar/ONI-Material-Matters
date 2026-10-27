@@ -40,7 +40,7 @@ namespace MaterialOverhaul.Game
 
                 string name = Strings.Get(Prefix + spec.StringToken + ".NAME");
                 string description = Strings.Get(Prefix + spec.StringToken + ".DESC");
-                Db.Get().CreateTrait(
+                Trait trait = Db.Get().CreateTrait(
                     spec.TraitId,
                     name,
                     description,
@@ -49,6 +49,14 @@ namespace MaterialOverhaul.Game
                     null,
                     true,
                     true);
+
+                // 特质没有属性修饰，原版特质列表下方不会自动生成说明行；用 ShortDesc 补一行，
+                // 悬停与特质名提示给出房间与效果。
+                string shortDescKey = Prefix + spec.StringToken + ".SHORT_DESC";
+                string shortTooltipKey = shortDescKey + "_TOOLTIP";
+                trait.ShortDescCB = () => Strings.Get(shortDescKey);
+                trait.ShortDescTooltipCB = () => Strings.Get(shortTooltipKey);
+                trait.ExtendedTooltip = () => Strings.Get(shortTooltipKey);
                 DUPLICANTSTATS.GOODTRAITS.Add(new DUPLICANTSTATS.TraitVal
                 {
                     id = spec.TraitId,
