@@ -82,7 +82,7 @@
 
 ## 安装
 
-1. 从本仓库的 [Releases](https://github.com/graduallyfar/ONI-Reform/releases) 下载最新版本的压缩包。
+1. 从本仓库的 [Releases](https://github.com/graduallyfar/ONI-Material-Matters/releases) 下载最新版本的压缩包。
 2. 解压到 Klei 数据目录的本地 Mod 文件夹，目录结构如下：
 
    ```text
@@ -138,7 +138,7 @@
 
 ## 反馈
 
-欢迎在 [Issues](https://github.com/graduallyfar/ONI-Reform/issues) 反馈问题和建议。报告问题时请注明 Mod 版本、游戏 build、启用的 DLC 和系统开关、涉及的建筑或房间、复现步骤，并附上 `Player.log`（位于 `%USERPROFILE%\AppData\LocalLow\Klei\Oxygen Not Included\`）。
+欢迎在 [Issues](https://github.com/graduallyfar/ONI-Material-Matters/issues) 反馈问题和建议。报告问题时请注明 Mod 版本、游戏 build、启用的 DLC 和系统开关、涉及的建筑或房间、复现步骤，并附上 `Player.log`（位于 `%USERPROFILE%\AppData\LocalLow\Klei\Oxygen Not Included\`）。
 
 ## 从源码构建
 
