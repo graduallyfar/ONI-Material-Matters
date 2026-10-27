@@ -42,7 +42,7 @@ namespace MaterialOverhaul.Tests
             Run("房间文本：字段树键与中文 PO 一致", RoomLocalizationTests.Run);
             Run("V1.0.1：装饰度门槛、线损系数、深渊晶石导热、房间文本与接入结构", V101FixTests.Run);
             Run("V1.0.2：调谐上限、喷发量与加成结算、辐射后遗症、压力与接入结构", V102FixTests.Run);
-            Run("辐射0.0.1：感生放射性的活化度、污染物与独立构建", RadiationTests.Run);
+            Run("辐射：累积与显现、每格累积表、粒子与发生器、复制人剂量与独立构建", RadiationTests.Run);
             Run("整合版系统开关：配置读写、补丁系统标注、按开关装配与选项文本", SystemSwitchTests.Run);
 
             Console.WriteLine();

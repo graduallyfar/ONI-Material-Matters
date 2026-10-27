@@ -52,10 +52,10 @@ namespace MaterialOverhaul
 #if !MATERIAL_OVERHAUL_POWER_ONLY && !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY
             if (IsOn(ModSystem.Radiation))
             {
-                ModLog.Info("辐射0.0.1：感生放射性第一版。建筑（含砖块）受照超过 "
-                    + Radiation.RadiationBalance.ActivationThresholdRads.ToString("0") + " rads/周期累积活化度，半衰期 "
-                    + Radiation.RadiationBalance.BuildingHalfLifeCycles.ToString("0") + " 周期，活化后自身放射；"
-                    + "液体、气体、天然格添加原版放射性污染物（优先于其他病菌）。数值为工作初值，游戏验收待执行。");
+                ModLog.Info("辐射：累积与显现。任何物质都累积受到的照射（半衰期 "
+                    + Radiation.RadiationBalance.AccumulationHalfLifeCycles.ToString("0") + " 周期），超过材料的显现限度后自身放射；"
+                    + "建筑挂放射源，格子物质、管道流体、地上物品写入原版放射性污染物（优先于其他病菌）；"
+                    + "辐射粒子撞击固体存入累积量，发生器吸收的辐射由周围显现物付账；复制人另有吸入与接触剂量。数值为工作初值，游戏验收待执行。");
             }
 #endif
 #if !MATERIAL_OVERHAUL_INDUSTRIAL_ONLY && !MATERIAL_OVERHAUL_ROOM_ONLY && !MATERIAL_OVERHAUL_RADIATION_ONLY
