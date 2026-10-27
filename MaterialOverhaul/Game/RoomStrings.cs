@@ -143,7 +143,7 @@ namespace MaterialOverhaul.Game
                 }
 
                 /// <summary>
-                /// 本 Mod 创建的六项娱乐偏好特质。工作口径（D13 未确认）：加入原版先天性特质池，
+                /// 本 Mod 创建的六项娱乐偏好特质。加入原版正面特质池随机抽取，
                 /// 在对应房间内获得专用效果；同时拥有两项相关特质时取映射表第一项。
                 /// </summary>
                 public static class TRAITS
@@ -152,36 +152,48 @@ namespace MaterialOverhaul.Game
                     {
                         public static LocString NAME = "超级明星";
                         public static LocString DESC = "需要在舞厅舒展天赋。";
+                        public static LocString SHORT_DESC = "在舞厅获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入舞厅后 1 周期内：士气 +4、压力每周期 −20%、运动 +3。";
                     }
 
                     public static class ESPORTS
                     {
                         public static LocString NAME = "电子竞技选手";
                         public static LocString DESC = "需要在街机厅舒展天赋。";
+                        public static LocString SHORT_DESC = "在街机厅获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入街机厅后 1 周期内：士气 +4、压力每周期 −20%、机械 +3。";
                     }
 
                     public static class BEACH
                     {
                         public static LocString NAME = "海滨达人";
                         public static LocString DESC = "需要模拟海边来放松。";
+                        public static LocString SHORT_DESC = "在海滨乐园获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入海滨乐园后 1 周期内：士气 +4、压力每周期 −20%、挖掘 +3。同时拥有冒险家时只按本特质结算。";
                     }
 
                     public static class ADVENTURER
                     {
                         public static LocString NAME = "冒险家";
                         public static LocString DESC = "需要机械冲浪板来展现天赋。";
+                        public static LocString SHORT_DESC = "在海滨乐园获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入海滨乐园后 1 周期内：士气 +4、压力每周期 −20%、建造 +3。同时拥有海滨达人时只按海滨达人结算。";
                     }
 
                     public static class ARTIST
                     {
                         public static LocString NAME = "艺术家";
                         public static LocString DESC = "需要展览馆来放松自己。";
+                        public static LocString SHORT_DESC = "在展览馆获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入展览馆后 1 周期内：士气 +4、压力每周期 −20%、艺术 +3。";
                     }
 
                     public static class ROCKET
                     {
                         public static LocString NAME = "火箭专家";
                         public static LocString DESC = "需要风洞来锻炼自己。";
+                        public static LocString SHORT_DESC = "在风洞训练室获得额外加成";
+                        public static LocString SHORT_DESC_TOOLTIP = "进入风洞训练室后 1 周期内：士气 +4、压力每周期 −20%、驾驶 +3。";
                     }
                 }
 

@@ -568,6 +568,7 @@ namespace MaterialOverhaul.Tests
             TestRunner.Section("娱乐偏好特质与专用效果");
 
             TestRunner.CheckEqual(6, RoomTraitCatalogue.Count, "六项娱乐偏好特质");
+            TestRunner.CheckEqual(1, RoomTraitCatalogue.PoolRarity, "偏好特质按原版 RARITY_COMMON 加入正面特质池");
             HashSet<string> traitIds = new HashSet<string>();
             HashSet<string> effectIds = new HashSet<string>();
             RoomTraitSpec[] specs = RoomTraitCatalogue.All;
