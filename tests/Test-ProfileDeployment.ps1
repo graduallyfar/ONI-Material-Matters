@@ -50,7 +50,7 @@ foreach ($mode in @('Power', 'Industrial', 'Combined', 'Power')) {
     Assert ($manifest.industrialEnabled -eq ($mode -ne 'Power')) "$mode 工业启用状态不符。"
     Assert ($manifest.powerEnabled -eq ($mode -ne 'Industrial')) "$mode 电力启用状态不符。"
     $keys = @(Select-String -LiteralPath (Join-Path $target 'strings\zh.po') -Pattern '^msgctxt ')
-    $expected = if ($mode -eq 'Power') { 14 } elseif ($mode -eq 'Industrial') { 89 } elseif ($mode -eq 'Room') { 167 } else { 294 }
+    $expected = if ($mode -eq 'Power') { 14 } elseif ($mode -eq 'Industrial') { 97 } elseif ($mode -eq 'Room') { 180 } else { 317 }
     Assert ($keys.Count -eq $expected) "$mode 本地化文件未完整替换。"
     Assert ((Get-Content -LiteralPath (Join-Path $target 'keep.txt') -Raw) -eq 'existing configuration') '部署不应覆盖无关配置。'
     foreach ($file in $manifest.files.PSObject.Properties) {
