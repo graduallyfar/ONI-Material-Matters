@@ -4,7 +4,7 @@
 
 ## 1. 项目目标与边界
 
-- 让建造材料的热容、导热、熔点、硬度等属性参与建筑和系统运算，使选材成为工程选择。
+- 让材料的热容、导热、熔点、硬度、电导率、装饰度等属性参与建筑、电网、房间和辐射的运算，使选材成为工程选择。
 - 优先复用原版属性和机制，增加现有系统之间的联系，避免扩展无关的新玩法或统一材料升级树。
 - 大多数材料应仍有使用空间；不适合的材料可以承担效率、能耗、环境或维护代价，不轻易禁止使用。
 - 按用户指定的系统和明确名单开发，不因共享组件或机制关联就扩大建筑、配方或系统范围。
@@ -12,12 +12,15 @@
 
 ## 2. 项目结构与文档入口
 
-项目根目录为 `E:\ONI Mod`，只读参考目录为 `E:\ONI-Ref`。设计和开发文档统一放在 `docs/`，该目录也是 Obsidian 库根。
+代码以 GitHub 仓库为准（第10节）；用户电脑上的本机工作区为 `E:\ONI Mod`，只读参考目录为 `E:\ONI-Ref`（反编译的原版代码）。设计和开发文档统一放在 `docs/`，该目录也是 Obsidian 库根。
 
 | 位置 | 用途 |
 | --- | --- |
-| `MaterialOverhaul/` | C# Mod源码，数值配置、判断逻辑、游戏接入和显示按现有结构组织 |
+| `MaterialOverhaul/` | C# Mod源码，数值配置、判断逻辑、游戏接入和显示按现有结构组织；按系统分目录（工业：`Heating/` `Hardness/` `Orders/` `Zones/`，电力：`Power/`，房间：`Rooms/`，辐射：`Radiation/`），游戏接入在 `Game/` |
 | `tests/MaterialOverhaul.Tests/` | 纯逻辑与部分游戏接入源码的替身测试，不替代游戏验收 |
+| `tests/MaterialOverhaul.ProfileChecks/` | 构建产物检查：各版本的补丁清单、系统隔离、本地化键数、原版 IL 与反射字段契约 |
+| `tests/Test-ProfileDeployment.ps1` | 部署切换与拒绝路径的模拟检查（在 `_build` 内进行） |
+| `MaterialOverhaul/tools/build-profiles.ps1` | 构建五个版本（Industrial、Power、Room、Radiation、Combined）并运行全部包检查，生成验证包到 `_dist\validation\` |
 | `MaterialOverhaul/mod/` | Mod元数据与本地化文件 |
 | `MaterialOverhaul/tools/deploy.ps1` | 本地部署脚本，仅在获得部署授权后执行 |
 | `MaterialOverhaul/local.props` | 本机游戏依赖路径，不提交 |
@@ -26,7 +29,9 @@
 | [总体设计](<docs/Mod玩法设计和修改/ONI Reform 总体设计.md>) | 项目目标、系统方向和总体机制 |
 | [系统细节目录](docs/Mod玩法设计和修改/) | 1 份总设计 + 4 份分设计（建筑、电力、房间、辐射）的规则、范围与数值 |
 | [开发记录目录](docs/开发计划/) | 各阶段开发计划、实现差异、待办与验收结果 |
-| [工业扩展开发记录](<docs/开发计划/V0.2.2开发计划.md>) | 工业扩展的范围、实现和验收记录，完成情况以文档中的状态为准 |
+| 最新开发计划 | `docs/开发计划/` 中版本号最大的 `V<版本号>开发计划.md`，记录当前版本的范围、实现、验证与待办 |
+| [整合版游戏测试清单](<docs/开发计划/整合版游戏测试清单.md>) | 需要进游戏验证的项目与验收状态 |
+| 发布说明 | `docs/开发计划/V<版本号>发布说明.md`，面向玩家的版本改动，可直接用作 GitHub Release 正文 |
 | [README](README.md) | 面向访客的简介、安装和构建入口 |
 
 开始任务时读取对应系统的细节文档及相关开发记录，不必加载全部历史。其他系统的设计、建议或草稿不等于已经授权开发。
@@ -58,15 +63,23 @@
 - 原版配方相关登记必须在 `ComplexRecipeManager.PostProcess` 之后；`Db.Initialize` 早于配方注册，不能把空表登记当作成功。
 - DLC缺失时正常跳过专属内容；未知配方、异常数据和补丁不匹配按已定兼容口径处理并提供可定位日志，不静默声称生效。
 - 新增界面文字使用本地化键，同步字段注册、中文PO和备用文本。状态反映真实条件，不能把允许生产写成正在生产。
+- 四个系统（工业、电力、房间、辐射）共用一份源码：整合版可在模组「选项」中分别开关，另可单独构建各系统的验证包。每个补丁标注所属系统，系统关闭时回到原版行为；系统之间的联动只在两边都开启时生效。
+- 新增、删除或改名源文件、补丁类、本地化键时，同步 `MaterialOverhaul.csproj` 中各版本的文件清单、`ProfileChecks` 的补丁名单与键数、`SystemSwitchTests` 的补丁计数和 `Test-ProfileDeployment.ps1` 的期望值。
+- 各系统的具体规则（电网取电顺序与损耗、房间分级与加成、辐射累积与显现等）以对应系统细节文档为准，改动时保持已确认的规则与存档兼容（含旧存档迁移）。
 
 ## 6. 验证与交付
 
-从项目根目录执行：
+构建需要本机游戏程序集，只能在用户电脑上进行（需 `MaterialOverhaul/local.props`）；云端会话不能构建，只能改代码和文档。在仓库根目录用 PowerShell 7 执行：
 
 ```powershell
-dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release
-dotnet run --project tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj -c Release
+pwsh -File MaterialOverhaul\tools\build-profiles.ps1          # 五个版本 + IL/房间契约 + 包检查
+dotnet build tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj -c Release
+dotnet _build\tests\net10.0\MaterialOverhaul.Tests.dll         # 源码级测试
 ```
+
+- 只改单个系统时可先用 `dotnet build MaterialOverhaul\MaterialOverhaul.csproj -c Release -p:SystemProfile=<版本>` 快速构建，交付前仍跑完整的 `build-profiles.ps1`。
+- 源码级测试用 `dotnet <dll>` 运行；用 `dotnet run` 或 exe 运行时，本机有 3 项「开关配置：文件读写」因环境原因失败（`DirectoryNotFoundException`），与代码无关。
+- `Test-ProfileDeployment.ps1` 会把模拟部署归档到主检出的 `deployed\`，运行后清理这些测试归档或在交付中说明。
 
 - 代码改动先构建，再运行相关检查；覆盖受影响的温控、供电、订单、真实生产计时、损坏维修、存档和DLC边界。
 - 纯文档改动检查定义、状态和链接一致性，不为此新增代码测试。
@@ -78,6 +91,7 @@ dotnet run --project tests\MaterialOverhaul.Tests\MaterialOverhaul.Tests.csproj 
 ## 7. 文档维护
 
 - 总体设计讲目标与机制，系统细节讲规则、边界和参数，开发记录讲实现、差异、待办和验收。
+- 改功能的同一批提交里同步修改受影响的文档：系统细节文档、README、整合版游戏测试清单、玩家可见文本（含模组选项说明与 `mod.yaml` 简介）和当前版本的开发计划。交付时列出改了哪些文档、哪些核对后无需修改。
 - 行为改变时同步旧段落，避免只在末尾追加相反定义。具体名单、公式、版本历史和测试计数只在对应文档维护，本文件保留总体约束与必要入口。
 - README保持面向访客的简短说明，不重复完整数值表，不逐版本追加日志，不删去尚未验证的提示。
 - 保留现有中文风格、文件名和Obsidian双链；不顺带改动 `docs/.obsidian` 个人界面配置。
