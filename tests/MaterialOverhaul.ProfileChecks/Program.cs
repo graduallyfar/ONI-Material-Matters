@@ -72,10 +72,13 @@ internal static partial class Program
     {
         "MaterialOverhaul.Patches.Patch_Radiation_Db_Initialize",
         "MaterialOverhaul.Patches.Patch_Radiation_BuildingComplete",
-        "MaterialOverhaul.Patches.Patch_Radiation_RoomProber_Sim1000ms",
+        "MaterialOverhaul.Patches.Patch_Radiation_SaveGame_OnPrefabInit",
         "MaterialOverhaul.Patches.Patch_Radiation_Game_OnCleanUp",
         "MaterialOverhaul.Patches.Patch_Radiation_Deconstructable_SpawnItems",
-        "MaterialOverhaul.Patches.Patch_Radiation_Deconstructable_SpawnItem"
+        "MaterialOverhaul.Patches.Patch_Radiation_Deconstructable_SpawnItem",
+        "MaterialOverhaul.Patches.Patch_Radiation_HighEnergyParticle_Collide",
+        "MaterialOverhaul.Patches.Patch_Radiation_ParticleSpawner_LauncherUpdate",
+        "MaterialOverhaul.Patches.Patch_Radiation_GermExposure_OnAirConsumed"
     };
     // 整合版外壳补丁：模组界面“选项”按钮，不属于任何系统，任何独立版都不应包含。
     private static readonly HashSet<string> ShellPatches = new(StringComparer.Ordinal)
@@ -272,12 +275,12 @@ internal static partial class Program
         }
         if (profile == "Radiation")
         {
-            Check(patches.SetEquals(RadiationPatches), "辐射独立版只应包含明确列出的6个辐射补丁。");
+            Check(patches.SetEquals(RadiationPatches), "辐射独立版只应包含明确列出的9个辐射补丁。");
             foreach (string forbidden in new[] { "MaterialOverhaul.Zones.", "MaterialOverhaul.Heating.", "MaterialOverhaul.Hardness.", "MaterialOverhaul.Orders.", "MaterialOverhaul.Power.", "MaterialOverhaul.Rooms." })
                 Check(!types.Any(t => t.StartsWith(forbidden, StringComparison.Ordinal)), "辐射独立版混入其他系统判断层：" + forbidden);
             foreach (string forbidden in new[] { "MaterialOverhaulFab", "MaterialRegistration", "ContentRegistration", "PowerRegistry", "DebugValues", "BuildingWhitelist", "PowerTopologyMonitor", "PowerWireCount", "RoomRegistration" })
                 Check(!types.Any(t => t.Split('+')[0].EndsWith("." + forbidden, StringComparison.Ordinal)), "辐射独立版混入其他系统组件：" + forbidden);
-            Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "辐射独立版缺少建筑活化组件。");
+            Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "辐射独立版缺少建筑累积组件。");
         }
         else if (profile == "Power")
         {
@@ -314,10 +317,10 @@ internal static partial class Program
                 Check(PowerPatches.IsSubsetOf(patches), "完整整合版缺少电力补丁。");
                 Check(RoomPatches.IsSubsetOf(patches), "完整整合版缺少房间补丁。");
                 Check(RadiationPatches.IsSubsetOf(patches), "完整整合版缺少辐射补丁。");
-                Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑活化组件。");
+                Check(types.Contains("MaterialOverhaul.Game.RadiationActivation"), "完整整合版缺少建筑累积组件。");
             }
         }
-        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 97 : profile == "Room" ? 180 : profile == "Radiation" ? 2 : 315;
+        int expectedKeys = profile == "Power" ? 14 : profile == "Industrial" ? 97 : profile == "Room" ? 180 : profile == "Radiation" ? 4 : 317;
         var poKeys = File.ReadLines(Path.Combine(directory, "strings", "zh.po"))
             .Select(line => Regex.Match(line, "^msgctxt \"([^\"]+)\"$"))
             .Where(match => match.Success).Select(match => match.Groups[1].Value).ToList();

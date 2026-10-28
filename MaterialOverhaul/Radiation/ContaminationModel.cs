@@ -30,9 +30,9 @@ namespace MaterialOverhaul.Radiation
     }
 
     /// <summary>
-    /// 液体、气体、天然格的感生放射（设计方案 §8.6、§9）：
-    /// 在超过门槛的格子里按受照量添加原版放射性污染物，此后的流动、混合、衰减和放射都交给原版病菌系统。
-    /// 放射性污染物优先级最高：格子里已有其他病菌时先清除再写入。
+    /// 格子里的物质、管道里的流体、地上的物品显现后的放射：按超出显现限度的部分添加原版放射性污染物，
+    /// 此后的流动、混合、衰减和放射都交给原版病菌系统。
+    /// 放射性污染物优先级最高：已有其他病菌时先清除再写入。
     /// </summary>
     public static class ContaminationModel
     {
@@ -62,16 +62,18 @@ namespace MaterialOverhaul.Radiation
         }
 
         /// <summary>
-        /// 格子里的物质能否被污染。核废料、铀矿等本身就会放射的元素不再添加污染物：
-        /// 它们自身的放射足以超过门槛，若再写入污染物，污染物又抬高本格辐射，会越积越多。
-        /// 它们照射到的其他物质照常污染。
+        /// 物质能否累积和被污染。核废料、铀矿等原版放射物质本身就是来源，不再累积、不添加污染物；
+        /// 它们照射到的其他物质照常累积。
         /// </summary>
         public static bool CanContaminate(float elementRadsPer1000Mass)
         {
             return !(elementRadsPer1000Mass > 0f);
         }
 
-        /// <summary>经过 dt 秒应添加的污染物个数（四舍五入）。</summary>
+        /// <summary>
+        /// 经过 dt 秒应添加的污染物个数（四舍五入）。<paramref name="excessRads"/> 是超出显现限度部分的
+        /// 衰减速率 λ·(D − L)（rads/周期），见 <see cref="AccumulationModel.ExcessRate"/>。
+        /// </summary>
         public static int ContaminantsToAdd(float effectiveMassKg, float excessRads, float dtSeconds)
         {
             if (!(effectiveMassKg > 0f) || !(excessRads > 0f) || !(dtSeconds > 0f))
@@ -87,6 +89,22 @@ namespace MaterialOverhaul.Radiation
             }
 
             return (int)Math.Round(value, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// 按当前写入速度，污染物达到稳态时的自身放射（rads/周期）。原版污染物半衰期 1 周期，
+        /// 稳态个数 = 每秒添加量 ÷ 每秒衰变常数。低于自身放射下限时调用方不写入（忽略不计）。
+        /// </summary>
+        public static float SteadySelfRads(float effectiveMassKg, float excessRads)
+        {
+            if (!(effectiveMassKg > 0f) || !(excessRads > 0f) || float.IsInfinity(effectiveMassKg) || float.IsInfinity(excessRads))
+            {
+                return 0f;
+            }
+
+            double perSecond = (double)RadiationBalance.ContaminantsPerTonRadSecond * (effectiveMassKg / 1000.0) * excessRads;
+            double decay = Math.Log(2.0) / (RadiationBalance.ContaminantHalfLifeCycles * RadiationBalance.SecondsPerCycle);
+            return (float)(perSecond / decay / 1000.0 * RadiationBalance.ContaminantRadsPerThousand);
         }
 
         /// <summary>格子中放射性污染物自身的放射（rads/周期），只作用于本格。</summary>
