@@ -16,7 +16,7 @@ namespace MaterialOverhaul.Core
 #elif MATERIAL_OVERHAUL_INDUSTRIAL_ONLY || MATERIAL_OVERHAUL_ROOM_ONLY
         public const string Version = "0.2.2";
 #else
-        public const string Version = "1.0.3";
+        public const string Version = "1.0.4";
 #endif
 
         /// <summary>Harmony 实例标识，用于按 Mod 归属补丁。</summary>

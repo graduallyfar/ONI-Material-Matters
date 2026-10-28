@@ -25,7 +25,7 @@
     <!-- 整合版为正式版号；独立验证包保留各自系统的验证号（Industrial／Room 0.2.2，Power 0.0.2，Radiation 0.0.1）。 -->
     <Version>0.2.2</Version>
     <Version Condition="'$(SystemProfile)' == 'Power'">0.0.2</Version>
-    <Version Condition="'$(SystemProfile)' == 'Combined'">1.0.3</Version>
+    <Version Condition="'$(SystemProfile)' == 'Combined'">1.0.4</Version>
     <Version Condition="'$(SystemProfile)' == 'Radiation'">0.0.1</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
