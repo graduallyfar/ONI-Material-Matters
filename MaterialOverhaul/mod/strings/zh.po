@@ -1382,7 +1382,7 @@ msgstr "（重启后生效）"
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.WARNING
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.WARNING"
 msgid "Turning a system off in an existing save drops the data it keeps on buildings the next time you save; added rooms fall back to vanilla rooms and related duplicant effects and traits stop working. Back up your save first."
-msgstr "在已有存档中途关闭某个系统：该系统记在建筑上的数据（工业订单与磨损进度、建筑活化度、航天飞行加成等）会在下次存档时丢失；新增房间退回原版房间，复制人身上相关的效果和特质暂时失效。重新开启后系统从头开始计算。建议先备份存档。"
+msgstr "在已有存档中途关闭某个系统：该系统记在建筑上的数据（工业订单与磨损进度、辐射累积量、航天飞行加成等）会在下次存档时丢失；新增房间退回原版房间，复制人身上相关的效果和特质暂时失效。重新开启后系统从头开始计算。建议先备份存档。"
 
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SAVE"
@@ -1451,5 +1451,5 @@ msgstr "辐射系统"
 
 #. STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION_TOOLTIP
 msgctxt "STRINGS.MODOPTIONS.MATERIALOVERHAUL.SYSTEMS.RADIATION_TOOLTIP"
-msgid "Induced radioactivity: buildings exposed to strong radiation emit it themselves; liquids, gases and tiles pick up radioactive contaminants."
-msgstr "感生放射性：建筑长期受强辐射后自身放射，液体、气体和地块带上放射性污染物。"
+msgid "Accumulation and manifestation: any matter exposed to radiation accumulates it and emits on its own once past its material's limit; cell matter, piped fluids and items on the ground pick up radioactive contaminants."
+msgstr "累积与显现：任何物质受照后累积，超过材料限度后自身放射；格子里的物质、管道流体和地上物品带上放射性污染物。"

@@ -18,7 +18,7 @@ namespace MaterialOverhaul.Game
                 public static LocString STATE_ON = "{0}：开启";
                 public static LocString STATE_OFF = "{0}：关闭";
                 public static LocString PENDING = "（重启后生效）";
-                public static LocString WARNING = "在已有存档中途关闭某个系统：该系统记在建筑上的数据（工业订单与磨损进度、建筑活化度、航天飞行加成等）会在下次存档时丢失；新增房间退回原版房间，复制人身上相关的效果和特质暂时失效。重新开启后系统从头开始计算。建议先备份存档。";
+                public static LocString WARNING = "在已有存档中途关闭某个系统：该系统记在建筑上的数据（工业订单与磨损进度、辐射累积量、航天飞行加成等）会在下次存档时丢失；新增房间退回原版房间，复制人身上相关的效果和特质暂时失效。重新开启后系统从头开始计算。建议先备份存档。";
                 public static LocString SAVE = "保存";
                 public static LocString SAVE_FAILED = "系统开关保存失败：{0}";
                 public static LocString RESTART_TITLE = "需要重启游戏";
@@ -35,7 +35,7 @@ namespace MaterialOverhaul.Game
                     public static LocString ROOM = "房间系统";
                     public static LocString ROOM_TOOLTIP = "房间分级、平均装饰度与温度条件、新增房间和房间效果。";
                     public static LocString RADIATION = "辐射系统";
-                    public static LocString RADIATION_TOOLTIP = "感生放射性：建筑长期受强辐射后自身放射，液体、气体和地块带上放射性污染物。";
+                    public static LocString RADIATION_TOOLTIP = "累积与显现：任何物质受照后累积，超过材料限度后自身放射；格子里的物质、管道流体和地上物品带上放射性污染物。";
                 }
             }
         }

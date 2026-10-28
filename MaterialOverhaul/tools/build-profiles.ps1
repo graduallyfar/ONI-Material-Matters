@@ -47,7 +47,7 @@ foreach ($mode in @($Profile | Select-Object -Unique)) {
         'Industrial' { @{ Title = '物尽其用 · 工业独立验证'; Description = '仅启用工业温控、加热、订单、磨损及材料改造；电力输配电与房间沿用原版。'; Industrial = $true; Power = $false; Room = $false; Radiation = $false } }
         'Power' { @{ Title = '物尽其用 · 电力独立验证'; Description = '电力0.0.2：最短线路、材料损耗、最近供电、电池与变压器分账及电网信息卡；工业保持原版。使用首轮测试初值，游戏和平衡待验收。'; Industrial = $false; Power = $true; Room = $false; Radiation = $false } }
         'Room' { @{ Title = '物尽其用 · 房间独立验证'; Description = '房间系统：房间分级、平均装饰度与平均温度条件、新增房间构成；工业与电力保持原版。效果接入与游戏验收按开发记录逐步补齐。'; Industrial = $false; Power = $false; Room = $true; Radiation = $false } }
-        'Combined' { @{ Title = '物尽其用 · Material Matters'; Description = '让材料属性参与工程运算：建材决定工业建筑的工作温区与磨损，导线材料决定输电损耗，装饰度与温度决定高级房间，强辐射会让材料带上放射性。可在模组「选项」中分别开关工业、电力、房间、辐射四个系统（重启生效）。'; Industrial = $true; Power = $true; Room = $true; Radiation = $true } }
+        'Combined' { @{ Title = '物尽其用 · Material Matters'; Description = '让材料属性参与工程运算：建材决定工业建筑的工作温区与磨损，导线材料决定输电损耗，装饰度与温度决定高级房间，受照的材料会累积辐射、自己带上放射性。可在模组「选项」中分别开关工业、电力、房间、辐射四个系统（重启生效）。'; Industrial = $true; Power = $true; Room = $true; Radiation = $true } }
         'Radiation' { @{ Title = '物尽其用 · 辐射独立验证'; Description = '辐射：累积与显现。任何物质受照后累积，超过材料的显现限度后自身放射；格子物质、管道流体、地上物品写入放射性污染物（优先于其他病菌）；辐射粒子撞击固体存入累积量，发生器消耗周围显现物的辐射；复制人另有吸入与接触剂量。工业、电力、房间保持原版。数值为工作初值，游戏验收待执行。'; Industrial = $false; Power = $false; Room = $false; Radiation = $true } }
     }
     & dotnet build $projectFile -c $Configuration "-p:SystemProfile=$mode" -v minimal
