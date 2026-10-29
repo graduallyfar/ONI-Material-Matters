@@ -22,6 +22,7 @@
 | `tests/Test-ProfileDeployment.ps1` | 部署切换与拒绝路径的模拟检查（在 `_build` 内进行） |
 | `MaterialOverhaul/tools/build-profiles.ps1` | 构建五个版本（Industrial、Power、Room、Radiation、Combined）并运行全部包检查，生成验证包到 `_dist\validation\` |
 | `MaterialOverhaul/mod/` | Mod元数据与本地化文件 |
+| `MaterialOverhaul/tools/cloud-setup.sh` | 云端（Linux）准备构建环境：装 .NET SDK、PowerShell，`GameDir` 指向私有仓库 ONI-ref |
 | `MaterialOverhaul/tools/deploy.ps1` | 本地部署脚本，仅在获得部署授权后执行 |
 | `MaterialOverhaul/local.props` | 本机游戏依赖路径，不提交 |
 | `_build/`、`_dist/` | 构建产物与临时文件，不提交 |
@@ -49,9 +50,9 @@
 - 修改前检查 `git status`、已有实现、项目配置及局部约定，保留用户和其他任务的改动，不覆盖或清理未完成工作。
 - 先查目标游戏程序集中的类、方法、签名和调用关系，再决定接入点。使用 `rg` 定位，只读相关范围，不反复加载整个反编译文件。
 - 需要补充外部资料时查 Wiki和Klei官方记录；涉及代码行为以目标版本程序集为准。用户要求联网时实际查询，引用给出出处，不把访问失败或版本未匹配的资料称为已核实。
-- `E:\ONI-Ref`只读；通过范围明确的组件、事件和Harmony补丁实现，不修改原版程序集或参考代码。
+- 游戏反编译代码在私有仓库 `graduallyfar/ONI-ref`（与 `E:\ONI-Ref` 同版本，另含 firstpass）；云端会话直接读该仓库，不依赖用户电脑。两处都只读；通过范围明确的组件、事件和Harmony补丁实现，不修改原版程序集或参考代码。
 - 优先采用小范围接入并保留未涉及的原版条件，不无条件修改共享基类，不顺带引入通用框架。
-- Mod使用与目标游戏兼容的C#运行时；当前工程为 `netstandard2.1`。框架和依赖由目标游戏核实，不按本机SDK版本推断。游戏程序集及自带Harmony只本地引用，不复制分发；不因存在PLib参考文件就新增依赖。
+- Mod使用与目标游戏兼容的C#运行时；当前工程为 `netstandard2.1`。框架和依赖由目标游戏核实，不按本机SDK版本推断。游戏程序集及自带Harmony只引用，不进入本仓库或mod包（私有仓库 ONI-ref 存放的编译用副本除外）；不因存在PLib参考文件就新增依赖。
 
 ## 5. 实现要求
 
@@ -69,7 +70,7 @@
 
 ## 6. 验证与交付
 
-构建需要本机游戏程序集，只能在用户电脑上进行（需 `MaterialOverhaul/local.props`）；云端会话不能构建，只能改代码和文档。在仓库根目录用 PowerShell 7 执行：
+构建需要游戏程序集（由 `MaterialOverhaul/local.props` 的 `GameDir` 指定）。用户电脑上指向游戏安装目录；云端会话先运行 `bash MaterialOverhaul/tools/cloud-setup.sh`，它安装 .NET SDK 与 PowerShell，并把 `GameDir` 指到 ONI-ref 里的程序集副本，之后同样可以构建和测试。部署与进游戏验证只能在用户电脑上进行。在仓库根目录用 PowerShell 7 执行：
 
 ```powershell
 pwsh -File MaterialOverhaul\tools\build-profiles.ps1          # 五个版本 + IL/房间契约 + 包检查
