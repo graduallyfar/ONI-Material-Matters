@@ -1,0 +1,29 @@
+[h1]物尽其用 · Material Matters[/h1]
+
+[i]「砂岩做的精炼炉？大胆。」—— 某位刚被烫伤的复制人[/i]
+
+在这颗小行星上，材料不再只是颜色不同的砖块。
+熔点、硬度、导电性、装饰度……每一种材料都有自己的脾气，选对了事半功倍，选错了嘛——复制人会告诉你的。
+
+[h2]你会遇到的事[/h2]
+[list]
+[*][b]工业[/b]：精炼炉要先烧热才肯干活，建材熔点决定它能烧多热。硬度不够？它照样开工，只是会慢慢把自己磨坏。
+[*][b]电力[/b]：电线不再是魔法。线拉得越长、材料越差，路上丢的电越多。铜：我又行了。
+[*][b]房间[/b]：16 个新房间，从淋浴间到舞厅再到地质研究室。高级房间要够漂亮、温度要合适，复制人可是很挑的。
+[*][b]辐射[/b]（群星 DLC）：在反应堆旁边待久了，墙也会开始发光。冷却水？最好别喝。
+[/list]
+
+没有万能材料，只有更合适的选择。
+
+[h2]小贴士[/h2]
+[list]
+[*]在「模组」菜单点本 Mod 的[b]「选项」[/b]，可以分别开关工业、电力、房间、辐射四个系统（重启生效）。存档中途关闭会丢失该系统的数据，记得先备份。
+[*]需要游戏 build 744825 或更新，无前置 Mod。
+[*]目前只有简体中文。
+[*]首个公开版本，数值还在调整中。复制人们欢迎你的反馈（以及更多的冰镇饮料）。
+[/list]
+
+完整规则与数值：[url=https://github.com/graduallyfar/ONI-Reform]GitHub · ONI-Reform[/url]
+
+[hr][/hr]
+[b]Material Matters[/b] — Melting points, hardness, conductivity and decor finally matter. Hot industry, lossy wires, picky rooms and radioactive walls. No perfect material, only better choices. (Chinese text only for now.)
