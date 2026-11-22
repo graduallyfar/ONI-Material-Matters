@@ -9,8 +9,11 @@ namespace HarmonyLib
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class HarmonyPatch : Attribute
     {
-        public HarmonyPatch(Type type, string method) { }
+        public HarmonyPatch(Type type, string method, params Type[] argumentTypes) { }
     }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class HarmonyPrepare : Attribute { }
 }
 
 public sealed class ComplexRecipe

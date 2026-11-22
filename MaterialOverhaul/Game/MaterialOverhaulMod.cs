@@ -149,8 +149,11 @@ namespace MaterialOverhaul
                     continue;
                 }
 
-                harmony.CreateClassProcessor(type).Patch();
-                applied++;
+                var patched = harmony.CreateClassProcessor(type).Patch();
+                if (patched != null && patched.Count > 0)
+                    applied++;
+                else
+                    skipped++;
             }
 
             ModLog.Info("系统开关：" + switches.Describe() + "；装配补丁 " + applied + " 个，跳过 " + skipped

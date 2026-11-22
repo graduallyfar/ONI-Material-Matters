@@ -15,6 +15,10 @@ namespace HarmonyLib
     {
         public static FieldInfo Field(Type type, string name)
             => type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+        public static MethodInfo DeclaredMethod(Type type, string name, Type[] parameters)
+            => type.GetMethod(name, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static
+                | BindingFlags.Public | BindingFlags.NonPublic, null, parameters, null);
     }
 }
 

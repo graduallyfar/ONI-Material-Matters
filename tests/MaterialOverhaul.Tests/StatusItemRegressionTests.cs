@@ -98,6 +98,12 @@ namespace MaterialOverhaul.Tests
             Assembly assembly = typeof(MaterialOverhaul.Patches.Patch_ComplexFabricator_UpdateChore).Assembly;
             MethodInfo buildingPostfix = assembly.GetType("MaterialOverhaul.Patches.Patch_Overheatable_GetDescriptors")
                 .GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            Type collectPatch = typeof(MaterialOverhaul.Patches.Patch_Overheatable_CollectDescriptors);
+            MethodInfo collectPostfix = collectPatch.GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            TestRunner.Check((bool)collectPatch.GetMethod("Prepare", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null),
+                "原版有 CollectDescriptors 时装配新版补丁");
+            TestRunner.Check(!(bool)buildingPostfix.DeclaringType.GetMethod("Prepare", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null),
+                "原版有 CollectDescriptors 时跳过旧版补丁");
             MethodInfo recipePostfix = assembly.GetType("MaterialOverhaul.Patches.Patch_ComplexFabricator_AdditionalEffectsForRecipe")
                 .GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
             string[] buildings = { "MetalRefinery", "RockCrusher", "GlassForge" };
@@ -116,6 +122,12 @@ namespace MaterialOverhaul.Tests
                 TestRunner.CheckEqual("原版属性来源", result[0].Tooltip, "不重写原版过热说明");
                 TestRunner.Check(result[1].Text.Contains(floors[i]) && !result[1].Text.Contains("MISSING."), buildings[i] + " 显示本栋真实工作下限");
                 TestRunner.Check(result[1].Tooltip.Contains("最高温度") && !result[1].Tooltip.Contains("MISSING."), buildings[i] + " 工作温度悬停正确");
+                var collected = new List<Descriptor>();
+                heat.CollectDescriptors(null, collected);
+                collectPostfix.Invoke(null, new object[] { heat, collected });
+                TestRunner.CheckEqual(2, collected.Count, buildings[i] + " 新版在同一个列表追加工作温区");
+                TestRunner.CheckEqual(result[0].Tooltip, collected[0].Tooltip, buildings[i] + " 新版保留原版过热说明");
+                TestRunner.CheckEqual(result[1].Text, collected[1].Text, buildings[i] + " 新旧版显示相同工作温区");
                 args = new object[] { new ComplexRecipe { id = recipeIds[i] }, new List<Descriptor>() };
                 recipePostfix.Invoke(null, args);
                 result = (List<Descriptor>)args[1];
@@ -127,6 +139,8 @@ namespace MaterialOverhaul.Tests
             object[] unchanged = { new Overheatable { Mod = outside, OverheatTemperature = 1000f }, new List<Descriptor>() };
             buildingPostfix.Invoke(null, unchanged);
             TestRunner.CheckEqual(0, ((List<Descriptor>)unchanged[1]).Count, "名单外没有工作温度文案");
+            collectPostfix.Invoke(null, unchanged);
+            TestRunner.CheckEqual(0, ((List<Descriptor>)unchanged[1]).Count, "新版名单外也不显示工作温度文案");
             unchanged = new object[] { new ComplexRecipe { id = "foreign-recipe" }, new List<Descriptor>() };
             recipePostfix.Invoke(null, unchanged);
             TestRunner.CheckEqual(0, ((List<Descriptor>)unchanged[1]).Count, "未配置配方不伪造最佳温度");

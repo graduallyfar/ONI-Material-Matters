@@ -99,6 +99,12 @@ internal static partial class Program
     {
         try
         {
+            if (args.Length == 2 && args[0] == "--industrial-game")
+            {
+                InspectIndustrialGameContract(args[1]);
+                Console.WriteLine("原版工业工作温区描述契约通过。");
+                return 0;
+            }
             if (args.Length == 2 && args[0] == "--game")
             {
                 InspectGameContract(args[1]);
@@ -302,6 +308,9 @@ internal static partial class Program
         {
             foreach (string required in new[] { "Patch_Db_Initialize", "Patch_ElementLoader_Load", "Patch_LegacyModMain_ConfigElements", "Patch_IndustrialGeneration", "Patch_EnergyConsumer_WattsUsed", "Patch_ComplexFabricator_UpdateChore" })
                 Check(patches.Contains("MaterialOverhaul.Patches." + required), "工业功能缺少补丁：" + required);
+            Check(patches.Contains("MaterialOverhaul.Patches.Patch_Overheatable_GetDescriptors")
+                && patches.Contains("MaterialOverhaul.Patches.Patch_Overheatable_CollectDescriptors"),
+                "工业功能缺少旧版或新版的工作温区补丁。");
             Check(types.Contains("MaterialOverhaul.Game.MaterialOverhaulFab"), "工业版缺少建筑组件。");
             if (profile == "Industrial")
             {

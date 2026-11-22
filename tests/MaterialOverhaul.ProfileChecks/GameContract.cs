@@ -7,6 +7,28 @@ using System.Reflection.PortableExecutable;
 
 internal static partial class Program
 {
+    private static void InspectIndustrialGameContract(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var pe = new PEReader(stream);
+        var reader = pe.GetMetadataReader();
+        var provider = new SignatureNames();
+        var overheatable = reader.TypeDefinitions.Select(reader.GetTypeDefinition)
+            .Single(type => reader.GetString(type.Name) == "Overheatable");
+        bool supported = overheatable.GetMethods().Select(reader.GetMethodDefinition)
+            .Where(method => method.RelativeVirtualAddress != 0 && (method.Attributes & MethodAttributes.Static) == 0)
+            .Any(method =>
+            {
+                string name = reader.GetString(method.Name);
+                if (name is not ("CollectDescriptors" or "GetDescriptors")) return false;
+                var signature = method.DecodeSignature(provider, (object?)null);
+                return name == "CollectDescriptors"
+                    ? signature.ReturnType == "Void" && signature.ParameterTypes.SequenceEqual(new[] { "GameObject", "List<Descriptor>" })
+                    : signature.ReturnType == "List<Descriptor>" && signature.ParameterTypes.SequenceEqual(new[] { "GameObject" });
+            });
+        Check(supported, "Overheatable 缺少可用的 CollectDescriptors 或 GetDescriptors 实例方法。");
+    }
+
     // 只读目标DLL的IL和签名；不把游戏程序集加载到测试进程。
     private static void InspectGameContract(string path)
     {

@@ -4,6 +4,7 @@ using HarmonyLib;
 using MaterialOverhaul.Core;
 using MaterialOverhaul.Game;
 using MaterialOverhaul.Zones;
+using UnityEngine;
 
 namespace MaterialOverhaul.Patches
 {
@@ -13,14 +14,14 @@ namespace MaterialOverhaul.Patches
     /// **按原版分工排布**（已核实原版机制）：建筑描述只讲用途（<c>BuildingDef.Desc</c> 读
     /// <c>STRINGS.BUILDINGS.PREFABS.&lt;ID&gt;.DESC</c>，原版金属精炼器只有一句材料用途），
     /// 机制与数值放在效果列表里（<c>Building.EffectDescriptors</c> 收集
-    /// <c>def.EffectDescription</c> 与各组件 <c>IGameObjectEffectDescriptor.GetDescriptors</c>），
+    /// <c>def.EffectDescription</c> 与各组件 <c>IGameObjectEffectDescriptor</c>），
     /// 效果行的悬停是「一句结论 + 来源明细」。因此本文件不再改写原版描述与过热行，
     /// 只补一条本 Mod 自己的效果行。
     ///
     /// 1. 配方详情：<c>ComplexFabricator.AdditionalEffectsForRecipe</c> 追加所选配方的最佳温区。
     ///    这是原版自己的接口调用点，配方名与其它效果保持原版。
     ///
-    /// 2. 建筑信息卡效果列表：在 <c>Overheatable.GetDescriptors</c> 之后追加一条
+    /// 2. 建筑信息卡效果列表：在 <c>Overheatable</c> 生成描述后追加一条
     ///    「工作温区：下限 ~ 上限」。借这个注入点是因为它已经在本 Mod 的建筑上生效，
     ///    追加后温区行紧跟原版「过热温度」行，语义相邻。
     ///
@@ -98,28 +99,36 @@ namespace MaterialOverhaul.Patches
     /// 预制件预览保持原版不变。文本全部走本 Mod 的键，不依赖原版 LocString 的类路径。
     /// </summary>
     [Core.SystemPart(Core.ModSystem.Industrial)]
-    [HarmonyPatch(typeof(Overheatable), "GetDescriptors")]
+    [HarmonyPatch(typeof(Overheatable), "GetDescriptors", typeof(GameObject))]
     internal static class Patch_Overheatable_GetDescriptors
     {
         private const string KeyTempZoneLine = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_LINE";
         private const string KeyTempZoneTooltip = "STRINGS.UI.BUILDINGEFFECTS.MATERIALOVERHAUL.TEMPZONE_TOOLTIP";
 
-        private static void Postfix(Overheatable __instance, ref List<Descriptor> __result)
+        [HarmonyPrepare]
+        private static bool Prepare() => !Patch_Overheatable_CollectDescriptors.IsAvailable;
+
+        private static void Postfix(Overheatable __instance, List<Descriptor> __result)
+        {
+            AppendForBuilding(__instance, __result);
+        }
+
+        internal static void AppendForBuilding(Overheatable instance, List<Descriptor> descriptors)
         {
             try
             {
-                if (__instance == null || __result == null)
+                if (instance == null || descriptors == null)
                 {
                     return;
                 }
 
-                MaterialOverhaulFab fab = __instance.GetComponent<MaterialOverhaulFab>();
+                MaterialOverhaulFab fab = instance.GetComponent<MaterialOverhaulFab>();
                 if (fab == null || !fab.Spawned)
                 {
                     return;
                 }
 
-                AppendWorkTemperature(fab.PrefabId, __instance.OverheatTemperature, __result, false);
+                AppendWorkTemperature(fab.PrefabId, instance.OverheatTemperature, descriptors, false);
             }
             catch (Exception e)
             {
@@ -164,6 +173,24 @@ namespace MaterialOverhaul.Patches
             string tooltip = string.IsNullOrEmpty(tooltipTemplate) ? line : tooltipTemplate;
 
             descriptors.Add(new Descriptor(line, tooltip, Descriptor.DescriptorType.Effect));
+        }
+    }
+
+    [Core.SystemPart(Core.ModSystem.Industrial)]
+    [HarmonyPatch(typeof(Overheatable), "CollectDescriptors", typeof(GameObject), typeof(List<Descriptor>))]
+    internal static class Patch_Overheatable_CollectDescriptors
+    {
+        // U60 将返回列表改为写入调用方提供的列表。优先走新入口，两个补丁只装配一个。
+        internal static readonly bool IsAvailable = AccessTools.DeclaredMethod(
+            typeof(Overheatable), "CollectDescriptors", new[] { typeof(GameObject), typeof(List<Descriptor>) })
+            ?.ReturnType == typeof(void);
+
+        [HarmonyPrepare]
+        private static bool Prepare() => IsAvailable;
+
+        private static void Postfix(Overheatable __instance, List<Descriptor> __1)
+        {
+            Patch_Overheatable_GetDescriptors.AppendForBuilding(__instance, __1);
         }
     }
 }

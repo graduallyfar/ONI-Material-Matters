@@ -53,6 +53,8 @@ public sealed class Overheatable
     public MaterialOverhaulFab Mod;
     public float OverheatTemperature;
     public T GetComponent<T>() where T : class { return Mod as T; }
+    public void CollectDescriptors(UnityEngine.GameObject go, List<Descriptor> descriptors)
+        => descriptors.Add(new Descriptor("原版过热温度", "原版属性来源", Descriptor.DescriptorType.Effect));
 }
 
 namespace MaterialOverhaul.Game
